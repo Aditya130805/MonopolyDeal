@@ -1,0 +1,1 @@
+# Allows the game directory to be treated as a package

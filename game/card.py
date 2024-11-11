@@ -9,7 +9,7 @@ class Card:
 
 class PropertyCard(Card):
     def __init__(self, name, color, value):
-        super().__init__(f"{name (color)}", "Property", value)
+        super().__init__(f"{name} ({color})", "Property", value)
         self.color = color
 
 class ActionCard(Card):
