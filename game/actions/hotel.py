@@ -1,7 +1,4 @@
-# hotel.py
-
 from .base_action import BaseAction
-
 
 class Hotel(BaseAction):
 
@@ -32,24 +29,37 @@ class Hotel(BaseAction):
         # Check if the player has a complete property set with a House to add a Hotel
         eligible_sets = self._get_eligible_property_sets()
 
+        # Prompt the player if there are no eligible sets
         if not eligible_sets:
-            # No eligible sets, bank the Hotel card
-            self.player.add_to_bank(card)
-            print(f"{self.player.name} added Hotel to the bank since no property set was eligible.")
-            return
+            while True:
+                choice = input(f"{self.player.name}, there are no eligible property sets. Would you like to 'cancel' the action or 'bank' the Hotel card? ").strip().lower()
+                if choice == "cancel":
+                    print(f"{self.player.name} canceled the action.")
+                    return False
+                elif choice == "bank":
+                    self.player.add_to_bank(card)
+                    print(f"{self.player.name} added Hotel to the bank.")
+                    return True
+                else:
+                    print("Invalid choice. Please type 'cancel' to cancel or 'bank' to put the Hotel card in the bank.")
 
-        # If eligible sets exist, prompt the player to add a hotel
+        # If eligible sets exist, prompt the player to choose a set for the Hotel
         print(f"{self.player.name}'s eligible property sets for a Hotel:")
         for i, color in enumerate(eligible_sets):
             print(f"{i}: {color} set with {len(self.player.properties[color])} properties")
 
         while True:
             choice = input(
-                f"{self.player.name}, choose the property set to add the Hotel to (or 'cancel' to put it in bank): ")
-            if choice.lower() == "cancel":
+                f"{self.player.name}, choose the property set to add the Hotel to (or 'cancel' to cancel the action, or 'bank' to put the Hotel in the bank): ").strip().lower()
+
+            if choice == "cancel":
+                print(f"{self.player.name} canceled the action.")
+                return False
+
+            if choice == "bank":
                 self.player.add_to_bank(card)
-                print(f"{self.player.name} canceled the Hotel addition and added it to the bank.")
-                return
+                print(f"{self.player.name} added the Hotel card to the bank.")
+                return True
 
             try:
                 choice = int(choice)
@@ -58,8 +68,8 @@ class Hotel(BaseAction):
                     # Add Hotel to the selected property set
                     self.player.properties[selected_set].append(card)
                     print(f"{self.player.name} added a Hotel to the {selected_set} set.")
-                    return
+                    return True
                 else:
                     print("Invalid choice. Try again.")
             except ValueError:
-                print("Invalid input. Enter a number or 'cancel'.")
+                print("Invalid input. Enter a number, 'cancel', or 'bank'.")

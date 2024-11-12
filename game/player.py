@@ -2,6 +2,7 @@ from game.card import PropertyCard, MoneyCard, ActionCard, RentCard
 from game.actions.pass_go import PassGo
 from game.actions.house import House
 from game.actions.hotel import Hotel
+from game.actions.sly_deal import SlyDeal
 
 
 class Player:
@@ -40,7 +41,6 @@ class Player:
             # Just Say No
             # Double the Rent
             # Forced Deal
-            # Sly Deal
             # Debt Collector
             # It's My Birthday
 
@@ -48,19 +48,20 @@ class Player:
                 "Pass Go": PassGo,
                 "House": House,
                 "Hotel": Hotel,
+                "Sly Deal": SlyDeal
                 # Add other actions as they are created
             }
 
             action_class = action_map.get(card.name)
             if action_class:
                 action = action_class(self, game)
-                action.execute(card)
+                if action.execute(card): # Card should only be removed if the action is successfully carried out.
+                    self.hand.remove(card)
+                    # NOTE: Discarding the card to the discard pile is specific to the action and is handled within the action class.
+                    return True
             else:
                 print(f"Action {card.name} is not implemented.")
-
-            # Remove the card from the player's hand
-            self.hand.remove(card)
-            # NOTE: Discarding the card to the discard pile is action specific and takes place within the action class itself
+            return False
 
     def take_action(self, game):
         if not self.hand:
@@ -90,7 +91,8 @@ class Player:
                     self.hand.remove(card)
                     print(f"{self.name} added {card} to the bank.")
                 elif isinstance(card, ActionCard):
-                    self.use_action_card(card, game)
+                    if not self.use_action_card(card, game):
+                        continue
                 elif isinstance(card, RentCard):
                     # TODO: Implement Rent logic
                     pass
