@@ -11,12 +11,14 @@ class PassGo(BaseAction):
                 drawn_cards = self.player.draw_cards(self.game.deck, num=2)
                 print(f"{self.player.name} used Pass Go and drew 2 cards: {[str(drawn_card) for drawn_card in drawn_cards]}")
                 self.game.discard_card(card)
+                self.player.hand.remove(card)
                 return True  # Return True as the card was played
 
             elif choice == "bank":
                 # If the player chooses to bank the card
                 self.player.add_to_bank(card)
                 print(f"{self.player.name} put Pass Go in the bank.")
+                self.player.hand.remove(card)
                 return True  # Return True as the card was put in the bank
 
             elif choice == "cancel":

@@ -3,7 +3,7 @@ from game.actions.pass_go import PassGo
 from game.actions.house import House
 from game.actions.hotel import Hotel
 from game.actions.sly_deal import SlyDeal
-
+from game.actions.forced_deal import ForcedDeal
 
 class Player:
     def __init__(self, name):
@@ -40,7 +40,6 @@ class Player:
             # Deal Breaker
             # Just Say No
             # Double the Rent
-            # Forced Deal
             # Debt Collector
             # It's My Birthday
 
@@ -48,16 +47,15 @@ class Player:
                 "Pass Go": PassGo,
                 "House": House,
                 "Hotel": Hotel,
-                "Sly Deal": SlyDeal
+                "Sly Deal": SlyDeal,
+                "Forced Deal": ForcedDeal
                 # Add other actions as they are created
             }
 
             action_class = action_map.get(card.name)
             if action_class:
                 action = action_class(self, game)
-                if action.execute(card): # Card should only be removed if the action is successfully carried out.
-                    self.hand.remove(card)
-                    # NOTE: Discarding the card to the discard pile is specific to the action and is handled within the action class.
+                if action.execute(card):
                     return True
             else:
                 print(f"Action {card.name} is not implemented.")

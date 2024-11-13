@@ -1,7 +1,6 @@
-# Byte-compiled files
 __pycache__/
+.pytest_cache/
 *.py[cod]
 
-# IDE and editor config files
 .vscode/
 .idea/

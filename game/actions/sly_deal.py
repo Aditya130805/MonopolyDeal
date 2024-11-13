@@ -102,7 +102,8 @@ class SlyDeal(BaseAction):
                 if self.attempt_block_with_just_say_no(target_player):
                     # If the action is blocked, count the card as played but no property is stolen
                     print(f"{self.player.name} played Sly Deal, but {target_player.name} blocked the action using 'Just Say No'.")
-                    # Remove the Sly Deal card from the current player's hand
+                    # Discard the Sly Deal card into the discard pile
+                    self.game.discard_card(card)
                     self.player.hand.remove(card)
                     return True  # Action was blocked but card was played
 
@@ -111,12 +112,14 @@ class SlyDeal(BaseAction):
 
                 # Discard the Sly Deal card into the discard pile
                 self.game.discard_card(card)
+                self.player.hand.remove(card)
                 return True  # Property was stolen, return True
 
             elif choice == 'bank':
                 # If the player chooses to bank the card
                 self.player.add_to_bank(card)
                 print(f"{self.player.name} put Sly Deal in the bank.")
+                self.player.hand.remove(card)
                 return True  # Action was completed, return True
 
             elif choice == 'cancel':

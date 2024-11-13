@@ -38,6 +38,7 @@ class House(BaseAction):
                 elif choice == "bank":
                     self.player.add_to_bank(card)
                     print(f"{self.player.name} added House to the bank.")
+                    self.player.hand.remove(card)
                     return True
                 else:
                     print("Invalid choice. Please type 'cancel' to cancel or 'bank' to put the House card in the bank.")
@@ -58,6 +59,7 @@ class House(BaseAction):
             if choice == "bank":
                 self.player.add_to_bank(card)
                 print(f"{self.player.name} added the House card to the bank.")
+                self.player.hand.remove(card)
                 return True
 
             try:
@@ -67,6 +69,7 @@ class House(BaseAction):
                     # Add House to the selected property set
                     self.player.properties[selected_set].append(card)
                     print(f"{self.player.name} added a House to the {selected_set} set.")
+                    self.player.hand.remove(card)
                     return True
                 else:
                     print("Invalid choice. Try again.")
