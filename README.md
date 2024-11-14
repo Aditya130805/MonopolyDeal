@@ -11,6 +11,5 @@
 ### Next steps:
 
 - Potentially update card.py, specifically PropertyCard to hold rent values with multiple cards of the same color
-- Allow for multiple back to back just say no's being played in sly deal and forced deal; make tests for these scenarios too
 - Implement more actions: Deal Breaker, Just Say No, Double the Rent, Debt Collector, and It's My Birthday
 - Plan out and implement wild card functionality – where it will be stored within properties and how it will be assigned colors
