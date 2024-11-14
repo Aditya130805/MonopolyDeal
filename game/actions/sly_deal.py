@@ -26,7 +26,7 @@ class SlyDeal(BaseAction):
                             print(f"Skipping {prop}) because it's part of a complete set.")
                             continue
                         all_properties.append((player, prop))
-
+        
         if not all_properties:
             print("There are no properties to steal.")
             return None
@@ -50,21 +50,39 @@ class SlyDeal(BaseAction):
             except (ValueError, IndexError):
                 print("Invalid choice. Please select a valid property.")
 
-    def attempt_block_with_just_say_no(self, target_player):
-        # Step 1: Check if the target player has a "Just Say No" card
-        just_say_no_cards = [card for card in target_player.hand if isinstance(card, ActionCard) and card.name == "Just Say No"]
-        if just_say_no_cards:
-            print(f"\n{target_player.name} has a 'Just Say No' card!")
-            choice = input(f"Do you want to play 'Just Say No' to block the Sly Deal? (y/n): ").strip().lower()
-            if choice == 'y':
-                # Block the action with 'Just Say No'
-                print(f"{target_player.name} plays 'Just Say No' to block the Sly Deal.")
-                # Remove the 'Just Say No' card from their hand
-                target_player.hand.remove(just_say_no_cards[0])
-                return True
+    def attempt_block_with_just_say_no(self, initiator, target_player):
+        """Allows players to counter each other's 'Just Say No' cards until one side runs out or chooses not to play."""
+        while True:
+            # Check if the target player has a "Just Say No" card
+            jsn_card = next((card for card in target_player.hand if card.name == "Just Say No"), None)
+            if jsn_card:
+                print(f"\n{target_player.name} has a 'Just Say No' card!")
+                choice = input(f"{target_player.name}, do you want to play 'Just Say No' to block the Sly Deal? (y/n): ").strip().lower()
+                if choice == 'y':
+                    print(f"{target_player.name} plays 'Just Say No' to block the Sly Deal.")
+                    target_player.hand.remove(jsn_card)
+
+                    # Now check if the initiator has a "Just Say No" to counter
+                    counter_jsn_card = next((card for card in initiator.hand if card.name == "Just Say No"), None)
+                    if counter_jsn_card:
+                        counter_choice = input(f"{initiator.name}, do you want to counter with another 'Just Say No'? (y/n): ").strip().lower()
+                        if counter_choice == 'y':
+                            print(f"{initiator.name} counters with 'Just Say No'.")
+                            initiator.hand.remove(counter_jsn_card)
+                            # Switch roles and continue the loop for another potential counter
+                            initiator, target_player = target_player, initiator
+                        else:
+                            print(f"{initiator.name} chose not to counter. Sly Deal is blocked.")
+                            return True  # Final block
+                    else:
+                        print(f"{initiator.name} has no 'Just Say No' to counter. Sly Deal is blocked.")
+                        return True  # Blocked without counter
+                else:
+                    print(f"{target_player.name} chose not to block the Sly Deal. Sly Deal is not blocked.")
+                    return False  # No block attempt
             else:
-                print(f"{target_player.name} chose not to block the Sly Deal.")
-        return False
+                print(f"{target_player.name} has no 'Just Say No' card. Sly Deal is not blocked.")
+                return False  # No 'Just Say No' to block
 
     def steal_property(self, stolen_property, target_player):
         # Step 4: Remove the property from the target player's collection
@@ -99,9 +117,9 @@ class SlyDeal(BaseAction):
                 stolen_property, target_player = stolen_property_and_target
 
                 # Step 2: Attempt to block the action with 'Just Say No'
-                if self.attempt_block_with_just_say_no(target_player):
+                if self.attempt_block_with_just_say_no(self.player, target_player):
                     # If the action is blocked, count the card as played but no property is stolen
-                    print(f"{self.player.name} played Sly Deal, but {target_player.name} blocked the action using 'Just Say No'.")
+                    print(f"{self.player.name} played Sly Deal, but {target_player.name} ultimately blocked the action using 'Just Say No'.")
                     # Discard the Sly Deal card into the discard pile
                     self.game.discard_card(card)
                     self.player.hand.remove(card)
