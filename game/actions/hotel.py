@@ -1,4 +1,5 @@
 from .base_action import BaseAction
+from game.card import ActionCard
 
 class Hotel(BaseAction):
 
@@ -15,14 +16,25 @@ class Hotel(BaseAction):
 
     def _get_eligible_property_sets(self):
         """
-        Check the player's properties for complete sets with a House to be eligible for a Hotel.
-        Returns a list of color sets that have a House but not a Hotel.
+        Check the player's properties for complete sets eligible to add a House or Hotel.
+        Returns a list of color sets that are complete and eligible.
         """
         eligible_sets = []
         for color in self.player.properties:
-            if self._is_complete_set(color) and "House" in self.player.properties[color] and "Hotel" not in \
-                    self.player.properties[color]:
-                eligible_sets.append(color)
+            # Check if the set is complete and contains either none or only one of "House" or "Hotel" cards
+            if self._is_complete_set(color):
+                has_house = any(
+                    isinstance(card, ActionCard) and card.name == "House" and card.value == 3
+                    for card in self.player.properties[color]
+                )
+                has_hotel = any(
+                    isinstance(card, ActionCard) and card.name == "Hotel" and card.value == 4
+                    for card in self.player.properties[color]
+                )
+
+                # Add the set to eligible_sets if it has neither or only one of these cards
+                if not (has_house and has_hotel):
+                    eligible_sets.append(color)
         return eligible_sets
 
     def execute(self, card):

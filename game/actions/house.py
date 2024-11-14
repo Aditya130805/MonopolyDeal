@@ -1,4 +1,5 @@
 from .base_action import BaseAction
+from game.card import ActionCard
 
 class House(BaseAction):
 
@@ -20,7 +21,11 @@ class House(BaseAction):
         """
         eligible_sets = []
         for color in self.player.properties:
-            if self._is_complete_set(color) and "House" not in self.player.properties[color]:
+            # Check if the set is complete and doesn't already contain a "House" ActionCard
+            if self._is_complete_set(color) and not any(
+                isinstance(card, ActionCard) and card.name == "House" and card.value == 3 
+                for card in self.player.properties[color]
+            ):
                 eligible_sets.append(color)
         return eligible_sets
 

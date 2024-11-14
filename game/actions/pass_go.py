@@ -7,6 +7,9 @@ class PassGo(BaseAction):
             choice = input(f"{self.player.name}, do you want to play the 'Pass Go' card, put it in the bank, or cancel it? (play/bank/cancel): ").strip().lower()
 
             if choice == "play":
+                if len(self.game.deck) < 2:
+                    print("Not enough cards in the deck to draw 2 cards. Pass Go cannot be played.")
+                    return False  # Return False as the card cannot be played
                 # If the player chooses to play the card, draw 2 cards
                 drawn_cards = self.player.draw_cards(self.game.deck, num=2)
                 print(f"{self.player.name} used Pass Go and drew 2 cards: {[str(drawn_card) for drawn_card in drawn_cards]}")
