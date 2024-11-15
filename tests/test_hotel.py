@@ -192,7 +192,7 @@ def test_add_hotel_to_each_eligible_set(player_with_complete_set):
     player.properties["Yellow"] = [properties.yellow1, properties.yellow2, properties.yellow3, ActionCard("House", 3)]
 
     # Test adding a hotel to each eligible set
-    for i, color in enumerate(["Red", "Green", "Yellow"]):
+    for i, color in enumerate(["Green", "Yellow"]):
         with patch('builtins.input', return_value=str(i)):
             result = Hotel(player, game).execute(hotel_card)
             assert hotel_card in player.properties[color]

@@ -1,5 +1,7 @@
 from game.actions.base_action import BaseAction
-from game.card import ActionCard
+from game.card import ActionCard, PropertyCard
+from game.actions import common_functions
+from constants.properties import num_properties_needed_for_full_set
 
 class ForcedDeal(BaseAction):
 
@@ -15,7 +17,8 @@ class ForcedDeal(BaseAction):
         available_properties = []
         for color, properties in player.properties.items():
             for prop in properties:
-                available_properties.append(prop)
+                if isinstance(prop, PropertyCard):
+                    available_properties.append(prop)
 
         if not available_properties:
             print("You have no properties to trade.")
@@ -23,7 +26,7 @@ class ForcedDeal(BaseAction):
 
         print("\nYour properties available for trade:")
         for i, prop in enumerate(available_properties):
-            print(f"{i}: {prop} (Color: {prop.color})")
+            print(f"{i}: {prop} (Color: {prop.current_color})")
 
         while True:
             choice = input("Choose the property you want to offer for trade (or type 'cancel' to cancel): ").strip()
@@ -38,23 +41,29 @@ class ForcedDeal(BaseAction):
                 print("Invalid choice. Please select a valid property.")
 
     def select_property_to_steal(self):
+        # Player selects which property to steal from any target player
         all_properties = []
         for player in self.game.players:
-            if player != self.player:
+            if player != self.player:  # Exclude the player who is taking the action
                 for color, properties in player.properties.items():
+                    num_total_property_cards = common_functions.count_fixed_property_cards(player, color) + common_functions.count_wild_property_cards(player, color)
+                    num_complete_sets = num_total_property_cards // num_properties_needed_for_full_set[color]
+                    extra_cards = num_total_property_cards % num_properties_needed_for_full_set[color]
+                    if extra_cards <= 0:
+                        print(f"Skipping {color} color as it has complete set(s).")
+                        continue
                     for prop in properties:
-                        if self._is_complete_set(player, color):
-                            print(f"Skipping {prop} because it's part of a complete set.")
-                            continue
-                        all_properties.append((player, prop))
+                        if isinstance(prop, PropertyCard):
+                            all_properties.append((player, prop))
         
         if not all_properties:
             print("There are no properties to trade for.")
             return None
 
-        print("\nProperties available to trade for:")
+        # Display all properties available to steal
+        print("\nProperties available to steal:")
         for i, (owner, prop) in enumerate(all_properties):
-            print(f"{i}: {owner.name}: {prop} (Color: {prop.color})")
+            print(f"{i}: {owner.name}: {prop})")
 
         while True:
             choice = input("Choose the property to trade for (or type 'cancel' to cancel): ").strip()
@@ -105,8 +114,8 @@ class ForcedDeal(BaseAction):
                 return False  # No 'Just Say No' to block
 
     def execute_trade(self, offered_property, target_property, target_player):
-        offered_color = offered_property.color
-        target_color = target_property.color
+        offered_color = offered_property.current_color
+        target_color = target_property.current_color
 
         # Remove offered property from the current player
         self.player.properties[offered_color].remove(offered_property)

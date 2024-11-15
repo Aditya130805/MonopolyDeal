@@ -1,18 +1,9 @@
 from .base_action import BaseAction
-from game.card import ActionCard
+from game.card import ActionCard, PropertyCard
+from constants.properties import num_properties_needed_for_full_set
+from game.actions import common_functions
 
 class House(BaseAction):
-
-    def _is_complete_set(self, color):
-        """
-        Check if a property set is complete based on the required number of properties for that color.
-        """
-        required_properties = {
-            "Brown": 2, "Mint": 2, "Light Blue": 3, "Pink": 3, "Orange": 3,
-            "Red": 3, "Yellow": 3, "Green": 3, "Blue": 2, "Black": 4
-        }
-        required_count = required_properties.get(color, float('inf'))
-        return len(self.player.properties.get(color, [])) >= required_count
 
     def _get_eligible_property_sets(self):
         """
@@ -22,11 +13,15 @@ class House(BaseAction):
         eligible_sets = []
         for color in self.player.properties:
             # Check if the set is complete and doesn't already contain a "House" ActionCard
-            if self._is_complete_set(color) and not any(
-                isinstance(card, ActionCard) and card.name == "House" and card.value == 3 
-                for card in self.player.properties[color]
-            ):
+            num_property_cards = common_functions.count_fixed_property_cards(self.player, color) + common_functions.count_wild_property_cards(self.player, color)
+            num_complete_sets = num_property_cards // num_properties_needed_for_full_set[color]
+            if num_complete_sets <= 0:
+                continue
+            num_house_cards = common_functions.count_house_cards(self.player, color)
+            i = num_complete_sets
+            while i > num_house_cards:
                 eligible_sets.append(color)
+                i -= 1
         return eligible_sets
 
     def execute(self, card):

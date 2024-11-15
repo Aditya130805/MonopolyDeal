@@ -45,9 +45,7 @@ def test_forced_deal_valid_trade(players_with_properties, player_with_forced_dea
     player, forced_deal_card, _ = player_with_forced_deal
 
     # Check if player_2 has a "Just Say No" card
-    jsn_card = next((card for card in player_2.hand if card.name == "Just Say No"), None)
-    if jsn_card:
-        player_2.hand.remove(jsn_card)  # Remove the "Just Say No" card from their hand
+    player_2.hand = [card for card in player_2.hand if card.name != "Just Say No"]
 
     # Mock inputs for trade property selections and execution flow
     with patch('builtins.input', side_effect=['play', '0', '0']):

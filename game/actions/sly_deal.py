@@ -1,5 +1,7 @@
 from game.actions.base_action import BaseAction
-from game.card import ActionCard
+from game.card import ActionCard, PropertyCard
+from game.actions import common_functions
+from constants.properties import num_properties_needed_for_full_set
 
 class SlyDeal(BaseAction):
 
@@ -20,12 +22,15 @@ class SlyDeal(BaseAction):
         for player in self.game.players:
             if player != self.player:  # Exclude the player who is taking the action
                 for color, properties in player.properties.items():
+                    num_total_property_cards = common_functions.count_fixed_property_cards(player, color) + common_functions.count_wild_property_cards(player, color)
+                    num_complete_sets = num_total_property_cards // num_properties_needed_for_full_set[color]
+                    extra_cards = num_total_property_cards % num_properties_needed_for_full_set[color]
+                    if extra_cards <= 0:
+                        print(f"Skipping {color} color as it has complete set(s).")
+                        continue
                     for prop in properties:
-                        # Skip properties that are part of a complete set
-                        if self._is_complete_set(player, color):
-                            print(f"Skipping {prop}) because it's part of a complete set.")
-                            continue
-                        all_properties.append((player, prop))
+                        if isinstance(prop, PropertyCard):
+                            all_properties.append((player, prop))
         
         if not all_properties:
             print("There are no properties to steal.")
@@ -92,7 +97,7 @@ class SlyDeal(BaseAction):
                 print(f"{target_player.name} lost {stolen_property}")
 
         # Step 5: Add the stolen property to the current player's properties
-        color = stolen_property.color
+        color = stolen_property.current_color
         if color not in self.player.properties:
             self.player.properties[color] = []
         self.player.properties[color].append(stolen_property)

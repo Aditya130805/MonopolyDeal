@@ -1,5 +1,10 @@
 from game.card import PropertyCard
 
+num_properties_needed_for_full_set = {
+    "Brown": 2, "Mint": 2, "Light Blue": 3, "Pink": 3, "Orange": 3,
+    "Red": 3, "Yellow": 3, "Green": 3, "Blue": 2, "Black": 4
+}
+
 # Brown Properties
 brown1 = PropertyCard("Mediterranean Avenue", "Brown", 1)
 brown2 = PropertyCard("Baltic Avenue", "Brown", 1)

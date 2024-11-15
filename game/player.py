@@ -4,6 +4,7 @@ from game.actions.house import House
 from game.actions.hotel import Hotel
 from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
+from constants.properties import num_properties_needed_for_full_set
 
 class Player:
     def __init__(self, name):
@@ -27,12 +28,89 @@ class Player:
 
     def play_property(self, card):
         if isinstance(card, PropertyCard):
-            color = card.color
+            color = card.current_color
+            if card.is_wild:
+                # Prompt the player to select the color for the wild card
+                print(f"{card.name} is a wild card. Choose a color from: {card.colors}")
+                while True:  # Infinite loop until a valid color is chosen
+                    color = input("Enter the color: ").strip()
+                    if color in card.colors:
+                        card.assign_color(color)
+                        break  # Exit the loop once a valid color is chosen
+                    else:
+                        print("Invalid color. Try again.")
+            # Add the card to the selected color set
             if color not in self.properties:
                 self.properties[color] = []
             self.properties[color].append(card)
             self.hand.remove(card)
             print(f"{self.name} played {card} to their properties.")
+            
+    def change_wild_card_color(self):
+        # Get a list of wild cards in properties
+        wild_cards = [(color, card) for color, cards in self.properties.items() for card in cards if card.is_wild]
+        
+        if not wild_cards:
+            print("No wild cards to change.")
+            return
+
+        # Display options to the player
+        print("Wild Cards in your properties:")
+        for i, (color, card) in enumerate(wild_cards):
+            print(f"{i}: {card.name} (Current color: {color})")
+        
+        try:
+            card_index = int(input("Select a wild card to change color: "))
+            old_color, selected_card = wild_cards[card_index]
+
+            # Infinite loop until a valid color is chosen
+            while True:
+                print(f"Choose a new color from: {selected_card.colors}")
+                new_color = input("Enter the color: ").strip()
+
+                if new_color not in selected_card.colors:
+                    print("Invalid color choice. Try again.")
+                else:
+                    if len(self.properties[old_color]) > num_properties_needed_for_full_set[old_color]:
+                        # Either a complete set + more properties OR a complete set + House (+ Hotel)
+                        num_fixed_property_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, PropertyCard) and not card.is_wild))
+                        num_wild_property_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, PropertyCard) and card.is_wild))
+                        num_house_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, ActionCard) and card.name == "House"))
+                        num_hotel_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, ActionCard) and card.name == "Hotel"))
+                        num_total_property_cards = num_fixed_property_cards + num_wild_property_cards
+                        num_complete_sets = num_total_property_cards // num_properties_needed_for_full_set[old_color]
+                        extra_wild_cards = num_total_property_cards % num_properties_needed_for_full_set[old_color]
+                        if extra_wild_cards == 0:
+                            # Check if houses/hotels need to be removed due to loss of a complete set
+                            if num_complete_sets <= num_house_cards:
+                                # Remove house from the set and move it to the bank
+                                house_card = next(card for card in self.properties[old_color] if isinstance(card, ActionCard) and card.name == "House")
+                                self.properties[old_color].remove(house_card)
+                                self.bank.append(house_card)
+                                print(f"A house was removed from the {old_color} set and added to the bank.")
+                            if num_complete_sets <= num_hotel_cards:
+                                # Remove hotel from the set and move it to the bank
+                                hotel_card = next(card for card in self.properties[old_color] if isinstance(card, ActionCard) and card.name == "Hotel")
+                                self.properties[old_color].remove(hotel_card)
+                                self.bank.append(hotel_card)
+                                print(f"A hotel was removed from the {old_color} set and added to the bank.")
+                    
+                    # Remove from old color list and update the wild card's current color
+                    self.properties[old_color].remove(selected_card)
+                    if not self.properties[old_color]:  # Clean up empty color lists
+                        del self.properties[old_color]
+
+                    selected_card.assign_color(new_color)
+                    if new_color not in self.properties:
+                        self.properties[new_color] = []
+                    self.properties[new_color].append(selected_card)
+
+                    print(f"Wild card color changed to {new_color} and moved to that property set.")
+                    break  # Exit the loop once a valid color is chosen
+            
+        except (ValueError, IndexError):
+            print("Invalid selection.")
+
 
     def use_action_card(self, card, game):
         if isinstance(card, ActionCard):
