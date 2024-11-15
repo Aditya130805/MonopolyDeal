@@ -55,14 +55,14 @@ def create_deck():
         PropertyCard("B. & O. Railroad", "Black", 2),
         
         # Wild Properties
-        PropertyCard("Wild Property", "Blue/Green", 4),
-        *[PropertyCard("Wild Property", "Red/Yellow", 3) for _ in range(2)],
-        *[PropertyCard("Wild Property", "Pink/Orange", 2) for _ in range(2)],
-        PropertyCard("Wild Property", "Black/Mint", 2),
-        PropertyCard("Wild Property", "Black/Light Blue", 4),
-        PropertyCard("Wild Property", "Black/Green", 4),
-        PropertyCard("Wild Property", "Brown/Light Blue", 1),
-        *[PropertyCard("Wild", "Brown/Mint/Light Blue/Pink/Orange/Red/Yellow/Green/Blue/Black", None) for _ in range(2)]
+        PropertyCard("Wild Property", ['blue', 'green'], 4, True),
+        *[PropertyCard("Wild Property", ['red', 'yellow'], 3, True) for _ in range(2)],
+        *[PropertyCard("Wild Property", ['pink', 'orange'], 2, True) for _ in range(2)],
+        PropertyCard("Wild Property", ['black', 'mint'], 2, True),
+        PropertyCard("Wild Property", ['black', 'light blue'], 4, True),
+        PropertyCard("Wild Property", ['black', 'green'], 4, True),
+        PropertyCard("Wild Property", ['brown', 'light blue'], 1, True),
+        *[PropertyCard("Wild", ['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], None, True) for _ in range(2)]
     ]
     
     # Add Rent Cards

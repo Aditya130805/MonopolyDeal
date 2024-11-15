@@ -1,8 +1,8 @@
 from game.card import PropertyCard
 
 num_properties_needed_for_full_set = {
-    "Brown": 2, "Mint": 2, "Light Blue": 3, "Pink": 3, "Orange": 3,
-    "Red": 3, "Yellow": 3, "Green": 3, "Blue": 2, "Black": 4
+    "brown": 2, "mint": 2, "light blue": 3, "pink": 3, "orange": 3,
+    "red": 3, "yellow": 3, "green": 3, "blue": 2, "black": 4
 }
 
 # Brown Properties
@@ -54,14 +54,14 @@ black3 = PropertyCard("Reading Railroad", "Black", 2)
 black4 = PropertyCard("B. & O. Railroad", "Black", 2)
 
 # Wild Properties
-wild_blue_green = PropertyCard("Wild Property", "Blue/Green", 4)
-wild_red_yellow1 = PropertyCard("Wild Property", "Red/Yellow", 3)
-wild_red_yellow2 = PropertyCard("Wild Property", "Red/Yellow", 3)
-wild_pink_orange1 = PropertyCard("Wild Property", "Pink/Orange", 2)
-wild_pink_orange2 = PropertyCard("Wild Property", "Pink/Orange", 2)
-wild_black_mint = PropertyCard("Wild Property", "Black/Mint", 2)
-wild_black_light_blue = PropertyCard("Wild Property", "Black/Light Blue", 4)
-wild_black_green = PropertyCard("Wild Property", "Black/Green", 4)
-wild_brown_light_blue = PropertyCard("Wild Property", "Brown/Light Blue", 1)
-wild_multicolor1 = PropertyCard("Wild", "Brown/Mint/Light Blue/Pink/Orange/Red/Yellow/Green/Blue/Black", None)
-wild_multicolor2 = PropertyCard("Wild", "Brown/Mint/Light Blue/Pink/Orange/Red/Yellow/Green/Blue/Black", None)
+wild_blue_green = PropertyCard("Wild Property", ['blue', 'green'], 4, True),
+wild_red_yellow1 = PropertyCard("Wild Property", ['red', 'yellow'], 3, True),
+wild_red_yellow2 = PropertyCard("Wild Property", ['red', 'yellow'], 3, True),
+wild_pink_orange1 = PropertyCard("Wild Property", ['pink', 'orange'], 2, True),
+wild_pink_orange2 = PropertyCard("Wild Property", ['pink', 'orange'], 2, True),
+wild_black_mint = PropertyCard("Wild Property", ['black', 'mint'], 2, True),
+wild_black_light_blue = PropertyCard("Wild Property", ['black', 'light blue'], 4, True),
+wild_black_green = PropertyCard("Wild Property", ['black', 'green'], 4, True),
+wild_brown_light_blue = PropertyCard("Wild Property", ['brown', 'light blue'], 1, True),
+wild_multicolor1 = PropertyCard("Wild", ['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], None, True)
+wild_multicolor2 = PropertyCard("Wild", ['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], None, True)

@@ -22,8 +22,11 @@ class Game:
         current_player = self.players[self.turn_index]
         print(f"{current_player.name}'s turn –––––––––––––––––>")
 
-        # Draw 2 cards at the start of the turn
-        current_player.draw_cards(self.deck, 2)
+        # Draw cards at the start of the turn
+        if len(current_player.hand) == 0:
+            current_player.draw_cards(self.deck, 5)
+        else:
+            current_player.draw_cards(self.deck, 2)
 
         # Let the player take up to 3 actions
         actions = 0

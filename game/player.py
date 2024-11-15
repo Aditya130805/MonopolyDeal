@@ -5,6 +5,7 @@ from game.actions.hotel import Hotel
 from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
 from constants.properties import num_properties_needed_for_full_set
+from game.actions import common_functions
 
 class Player:
     def __init__(self, name):
@@ -33,7 +34,7 @@ class Player:
                 # Prompt the player to select the color for the wild card
                 print(f"{card.name} is a wild card. Choose a color from: {card.colors}")
                 while True:  # Infinite loop until a valid color is chosen
-                    color = input("Enter the color: ").strip()
+                    color = input("Enter the color: ").strip().lower()
                     if color in card.colors:
                         card.assign_color(color)
                         break  # Exit the loop once a valid color is chosen
@@ -67,10 +68,12 @@ class Player:
             while True:
                 print(f"Choose a new color from: {selected_card.colors}")
                 new_color = input("Enter the color: ").strip()
+                print("HERE!")
 
                 if new_color not in selected_card.colors:
                     print("Invalid color choice. Try again.")
                 else:
+                    print("PRINTING:", self.properties)
                     if len(self.properties[old_color]) > num_properties_needed_for_full_set[old_color]:
                         # Either a complete set + more properties OR a complete set + House (+ Hotel)
                         num_fixed_property_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, PropertyCard) and not card.is_wild))
@@ -148,10 +151,13 @@ class Player:
         print(f"\n{self.name}'s hand: {[f'{i}: {card}' for i, card in enumerate(self.hand)]}")
 
         while True:
-            choice = input(f"{self.name}, enter the number of the card you want to play (or 'skip' to end your turn): ")
+            choice = input(f"{self.name}, enter the number of the card you want to play, 'wild' to change a wild card's color, or 'skip' to end your turn: ")
 
             if choice.lower() == "skip":
                 return False
+            elif choice.lower() == "wild":
+                self.change_wild_card_color()
+                continue
             try:
                 choice = int(choice)
                 if choice < 0 or choice >= len(self.hand):
@@ -182,5 +188,11 @@ class Player:
 
     def has_won(self):
         # Win condition: 3 full property sets
-        complete_sets = sum(len(cards) >= 3 for cards in self.properties.values())
-        return complete_sets >= 3
+        num_complete_sets = 0
+        
+        for color in self.properties.keys():
+            num_property_cards_in_color = common_functions.count_fixed_property_cards(self, color) + common_functions.count_wild_property_cards(self, color)
+            num_complete_sets_in_color = num_property_cards_in_color // num_properties_needed_for_full_set[color]
+            num_complete_sets += num_complete_sets_in_color
+        
+        return num_complete_sets >= 3
