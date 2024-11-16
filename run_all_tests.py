@@ -2,7 +2,7 @@ import os
 import pytest
 
 # Number of times to run each test file
-num_runs = 1
+num_runs = 25
 
 # Define the directory where the test files are located
 test_directory = "tests"

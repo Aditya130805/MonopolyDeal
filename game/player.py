@@ -5,6 +5,7 @@ from game.actions.hotel import Hotel
 from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
 from game.actions.deal_breaker import DealBreaker
+from game.actions.just_say_no import JustSayNo
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
 
@@ -69,12 +70,10 @@ class Player:
             while True:
                 print(f"Choose a new color from: {selected_card.colors}")
                 new_color = input("Enter the color: ").strip()
-                print("HERE!")
 
                 if new_color not in selected_card.colors:
                     print("Invalid color choice. Try again.")
                 else:
-                    print("PRINTING:", self.properties)
                     if len(self.properties[old_color]) > num_properties_needed_for_full_set[old_color]:
                         # Either a complete set + more properties OR a complete set + House (+ Hotel)
                         num_fixed_property_cards = sum(1 for card in self.properties.get(color, []) if (isinstance(card, PropertyCard) and not card.is_wild))
@@ -119,8 +118,7 @@ class Player:
     def use_action_card(self, card, game):
         if isinstance(card, ActionCard):
 
-            # Deal Breaker
-            # Just Say No
+            # Just Say No - within the non-implemented actions
             # Double the Rent
             # Debt Collector
             # It's My Birthday
@@ -131,7 +129,8 @@ class Player:
                 "Hotel": Hotel,
                 "Sly Deal": SlyDeal,
                 "Forced Deal": ForcedDeal,
-                "Deal Breaker": DealBreaker
+                "Deal Breaker": DealBreaker,
+                "Just Say No": JustSayNo
                 # Add other actions as they are created
             }
 
