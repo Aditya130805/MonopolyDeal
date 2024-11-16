@@ -4,6 +4,7 @@ from game.actions.house import House
 from game.actions.hotel import Hotel
 from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
+from game.actions.deal_breaker import DealBreaker
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
 
@@ -49,7 +50,7 @@ class Player:
             
     def change_wild_card_color(self):
         # Get a list of wild cards in properties
-        wild_cards = [(color, card) for color, cards in self.properties.items() for card in cards if card.is_wild]
+        wild_cards = [(color, card) for color, cards in self.properties.items() for card in cards if (isinstance(card, PropertyCard) and card.is_wild)]
         
         if not wild_cards:
             print("No wild cards to change.")
@@ -129,7 +130,8 @@ class Player:
                 "House": House,
                 "Hotel": Hotel,
                 "Sly Deal": SlyDeal,
-                "Forced Deal": ForcedDeal
+                "Forced Deal": ForcedDeal,
+                "Deal Breaker": DealBreaker
                 # Add other actions as they are created
             }
 
