@@ -5,17 +5,6 @@ from constants.properties import num_properties_needed_for_full_set
 
 class SlyDeal(BaseAction):
 
-    def _is_complete_set(self, player, color):
-        """
-        Check if a property set is complete based on the required number of properties for that color.
-        """
-        required_properties = {
-            "Brown": 2, "Mint": 2, "Light Blue": 3, "Pink": 3, "Orange": 3,
-            "Red": 3, "Yellow": 3, "Green": 3, "Blue": 2, "Black": 4
-        }
-        required_count = required_properties.get(color, float('inf'))
-        return len(player.properties.get(color, [])) >= required_count
-
     def select_property_to_steal(self):
         # Player selects which property to steal from any target player
         all_properties = []

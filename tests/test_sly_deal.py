@@ -30,9 +30,9 @@ def players_with_properties(game_setup):
     player_1 = game.players[0]
     player_2 = game.players[1]
     # Assign properties to Player 1
-    player_1.properties["Red"] = [properties.red1, properties.red2]
+    player_1.properties["red"] = [properties.red1, properties.red2]
     # Assign a non-complete set to Player 2
-    player_2.properties["Blue"] = [properties.blue1]
+    player_2.properties["blue"] = [properties.blue1]
 
     return game, player_1, player_2
 
@@ -53,8 +53,8 @@ def test_sly_deal_valid_steal(players_with_properties, player_with_sly_deal):
 
         # Check if the steal was successful
         assert result is True
-        assert properties.blue1 not in player_2.properties["Blue"]
-        assert properties.blue1 in player_1.properties["Blue"]
+        assert properties.blue1 not in player_2.properties["blue"]
+        assert properties.blue1 in player_1.properties["blue"]
 
 # Test 2: Sly Deal canceled by player
 def test_sly_deal_canceled(player_with_sly_deal):
@@ -91,10 +91,10 @@ def test_sly_deal_skips_complete_sets(players_with_properties, player_with_sly_d
     game, player_1, player_2 = players_with_properties
     player, sly_deal_card, _ = player_with_sly_deal
 
-    # Make Player 2 have a complete set of Red properties
+    # Make Player 2 have a complete set of red properties
     player_2.properties = {}
-    player_2.properties["Red"] = [properties.red1, properties.red2, properties.red3]
-    player_2.properties["Blue"] = [properties.blue1, properties.blue2, ActionCard("House", 3)]
+    player_2.properties["red"] = [properties.red1, properties.red2, properties.red3]
+    player_2.properties["blue"] = [properties.blue1, properties.blue2, ActionCard("House", 3)]
 
     # Mock inputs for Sly Deal where Player 1 tries to steal from Player 2
     with patch('builtins.input', side_effect=['play']):
@@ -139,9 +139,9 @@ def test_sly_deal_blocked_with_one_just_say_no(players_with_properties, player_w
 
         # Check that the steal was blocked by the "Just Say No"
         assert result is True  # The action was executed, but blocked
-        assert properties.blue1 in player_2.properties["Blue"]
-        if "Blue" in player_1.properties:
-            assert properties.blue1 not in player_1.properties["Blue"]
+        assert properties.blue1 in player_2.properties["blue"]
+        if "blue" in player_1.properties:
+            assert properties.blue1 not in player_1.properties["blue"]
 
 # Test 7: Two Just Say No cards played, allowing the Sly Deal to go through
 def test_sly_deal_blocked_and_unblocked_with_two_just_say_no(players_with_properties, player_with_sly_deal):
@@ -169,9 +169,9 @@ def test_sly_deal_blocked_and_unblocked_with_two_just_say_no(players_with_proper
 
         # Check that after the second "Just Say No", the steal goes through
         assert result is True
-        assert properties.blue1 in player_1.properties["Blue"]
-        if "Blue" in player_2.properties:
-            assert properties.blue1 not in player_2.properties["Blue"]
+        assert properties.blue1 in player_1.properties["blue"]
+        if "blue" in player_2.properties:
+            assert properties.blue1 not in player_2.properties["blue"]
 
 # Test 8: Three Just Say No cards played, blocking the Sly Deal
 def test_sly_deal_blocked_with_three_just_say_no(players_with_properties, player_with_sly_deal):
@@ -200,9 +200,9 @@ def test_sly_deal_blocked_with_three_just_say_no(players_with_properties, player
 
         # Check that after the third "Just Say No", the Sly Deal is still blocked
         assert result is True
-        assert properties.blue1 in player_2.properties["Blue"]  # Player 2's property remains unblocked
-        if "Blue" in player_1.properties:
-            assert properties.blue1 not in player_1.properties["Blue"]
+        assert properties.blue1 in player_2.properties["blue"]  # Player 2's property remains unblocked
+        if "blue" in player_1.properties:
+            assert properties.blue1 not in player_1.properties["blue"]
 
 """ TODO: WORRY ABOUT THIS TEST AFTER IMPLEMENTING WILD CARD LOGIC CORRECTLY
 # Test 9: Attempt to steal a property with a Wild Card

@@ -7,52 +7,52 @@ def create_deck():
     # Add Property Cards (Grouped by color)
     properties = [
         # Brown
-        PropertyCard("Mediterranean Avenue", "Brown", 1),
-        PropertyCard("Baltic Avenue", "Brown", 1),
+        PropertyCard("Mediterranean Avenue", "brown", 1),
+        PropertyCard("Baltic Avenue", "brown", 1),
         
         # Mint
-        PropertyCard("Water Works", "Mint", 2),
-        PropertyCard("Electric Company", "Mint", 2),
+        PropertyCard("Water Works", "mint", 2),
+        PropertyCard("Electric Company", "mint", 2),
         
         # Light Blue
-        PropertyCard("Connecticut Avenue", "Light Blue", 1),
-        PropertyCard("Vermont Avenue", "Light Blue", 1),
-        PropertyCard("Oriental Avenue", "Light Blue", 1),
+        PropertyCard("Connecticut Avenue", "light blue", 1),
+        PropertyCard("Vermont Avenue", "light blue", 1),
+        PropertyCard("Oriental Avenue", "light blue", 1),
         
         # Pink
-        PropertyCard("St. Charles Place", "Pink", 2),
-        PropertyCard("States Avenue", "Pink", 2),
-        PropertyCard("Virginia Avenue", "Pink", 2),
+        PropertyCard("St. Charles Place", "pink", 2),
+        PropertyCard("States Avenue", "pink", 2),
+        PropertyCard("Virginia Avenue", "pink", 2),
         
         # Orange
-        PropertyCard("Tennessee Avenue", "Orange", 2),
-        PropertyCard("New York Avenue", "Orange", 2),
-        PropertyCard("St. James Place", "Orange", 2),
+        PropertyCard("Tennessee Avenue", "orange", 2),
+        PropertyCard("New York Avenue", "orange", 2),
+        PropertyCard("St. James Place", "orange", 2),
         
         # Red
-        PropertyCard("Illinois Avenue", "Red", 3),
-        PropertyCard("Indiana Avenue", "Red", 3),
-        PropertyCard("Kentucky Avenue", "Red", 3),
+        PropertyCard("Illinois Avenue", "red", 3),
+        PropertyCard("Indiana Avenue", "red", 3),
+        PropertyCard("Kentucky Avenue", "red", 3),
         
         # Yellow
-        PropertyCard("Atlantic Avenue", "Yellow", 3),
-        PropertyCard("Marvin Gardens", "Yellow", 3),
-        PropertyCard("Ventnor Avenue", "Yellow", 3),
+        PropertyCard("Atlantic Avenue", "yellow", 3),
+        PropertyCard("Marvin Gardens", "yellow", 3),
+        PropertyCard("Ventnor Avenue", "yellow", 3),
         
         # Green
-        PropertyCard("Pacific Avenue", "Green", 4),
-        PropertyCard("North Carolina Avenue", "Green", 4),
-        PropertyCard("Pennsylvania Avenue", "Green", 4),
+        PropertyCard("Pacific Avenue", "green", 4),
+        PropertyCard("North Carolina Avenue", "green", 4),
+        PropertyCard("Pennsylvania Avenue", "green", 4),
         
         # Blue
-        PropertyCard("Boardwalk", "Blue", 4),
-        PropertyCard("Park Place", "Blue", 4),
+        PropertyCard("Boardwalk", "blue", 4),
+        PropertyCard("Park Place", "blue", 4),
         
         # Black (Railroads)
-        PropertyCard("Short Line", "Black", 2),
-        PropertyCard("Pennsylvania Railroad", "Black", 2),
-        PropertyCard("Reading Railroad", "Black", 2),
-        PropertyCard("B. & O. Railroad", "Black", 2),
+        PropertyCard("Short Line", "black", 2),
+        PropertyCard("Pennsylvania Railroad", "black", 2),
+        PropertyCard("Reading Railroad", "black", 2),
+        PropertyCard("B. & O. Railroad", "black", 2),
         
         # Wild Properties
         PropertyCard("Wild Property", ['blue', 'green'], 4, True),

@@ -29,13 +29,13 @@ def players_with_properties(game_setup):
     game = game_setup
     player_1 = game.players[0]
     player_2 = game.players[1]
-    red1 = PropertyCard("Illinois Avenue", "Red", 3)
-    red2 = PropertyCard("Indiana Avenue", "Red", 3)
-    blue1 = PropertyCard("Boardwalk", "Blue", 4)
+    red1 = PropertyCard("Illinois Avenue", "red", 3)
+    red2 = PropertyCard("Indiana Avenue", "red", 3)
+    blue1 = PropertyCard("Boardwalk", "blue", 4)
     # Assign properties to Player 1
-    player_1.properties["Red"] = [properties.red1, properties.red2]
+    player_1.properties["red"] = [properties.red1, properties.red2]
     # Assign a non-complete set to Player 2
-    player_2.properties["Blue"] = [properties.blue1]
+    player_2.properties["blue"] = [properties.blue1]
 
     return game, player_1, player_2
 
@@ -54,8 +54,8 @@ def test_forced_deal_valid_trade(players_with_properties, player_with_forced_dea
 
         # Check if the trade was successfully executed
         assert result is True
-        assert properties.blue1 in player_1.properties["Blue"]
-        assert properties.red1 in player_2.properties["Red"]
+        assert properties.blue1 in player_1.properties["blue"]
+        assert properties.red1 in player_2.properties["red"]
 
 # Test 2: Forced Deal canceled by player
 def test_forced_deal_canceled(player_with_forced_deal):
@@ -90,7 +90,7 @@ def test_forced_deal_skips_complete_sets(players_with_properties, player_with_fo
     player, forced_deal_card, _ = player_with_forced_deal
 
     # Complete set for Player 2 to ensure Forced Deal skips it
-    player_2.properties["Blue"].append(properties.blue1)
+    player_2.properties["blue"].append(properties.blue1)
 
     # Mock inputs for Forced Deal with trade selection flow
     with patch('builtins.input', side_effect=['play']):
@@ -141,10 +141,10 @@ def test_forced_deal_only_complete_sets(players_with_properties, player_with_for
     game, player_1, player_2 = players_with_properties
     player, forced_deal_card, _ = player_with_forced_deal
 
-    # Give Player 2 a complete set in Red
+    # Give Player 2 a complete set in red
     player_2.properties = {}
-    player_2.properties["Red"] = [properties.red1, properties.red2, properties.red3]
-    player_2.properties["Blue"] = [properties.blue1, properties.blue2, ActionCard("House", 3)]
+    player_2.properties["red"] = [properties.red1, properties.red2, properties.red3]
+    player_2.properties["blue"] = [properties.blue1, properties.blue2, ActionCard("House", 3)]
 
     # Attempt Forced Deal
     with patch('builtins.input', side_effect=['play']):
@@ -193,9 +193,9 @@ def test_forced_deal_one_jsn(players_with_properties, player_with_forced_deal):
 
         # Verify that the trade was blocked and no properties were swapped
         assert result is True
-        assert properties.blue1 in player_2.properties["Blue"]  # Player 2's property remains unblocked
-        if "Blue" in player_1.properties:
-            assert properties.blue1 not in player_1.properties["Blue"]
+        assert properties.blue1 in player_2.properties["blue"]  # Player 2's property remains unblocked
+        if "blue" in player_1.properties:
+            assert properties.blue1 not in player_1.properties["blue"]
 
 # Test 10: Forced Deal Blocked by Two 'Just Say No' Cards
 def test_forced_deal_two_jsn(players_with_properties, player_with_forced_deal):
@@ -219,12 +219,12 @@ def test_forced_deal_two_jsn(players_with_properties, player_with_forced_deal):
 
         # Verify that the trade went through after two "Just Say No" cards were played
         assert result is True
-        assert properties.blue1 in player_1.properties["Blue"]
-        if "Blue" in player_2.properties:
-            assert properties.blue1 not in player_2.properties["Blue"]
-        assert properties.red1 in player_2.properties["Red"]
-        if "Red" in player_1.properties:
-            assert properties.red1 not in player_1.properties["Red"]
+        assert properties.blue1 in player_1.properties["blue"]
+        if "blue" in player_2.properties:
+            assert properties.blue1 not in player_2.properties["blue"]
+        assert properties.red1 in player_2.properties["red"]
+        if "red" in player_1.properties:
+            assert properties.red1 not in player_1.properties["red"]
 
 # Test 11: Forced Deal Blocked by Three 'Just Say No' Cards
 def test_forced_deal_three_jsn(players_with_properties, player_with_forced_deal):
@@ -249,6 +249,6 @@ def test_forced_deal_three_jsn(players_with_properties, player_with_forced_deal)
 
         # Verify that the trade was blocked after three "Just Say No" cards were played
         assert result is True
-        assert properties.blue1 in player_2.properties["Blue"]  # Player 2's property remains unblocked
-        if "Blue" in player_1.properties:
-            assert properties.blue1 not in player_1.properties["Blue"]
+        assert properties.blue1 in player_2.properties["blue"]  # Player 2's property remains unblocked
+        if "blue" in player_1.properties:
+            assert properties.blue1 not in player_1.properties["blue"]

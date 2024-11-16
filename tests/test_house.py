@@ -14,12 +14,12 @@ def game_setup():
 
 @pytest.fixture
 def player_with_complete_set(game_setup):
-    """Fixture to set up a player with a complete property set for 'Red'."""
+    """Fixture to set up a player with a complete property set for 'red'."""
     game = game_setup
     player = game.players[0]
     player.properties = {
-        "Red": [properties.red1, properties.red2, properties.red3],  # Complete set for 'Red'
-        "Blue": [properties.blue1]  # Incomplete set for 'Blue'
+        "red": [properties.red1, properties.red2, properties.red3],  # Complete set for 'red'
+        "blue": [properties.blue1]  # Incomplete set for 'blue'
     }
     house_card = ActionCard("House", 3)  # Example House card
     player.hand.append(house_card)
@@ -31,8 +31,8 @@ def player_with_no_complete_set(game_setup):
     game = game_setup
     player = game.players[0]
     player.properties = {
-        "Blue": [properties.blue1],  # Incomplete set
-        "Green": [properties.green1, properties.green2]  # Incomplete set
+        "blue": [properties.blue1],  # Incomplete set
+        "green": [properties.green1, properties.green2]  # Incomplete set
     }
     house_card = ActionCard("House", 3)
     player.hand.append(house_card)
@@ -42,12 +42,12 @@ def player_with_no_complete_set(game_setup):
 def test_add_house_to_complete_set(player_with_complete_set):
     player, house_card, game = player_with_complete_set
 
-    # Mock the input to simulate the player choosing to add the house to the 'Red' set
+    # Mock the input to simulate the player choosing to add the house to the 'red' set
     with patch('builtins.input', return_value='0'):
         result = House(player, game).execute(house_card)
         
         # Check if the house was added to the correct property set
-        assert house_card in player.properties["Red"]
+        assert house_card in player.properties["red"]
         assert house_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -86,7 +86,7 @@ def test_invalid_input_for_house_action(player_with_complete_set):
         result = House(player, game).execute(house_card)
         
         # Check if the house was added to the correct property set after invalid input
-        assert house_card in player.properties["Red"]
+        assert house_card in player.properties["red"]
         assert house_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -94,8 +94,8 @@ def test_invalid_input_for_house_action(player_with_complete_set):
 def test_house_not_added_if_already_present_with_cancel_or_bank(player_with_complete_set):
     player, house_card, game = player_with_complete_set
 
-    # Add a house to the 'Red' set manually to make it ineligible for another house
-    player.properties["Red"].append(ActionCard("House", 3))
+    # Add a house to the 'red' set manually to make it ineligible for another house
+    player.properties["red"].append(ActionCard("House", 3))
 
     # Test the `cancel` option
     with patch('builtins.input', return_value='cancel'):
@@ -120,14 +120,14 @@ def test_multiple_complete_sets(player_with_complete_set):
     player, house_card, game = player_with_complete_set
 
     # Add a second complete set to make multiple eligible
-    player.properties["Green"] = [properties.green1, properties.green2, properties.green3]
+    player.properties["green"] = [properties.green1, properties.green2, properties.green3]
 
-    # Mock the input to simulate choosing the 'Green' set (index 1)
+    # Mock the input to simulate choosing the 'green' set (index 1)
     with patch('builtins.input', return_value='1'):
         result = House(player, game).execute(house_card)
 
-        # Check if the house was added to the correct property set (Green)
-        assert house_card in player.properties["Green"]
+        # Check if the house was added to the correct property set (green)
+        assert house_card in player.properties["green"]
         assert house_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -135,15 +135,15 @@ def test_multiple_complete_sets(player_with_complete_set):
 def test_set_becomes_complete(player_with_no_complete_set):
     player, house_card, game = player_with_no_complete_set
 
-    # Complete the 'Green' set during the test
-    player.properties["Green"].append(properties.green3)
+    # Complete the 'green' set during the test
+    player.properties["green"].append(properties.green3)
 
-    # Mock the input to simulate choosing the 'Green' set
+    # Mock the input to simulate choosing the 'green' set
     with patch('builtins.input', return_value='0'):
         result = House(player, game).execute(house_card)
 
-        # Check if the house was added to the 'Green' set
-        assert house_card in player.properties["Green"]
+        # Check if the house was added to the 'green' set
+        assert house_card in player.properties["green"]
         assert house_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -184,11 +184,11 @@ def test_cancel_then_bank_house_card(player_with_no_complete_set):
 def test_add_house_to_each_eligible_set(player_with_complete_set):
     player, house_card, game = player_with_complete_set
     # Add multiple complete sets for eligibility
-    player.properties["Green"] = [properties.green1, properties.green2, properties.green3]
-    player.properties["Yellow"] = [properties.yellow1, properties.yellow2, properties.yellow3]
+    player.properties["green"] = [properties.green1, properties.green2, properties.green3]
+    player.properties["yellow"] = [properties.yellow1, properties.yellow2, properties.yellow3]
 
     # Test adding a house to each eligible set
-    for i, color in enumerate(["Red", "Green", "Yellow"]):
+    for i, color in enumerate(["red", "green", "yellow"]):
         with patch('builtins.input', return_value=str(i)):
             result = House(player, game).execute(house_card)
             

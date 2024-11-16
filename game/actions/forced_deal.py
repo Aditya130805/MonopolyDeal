@@ -5,14 +5,6 @@ from constants.properties import num_properties_needed_for_full_set
 
 class ForcedDeal(BaseAction):
 
-    def _is_complete_set(self, player, color):
-        required_properties = {
-            "Brown": 2, "Mint": 2, "Light Blue": 3, "Pink": 3, "Orange": 3,
-            "Red": 3, "Yellow": 3, "Green": 3, "Blue": 2, "Black": 4
-        }
-        required_count = required_properties.get(color, float('inf'))
-        return len(player.properties.get(color, [])) >= required_count
-
     def select_property_to_trade(self, player):
         available_properties = []
         for color, properties in player.properties.items():

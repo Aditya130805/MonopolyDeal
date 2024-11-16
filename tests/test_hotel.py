@@ -14,12 +14,12 @@ def game_setup():
 
 @pytest.fixture
 def player_with_complete_set(game_setup):
-    """Fixture to set up a player with a complete property set for 'Red'."""
+    """Fixture to set up a player with a complete property set for 'red'."""
     game = game_setup
     player = game.players[0]
     player.properties = {
-        "Red": [properties.red1, properties.red2, properties.red3],  # Complete set for 'Red'
-        "Blue": [properties.blue1]  # Incomplete set for 'Blue'
+        "red": [properties.red1, properties.red2, properties.red3],  # Complete set for 'red'
+        "blue": [properties.blue1]  # Incomplete set for 'blue'
     }
     hotel_card = ActionCard("Hotel", 4)  # Example House card
     player.hand.append(hotel_card)
@@ -31,8 +31,8 @@ def player_with_no_complete_set(game_setup):
     game = game_setup
     player = game.players[0]
     player.properties = {
-        "Blue": [properties.blue1],  # Incomplete set
-        "Green": [properties.green1, properties.green2]  # Incomplete set
+        "blue": [properties.blue1],  # Incomplete set
+        "green": [properties.green1, properties.green2]  # Incomplete set
     }
     hotel_card = ActionCard("Hotel", 4)
     player.hand.append(hotel_card)
@@ -42,15 +42,15 @@ def player_with_no_complete_set(game_setup):
 def test_add_hotel_to_complete_set_with_house(player_with_complete_set):
     player, hotel_card, game = player_with_complete_set
 
-    # Manually add a house to the 'Red' set to make it eligible for a hotel
-    player.properties["Red"].append(ActionCard("House", 3))
+    # Manually add a house to the 'red' set to make it eligible for a hotel
+    player.properties["red"].append(ActionCard("House", 3))
 
-    # Mock the input to simulate the player choosing to add the hotel to the 'Red' set
+    # Mock the input to simulate the player choosing to add the hotel to the 'red' set
     with patch('builtins.input', return_value='0'):
         result = Hotel(player, game).execute(hotel_card)
 
         # Check if the hotel was added to the correct property set
-        assert hotel_card in player.properties["Red"]
+        assert hotel_card in player.properties["red"]
         assert hotel_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -84,15 +84,15 @@ def test_cancel_hotel_with_no_complete_set(player_with_no_complete_set):
 def test_invalid_input_for_hotel_action(player_with_complete_set):
     player, hotel_card, game = player_with_complete_set
 
-    # Manually add a house to make the 'Red' set eligible for a hotel
-    player.properties["Red"].append(ActionCard("House", 3))
+    # Manually add a house to make the 'red' set eligible for a hotel
+    player.properties["red"].append(ActionCard("House", 3))
 
     # Mock the input to simulate invalid input followed by a valid choice
     with patch('builtins.input', side_effect=['invalid', '0']):
         result = Hotel(player, game).execute(hotel_card)
         
         # Check if the hotel was added to the correct property set after invalid input
-        assert hotel_card in player.properties["Red"]
+        assert hotel_card in player.properties["red"]
         assert hotel_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -100,9 +100,9 @@ def test_invalid_input_for_hotel_action(player_with_complete_set):
 def test_hotel_not_added_if_already_present_with_cancel_or_bank(player_with_complete_set):
     player, hotel_card, game = player_with_complete_set
 
-    # Add both a house and a hotel to make the 'Red' set ineligible for another hotel
-    player.properties["Red"].append(ActionCard("House", 3))
-    player.properties["Red"].append(ActionCard("Hotel", 4))
+    # Add both a house and a hotel to make the 'red' set ineligible for another hotel
+    player.properties["red"].append(ActionCard("House", 3))
+    player.properties["red"].append(ActionCard("Hotel", 4))
 
     # Test the `cancel` option
     with patch('builtins.input', return_value='cancel'):
@@ -126,16 +126,16 @@ def test_multiple_complete_sets_for_hotel(player_with_complete_set):
     player, hotel_card, game = player_with_complete_set
 
     # Add a house to both sets to make them eligible for a hotel
-    player.properties["Red"].append(ActionCard("House", 3))
-    player.properties["Green"] = [properties.green1, properties.green2, properties.green3]
-    player.properties["Green"].append(ActionCard("House", 3))
+    player.properties["red"].append(ActionCard("House", 3))
+    player.properties["green"] = [properties.green1, properties.green2, properties.green3]
+    player.properties["green"].append(ActionCard("House", 3))
 
-    # Mock the input to simulate choosing the 'Green' set (index 1)
+    # Mock the input to simulate choosing the 'green' set (index 1)
     with patch('builtins.input', return_value='1'):
         result = Hotel(player, game).execute(hotel_card)
 
         # Check if the hotel was added to the correct property set
-        assert hotel_card in player.properties["Green"]
+        assert hotel_card in player.properties["green"]
         assert hotel_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -143,15 +143,15 @@ def test_multiple_complete_sets_for_hotel(player_with_complete_set):
 def test_set_becomes_complete_for_hotel(player_with_no_complete_set):
     player, hotel_card, game = player_with_no_complete_set
 
-    # Complete the 'Green' set and add a house during the test
-    player.properties["Green"].extend([properties.green3, ActionCard("House", 3)])
+    # Complete the 'green' set and add a house during the test
+    player.properties["green"].extend([properties.green3, ActionCard("House", 3)])
 
-    # Mock the input to simulate choosing the 'Green' set
+    # Mock the input to simulate choosing the 'green' set
     with patch('builtins.input', return_value='0'):
         result = Hotel(player, game).execute(hotel_card)
 
-        # Check if the hotel was added to the 'Green' set
-        assert hotel_card in player.properties["Green"]
+        # Check if the hotel was added to the 'green' set
+        assert hotel_card in player.properties["green"]
         assert hotel_card not in player.hand
         assert result is True  # The action was successfully played
 
@@ -188,11 +188,11 @@ def test_cancel_then_bank_hotel_card(player_with_no_complete_set):
 def test_add_hotel_to_each_eligible_set(player_with_complete_set):
     player, hotel_card, game = player_with_complete_set
     # Add multiple complete sets with houses for eligibility
-    player.properties["Green"] = [properties.green1, properties.green2, properties.green3, ActionCard("House", 3)]
-    player.properties["Yellow"] = [properties.yellow1, properties.yellow2, properties.yellow3, ActionCard("House", 3)]
+    player.properties["green"] = [properties.green1, properties.green2, properties.green3, ActionCard("House", 3)]
+    player.properties["yellow"] = [properties.yellow1, properties.yellow2, properties.yellow3, ActionCard("House", 3)]
 
     # Test adding a hotel to each eligible set
-    for i, color in enumerate(["Green", "Yellow"]):
+    for i, color in enumerate(["green", "yellow"]):
         with patch('builtins.input', return_value=str(i)):
             result = Hotel(player, game).execute(hotel_card)
             assert hotel_card in player.properties[color]
