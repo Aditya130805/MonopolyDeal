@@ -6,6 +6,7 @@ from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
 from game.actions.deal_breaker import DealBreaker
 from game.actions.just_say_no import JustSayNo
+from game.actions.rent import Rent
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
 
@@ -63,13 +64,24 @@ class Player:
             print(f"{i}: {card.name} (Current color: {color})")
         
         try:
-            card_index = int(input("Select a wild card to change color: "))
+            card_index = str(input("Select a wild card to change color (or 'cancel' to cancel): "))
+            
+            if card_index.lower() == 'cancel':
+                print("Wild color change action canceled.")
+                return
+            
+            card_index = int(card_index)
+            
             old_color, selected_card = wild_cards[card_index]
 
             # Infinite loop until a valid color is chosen
             while True:
-                print(f"Choose a new color from: {selected_card.colors}")
-                new_color = input("Enter the color: ").strip()
+                print(f"Choose a new color from: {selected_card.colors} (or 'cancel' to cancel): ")
+                new_color = str(input("Enter the color: ").strip())
+                
+                if new_color.lower() == 'cancel':
+                    print("Wild color change action canceled.")
+                    return
 
                 if new_color not in selected_card.colors:
                     print("Invalid color choice. Try again.")
@@ -114,7 +126,6 @@ class Player:
         except (ValueError, IndexError):
             print("Invalid selection.")
 
-
     def use_action_card(self, card, game):
         if isinstance(card, ActionCard):
 
@@ -149,7 +160,7 @@ class Player:
             return False
 
         # Display the player's hand once
-        print(f"\n{self.name}'s hand: {[f'{i}: {card}' for i, card in enumerate(self.hand)]}")
+        print(f"\n{self.name}'s hand: {[f'{i}: {card}' for i, card in enumerate(self.hand)]}\n")
 
         while True:
             choice = input(f"{self.name}, enter the number of the card you want to play, 'wild' to change a wild card's color, or 'skip' to end your turn: ")
@@ -177,8 +188,9 @@ class Player:
                     if not self.use_action_card(card, game):
                         continue
                 elif isinstance(card, RentCard):
-                    # TODO: Implement Rent logic
-                    pass
+                    action = Rent(self, game)
+                    if not action.execute(card):
+                        continue
                 else:
                     print("Unhandled card type.")
                 break  # Exit the loop after a valid action
@@ -186,6 +198,179 @@ class Player:
                 print("Invalid input. Please enter a valid card number or 'skip'.")
 
         return True
+
+    def pay_to_player(self, amount, target_player):
+        """
+        Handles payment from the initiator (self) to the target_player. The player can pay using cards from their 
+        bank or properties, with options to restart the selection or finalize after reaching or exceeding the amount.
+        """
+        print(f"\n{self.name}, you need to pay ${amount} to {target_player.name}.")
+        
+        # Check if the player has nothing to pay from
+        if not self.bank and not any(self.properties[color] for color in self.properties):
+            print(f"{self.name} has nothing to pay with. Transaction completed.")
+            return  # Exit if there are no available cards to pay with
+
+        payment = []
+        total_payment = 0
+
+        # Store initial states of bank and properties for resetting
+        initial_bank = self.bank[:]
+        initial_properties = {color: cards[:] for color, cards in self.properties.items()}
+
+        def reset_payment():
+            """Resets payment selection by returning cards to their original locations."""
+            nonlocal payment, total_payment
+            # Restore the initial bank and properties states
+            self.bank = initial_bank[:]
+            self.properties = {color: cards[:] for color, cards in initial_properties.items()}
+            
+            # Clear the payment and total_payment
+            payment.clear()
+            total_payment = 0
+
+        while total_payment < amount or not payment:
+            print("\n--- Current Payment Selection ---")
+            for card in payment:
+                print(f"- {card.name} (${card.value})")
+            print(f"Total selected: ${total_payment} / ${amount}")
+
+            print("\n--- Available Cards for Payment ---")
+            print("Bank:")
+            for i, card in enumerate(self.bank):
+                print(f"  {i}. {card.name} (${card.value})")
+            if not self.bank:
+                print("  No cards available in your bank.")
+
+            print("\nProperties:")
+            for color, cards in self.properties.items():
+                print(f"  {color}: {[card.name for card in cards]}")
+            if not any(self.properties[color] for color in self.properties):
+                print("  No properties available for payment.")
+
+            # If there are no available cards to pay from, finalize the transaction
+            if not self.bank and not any(self.properties[color] for color in self.properties):
+                print(f"\n{self.name} has no more cards to pay with.")
+                print(f"{self.name} has paid ${total_payment} to {target_player.name}.")
+                return  # End the function here if no more cards are available for payment
+
+            print("\nChoose 'bank', 'property', or 'restart':")
+            choice = input("Where do you want to pay from? ").strip().lower()
+
+            if choice == 'restart':
+                print("\nRestarting payment selection...")
+                reset_payment()  # Reset the payment and total_payment
+                return self.pay_to_player(amount, target_player)  # Restart by calling the function again
+
+            elif choice == 'bank':
+                if not self.bank:
+                    print("\nYour bank has no cards to pay with. Please choose another option.")
+                    continue  # Prompt the user again without restarting the selection
+
+                print("\n--- Bank Cards ---")
+                for i, card in enumerate(self.bank):
+                    print(f"{i}. {card.name} (${card.value})")
+                
+                while True:
+                    print("Enter the number of the card to select or 'restart':")
+                    bank_choice = input().strip()
+
+                    if bank_choice == 'restart':
+                        print("\nRestarting payment selection...")
+                        reset_payment()  # Reset the payment and total_payment
+                        return self.pay_to_player(amount, target_player)  # Restart by calling the function again
+                
+                    try:
+                        bank_choice = int(bank_choice)
+                        if 0 <= bank_choice < len(self.bank):
+                            selected_card = self.bank.pop(bank_choice)
+                            payment.append(selected_card)
+                            total_payment += selected_card.value
+                            break
+                        else:
+                            print("\nInvalid selection. Try again.")
+                    except ValueError:
+                        print("\nInvalid input. Try again.")
+
+            elif choice == 'property':
+                if not any(self.properties[color] for color in self.properties):
+                    print("\nYou have no properties available for payment. Please choose another option.")
+                    continue  # Prompt the user again without restarting the selection
+
+                print("\n--- Properties ---")
+                for color, cards in self.properties.items():
+                    print(f"  {color}: {[card.name for card in cards]}")
+                while True:
+                    print("Enter the color of the property set or 'restart':")
+                    color_choice = input().strip().lower()
+
+                    if color_choice == 'restart':
+                        print("\nRestarting payment selection...")
+                        reset_payment()  # Reset the payment and total_payment
+                        return self.pay_to_player(amount, target_player)  # Restart by calling the function again
+
+                    if color_choice in self.properties and self.properties[color_choice]:
+                        print(f"\n--- {color_choice.title()} Properties ---")
+                        for i, card in enumerate(self.properties[color_choice]):
+                            print(f"{i}. {card.name} (${card.value})")
+                        print("Enter the number of the card to select or 'restart':")
+                        property_choice = input().strip()
+
+                        if property_choice == 'restart':
+                            print("\nRestarting payment selection...")
+                            reset_payment()  # Reset the payment and total_payment
+                            return self.pay_to_player(amount, target_player)  # Restart by calling the function again
+                        
+                        while True:
+                            try:
+                                property_choice = int(property_choice)
+                                if 0 <= property_choice < len(self.properties[color_choice]):
+                                    selected_card = self.properties[color_choice].pop(property_choice)
+                                    payment.append(selected_card)
+                                    total_payment += selected_card.value
+
+                                    # Check if the selected card is a House and there's a Hotel on the same property set
+                                    if isinstance(selected_card, ActionCard) and selected_card.name == "House":
+                                        for other_card in self.properties[color_choice]:
+                                            if isinstance(other_card, ActionCard) and other_card.name == "Hotel":
+                                                # Move the hotel to the bank
+                                                print(f"\nThe corresponding hotel from the {color_choice} set has been moved to the bank.")
+                                                self.bank.append(other_card)
+                                                self.properties[color_choice].remove(other_card)
+
+                                    break
+                                else:
+                                    print("\nInvalid selection. Try again.")
+                            except ValueError:
+                                print("\nInvalid input. Try again.")
+                        break
+                    else:
+                        print("\nInvalid color or no cards in this set. Try again.")
+            else:
+                print("\nInvalid choice. Please select 'bank', 'property', or 'restart'.")
+
+        # Finalize or restart payment
+        print("\n--- Final Payment Selection ---")
+        for card in payment:
+            print(f"- {card.name} (${card.value})")
+        print(f"Total payment: ${total_payment} (required: ${amount})\n")
+        confirm = input("Confirm this payment? (y/n, or type 'restart' to reset selection): ").strip().lower()
+
+        if confirm == 'n' or confirm == 'restart':
+            print("\nRestarting payment selection...")
+            reset_payment()  # Reset the payment and total_payment
+            return self.pay_to_player(amount, target_player)  # Restart by calling the function again
+
+        # Finalize payment
+        print("\nPayment finalized. Transferring cards to the target player.")
+        for card in payment:
+            if isinstance(card, PropertyCard):
+                if card.current_color not in target_player.properties:
+                    target_player.properties[card.current_color] = []
+                target_player.properties[card.current_color].append(card)
+            else:
+                target_player.bank.append(card)
+        print(f"{self.name} has paid ${total_payment} to {target_player.name}.")
 
     def has_won(self):
         # Win condition: 3 full property sets

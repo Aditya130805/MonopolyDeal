@@ -24,9 +24,10 @@ class ActionCard(Card):
         super().__init__(name, "Action", value)
 
 class RentCard(Card):
-    def __init__(self, color, value):
+    def __init__(self, color, value, is_wild=False):
         super().__init__(f"Rent ({color})", "Rent", value)
-        self.color = color
+        self.colors = color if isinstance(color, list) else [color]
+        self.is_wild = is_wild
 
 class MoneyCard(Card):
     def __init__(self, value):

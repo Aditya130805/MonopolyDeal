@@ -67,12 +67,12 @@ def create_deck():
     
     # Add Rent Cards
     rents = [
-        *[RentCard("Brown/Mint/Light Blue/Pink/Orange/Red/Yellow/Green/Blue/Black", 3) for _ in range(3)],
-        *[RentCard("Blue/Green", 1) for _ in range(2)],
-        *[RentCard("Mint/Black", 1) for _ in range(2)],
-        *[RentCard("Red/Yellow", 1) for _ in range(2)],
-        *[RentCard("Orange/Pink", 1) for _ in range(2)],
-        *[RentCard("Brown/Light Blue", 1) for _ in range(2)]
+        *[RentCard(['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], 3, True) for _ in range(3)],
+        *[RentCard(['blue', 'green'], 1) for _ in range(2)],
+        *[RentCard(['mint', 'black'], 1) for _ in range(2)],
+        *[RentCard(['red', 'yellow'], 1) for _ in range(2)],
+        *[RentCard(['orange', 'pink'], 1) for _ in range(2)],
+        *[RentCard(['brown', 'light blue'], 1) for _ in range(2)]
     ]
     
     # Add Action Cards

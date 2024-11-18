@@ -5,6 +5,11 @@ num_properties_needed_for_full_set = {
     "red": 3, "yellow": 3, "green": 3, "blue": 2, "black": 4
 }
 
+rent_values = {
+    "brown": [1, 2], "mint": [1, 2], "light blue": [1, 2, 3], "pink": [1, 2, 4], "orange": [1, 3, 5], 
+    "red": [2, 3, 6], "yellow": [2, 4, 6], "green": [2, 4, 7], "blue": [3, 8], "black": [1, 2, 3, 4]
+}
+
 # Brown Properties
 brown1 = PropertyCard("Mediterranean Avenue", "brown", 1)
 brown2 = PropertyCard("Baltic Avenue", "brown", 1)

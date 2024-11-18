@@ -1,6 +1,7 @@
 from game.deck import create_deck
 from game.player import Player
-
+from colorama import init, Fore
+init()  # Initialize colorama to enable cross-platform color support
 
 class Game:
     def __init__(self, player_names):
@@ -17,10 +18,20 @@ class Game:
         for player in self.players:
             player.draw_cards(self.deck, 5)
         print("Done\n")
-
+        
+    def print_colored(self, player_number, text):
+        if player_number == 0:
+            print(f"{Fore.BLUE}{text}{Fore.RESET}")
+        elif player_number == 1:
+            print(f"{Fore.GREEN}{text}{Fore.RESET}")
+        elif player_number == 2:
+            print(f"{Fore.RED}{text}{Fore.RESET}")
+        else:
+            print(text)  # No color for other players
+    
     def play_turn(self):
         current_player = self.players[self.turn_index]
-        print(f"{current_player.name}'s turn –––––––––––––––––>")
+        self.print_colored(self.turn_index, f"\n{current_player.name}'s turn –––––––––––––––––>")
 
         # Draw cards at the start of the turn
         if len(current_player.hand) == 0:
@@ -31,6 +42,7 @@ class Game:
         # Let the player take up to 3 actions
         actions = 0
         while actions < 3:
+            self.print_colored(self.turn_index, f"\n--------------\nTurn {actions + 1}\n--------------")
             if not current_player.take_action(self):
                 break
             actions += 1
@@ -38,7 +50,7 @@ class Game:
         # Check if the player has won by collecting 3 full property sets
         if current_player.has_won():
             self.winner = current_player
-            print(f"{current_player.name} has won the game!")
+            self.print_colored(self.turn_index, f"\n{current_player.name} has won the game!\n")
             return
 
         # Move to the next player's turn
