@@ -12,6 +12,8 @@ class Hotel(BaseAction):
         """
         eligible_sets = []
         for color in self.player.properties:
+            if color == 'black' or color == 'mint':
+                continue
             # Check if the set is complete and doesn't already contain a "House" ActionCard
             num_property_cards = common_functions.count_fixed_property_cards(self.player, color) + common_functions.count_wild_property_cards(self.player, color)
             num_complete_sets = num_property_cards // num_properties_needed_for_full_set[color]

@@ -198,3 +198,37 @@ def test_add_house_to_each_eligible_set(player_with_complete_set):
             # Remove the house card to reset for the next iteration
             player.properties[color].remove(house_card)
             player.hand.append(house_card)  # Return card to hand for next loop
+
+# Test 11: Test adding a house to a black property set
+def test_add_house_to_black_set(player_with_complete_set):
+    player, house_card, game = player_with_complete_set
+    
+    # Add a complete black set to the player’s properties
+    player.properties = {}
+    player.properties["black"] = [properties.black1, properties.black2, properties.black3, properties.black4]
+
+    # 'bank' since the black set should not show up in eligible sets
+    with patch('builtins.input', return_value='bank'):
+        result = House(player, game).execute(house_card)
+
+        # Check if the house was added to the black property set
+        assert house_card not in player.properties["black"]
+        assert house_card in player.bank
+        assert result is True
+
+# Test 12: Test adding a house to a mint property set
+def test_add_house_to_mint_set(player_with_complete_set):
+    player, house_card, game = player_with_complete_set
+    
+    # Add a complete mint set to the player’s properties
+    player.properties = {}
+    player.properties["mint"] = [properties.mint1, properties.mint2]
+
+    # 'bank' since the mint set should not show up in eligible sets
+    with patch('builtins.input', return_value='bank'):
+        result = House(player, game).execute(house_card)
+
+        # Check if the house was added to the mint property set
+        assert house_card not in player.properties["mint"]
+        assert house_card in player.bank
+        assert result is True

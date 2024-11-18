@@ -251,6 +251,15 @@ class Player:
             # If there are no available cards to pay from, finalize the transaction
             if not self.bank and not any(self.properties[color] for color in self.properties):
                 print(f"\n{self.name} has no more cards to pay with.")
+                # Finalize payment
+                print("\nPayment finalized. Transferring cards to the target player.")
+                for card in payment:
+                    if isinstance(card, PropertyCard):
+                        if card.current_color not in target_player.properties:
+                            target_player.properties[card.current_color] = []
+                        target_player.properties[card.current_color].append(card)
+                    else:
+                        target_player.bank.append(card)
                 print(f"{self.name} has paid ${total_payment} to {target_player.name}.")
                 return  # End the function here if no more cards are available for payment
 
