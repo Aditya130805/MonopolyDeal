@@ -4,12 +4,12 @@
 
 - Charted out logic for player.py, taking care of their hand, properties, and bank
 - Added wild property card functionality
-- 8 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, and Debt Collector
+- 9 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, Debt Collector, It's Your Birthday
 - Implemented test cases for all actions created
 
 ### Next steps:
 
-- Implement more actions: Just Say No - within the non-implemented actions, Double the Rent, and It's My Birthday
+- Implement more actions: Just Say No - within the non-implemented actions, Double the Rent
 - Implement logic to ensure that player's hands cannot contain more than 7 cards at the end of their turn
 
 ### Deviations from official Monopoly Deal rules:
