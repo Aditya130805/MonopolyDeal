@@ -4,6 +4,7 @@ from constants.properties import rent_values, num_properties_needed_for_full_set
 
 class Rent(BaseAction):
     def select_target_player(self):
+        """Prompt the user to select a target player to charge rent."""
         print("\nPlayers available to charge rent:")
         for i, player in enumerate(self.game.players):
             if player != self.player:

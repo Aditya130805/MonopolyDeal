@@ -6,6 +6,7 @@ from game.actions.sly_deal import SlyDeal
 from game.actions.forced_deal import ForcedDeal
 from game.actions.deal_breaker import DealBreaker
 from game.actions.just_say_no import JustSayNo
+from game.actions.debt_collector import DebtCollector
 from game.actions.rent import Rent
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
@@ -131,7 +132,6 @@ class Player:
 
             # Just Say No - within the non-implemented actions
             # Double the Rent
-            # Debt Collector
             # It's My Birthday
 
             action_map = {
@@ -141,7 +141,8 @@ class Player:
                 "Sly Deal": SlyDeal,
                 "Forced Deal": ForcedDeal,
                 "Deal Breaker": DealBreaker,
-                "Just Say No": JustSayNo
+                "Just Say No": JustSayNo,
+                "Debt Collector": DebtCollector
                 # Add other actions as they are created
             }
 
