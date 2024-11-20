@@ -2,7 +2,7 @@
 
 ### Updates:
 
-#### **GAMEPLAY IMPLEMENTATION COMPLETE!**
+#### **GAMEPLAY LOGIC COMPLETE!**
 
 - Charted out logic for player.py, taking care of their hand, properties, and bank
 - Added wild property card functionality
@@ -11,6 +11,7 @@
 
 ### Next steps:
 
+- Networking
 - Graphical User Interface
 
 ### Deviations from official Monopoly Deal rules:
