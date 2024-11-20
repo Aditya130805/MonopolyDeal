@@ -11,6 +11,7 @@ from game.actions.debt_collector import DebtCollector
 from game.actions.its_your_birthday import ItsYourBirthday
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
+from constants import properties
 
 class Player:
     def __init__(self, name):
@@ -209,7 +210,7 @@ class Player:
         print(f"\n{self.name}, you need to pay ${amount} to {target_player.name}.")
         
         # Check if the player has nothing to pay from
-        if not self.bank and not any(self.properties[color] for color in self.properties):
+        if not self.bank and (not any(self.properties[color] for color in self.properties) or all(prop.name in [properties.wild_multicolor1.name, properties.wild_multicolor2.name] for color in self.properties for prop in self.properties[color])):
             print(f"{self.name} has nothing to pay with. Transaction completed.")
             return  # Exit if there are no available cards to pay with
 
@@ -251,7 +252,7 @@ class Player:
                 print("  No properties available for payment.")
 
             # If there are no available cards to pay from, finalize the transaction
-            if not self.bank and not any(self.properties[color] for color in self.properties):
+            if not self.bank and (not any(self.properties[color] for color in self.properties) or all(prop.name in [properties.wild_multicolor1.name, properties.wild_multicolor2.name] for color in self.properties for prop in self.properties[color])):
                 print(f"\n{self.name} has no more cards to pay with.")
                 # Finalize payment
                 print("\nPayment finalized. Transferring cards to the target player.")

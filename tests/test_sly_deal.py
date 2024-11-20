@@ -203,24 +203,3 @@ def test_sly_deal_blocked_with_three_just_say_no(players_with_properties, player
         assert properties.blue1 in player_2.properties["blue"]  # Player 2's property remains unblocked
         if "blue" in player_1.properties:
             assert properties.blue1 not in player_1.properties["blue"]
-
-""" TODO: WORRY ABOUT THIS TEST AFTER IMPLEMENTING WILD CARD LOGIC CORRECTLY
-# Test 9: Attempt to steal a property with a Wild Card
-def test_sly_deal_with_wild_card(players_with_properties, player_with_sly_deal):
-    game, player_1, player_2 = players_with_properties
-    player, sly_deal_card, _ = player_with_sly_deal
-
-    # Add a Wild Card to Player 1's properties
-    wild_card = properties.wild_multicolor1
-    player_1.properties["Any"] = [wild_card]
-
-    # Mock inputs to simulate stealing the wild card
-    with patch('builtins.input', side_effect=['play', '0']):
-        action = SlyDeal(player, game)
-        result = action.execute(sly_deal_card)
-
-        # Ensure the wild card was successfully stolen
-        assert result is True
-        assert wild_card not in player_1.properties["Any"]
-        assert wild_card in player_2.properties["Any"]
-"""

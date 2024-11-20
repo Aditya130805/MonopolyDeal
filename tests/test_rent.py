@@ -20,6 +20,10 @@ def player_with_rent(game_setup):
     rent_card = RentCard(["red", "yellow"], 1)
     player = game.players[0]
     player.hand.append(rent_card)
+    # Remove any "Just Say No" cards that might exist in the player's hand
+    player.hand = [card for card in player.hand if card.name != "Just Say No"]
+    # Remove any "Double The Rent" cards that might exist in the player's hand
+    player.hand = [card for card in player.hand if card.name != "Double The Rent"]
     return player, rent_card, game
 
 # Fixtures for setting up properties
@@ -36,6 +40,9 @@ def players_with_properties(game_setup):
     # Remove any "Just Say No" cards that might exist in the players' hands
     player_1.hand = [card for card in player_1.hand if card.name != "Just Say No"]
     player_2.hand = [card for card in player_2.hand if card.name != "Just Say No"]
+    # Remove any "Double The Rent" cards that might exist in the players' hands
+    player_1.hand = [card for card in player_1.hand if card.name != "Double The Rent"]
+    player_2.hand = [card for card in player_2.hand if card.name != "Double The Rent"]
 
     return game, player_1, player_2
 
@@ -197,14 +204,14 @@ def test_rent_with_money_in_bank(players_with_properties, game_setup):
         action = Rent(player_1, game)
         result = action.execute(rent_card)
 
-        # Check that the rent was successfully charged
-        assert result is True
-        # Verify that rent is charged to all players
-        assert 'blue' in player_1.properties
-        if 'blue' in player_2.properties:
-            assert len(player_2.properties['blue']) == 0
-        assert any(isinstance(card, MoneyCard) and card.value == 5 for card in player_1.bank)
-        assert not any(isinstance(card, MoneyCard) and card.value == 5 for card in new_player.bank)
+    # Check that the rent was successfully charged
+    assert result is True
+    # Verify that rent is charged to all players
+    assert 'blue' in player_1.properties
+    if 'blue' in player_2.properties:
+        assert len(player_2.properties['blue']) == 0
+    assert any(isinstance(card, MoneyCard) and card.value == 5 for card in player_1.bank)
+    assert not any(isinstance(card, MoneyCard) and card.value == 5 for card in new_player.bank)
 
 # Test 9: Rent action with insufficient funds (property payment)
 def test_rent_insufficient_funds_with_property(players_with_properties, player_with_rent, capsys):
@@ -224,13 +231,13 @@ def test_rent_insufficient_funds_with_property(players_with_properties, player_w
         assert len(player_2.properties['blue']) == 0
     assert 'blue' in player_1.properties
 
-# Test 10: Rent action with insufficient funds (bank payment)
+# Test 10: Rent action with insufficient funds due to multicolor wild property (bank payment)
 def test_rent_insufficient_funds_with_bank(players_with_properties, player_with_rent, capsys):
     game, player_1, player_2 = players_with_properties
     player, rent_card, _ = player_with_rent
     
     player.properties["red"] = [properties.red1, properties.red2, properties.red3]
-    player_2.properties = {}
+    player_2.properties = {properties.wild_multicolor1.current_color: [properties.wild_multicolor1]}
     player_2.bank.append(MoneyCard(5))
     
     # Mock input for Rent action
@@ -242,3 +249,114 @@ def test_rent_insufficient_funds_with_bank(players_with_properties, player_with_
     assert result is True
     assert any(isinstance(card, MoneyCard) and card.value == 5 for card in player_1.bank)
     assert not any(isinstance(card, MoneyCard) and card.value == 5 for card in player_2.bank)
+
+# Test 11: Rent action against a player that has nothing to pay
+def test_rent_against_player_with_nothing_to_pay(players_with_properties, player_with_rent):
+    game, player_1, player_2 = players_with_properties
+    player, rent_card, _ = player_with_rent
+    
+    player_2.bank = []
+    player_2.properties = {}
+    
+    # Mock Input for Rent execution
+    with patch('builtins.input', side_effect=['play', '0']):
+        action = Rent(player, game)
+        result = action.execute(rent_card)
+    
+    assert result is True
+
+# Test 12: Rent action against a player with a multicolor wild card only
+def test_rent_against_player_with_multicolor_wild_card_only(players_with_properties, player_with_rent):
+    game, player_1, player_2 = players_with_properties
+    player, rent_card, _ = player_with_rent
+    
+    player_2.bank = []
+    player_2.properties = {properties.wild_multicolor1.current_color: [properties.wild_multicolor1]}
+    
+    # Mock Input for Rent execution
+    with patch('builtins.input', side_effect=['play', '0']):
+        action = Rent(player, game)
+        result = action.execute(rent_card)
+    
+    assert result is True
+
+# Test 13: Rent action with "Double The Rent" card
+def test_rent_with_double_the_rent(players_with_properties, player_with_rent):
+    game, player_1, player_2 = players_with_properties
+    player, rent_card, _ = player_with_rent
+
+    # Add "Double The Rent" card to Player 1's hand
+    double_rent_card = ActionCard("Double The Rent", 1)
+    player_1.hand.append(double_rent_card)
+
+    player_2.bank = [MoneyCard(2)]
+
+    # Mock input for Rent execution
+    with patch('builtins.input', side_effect=['play', 'y', '0', 'property', 'blue', '0', 'y', 'bank', '0', 'y']):
+        action = Rent(player, game)
+        result = action.execute(rent_card)
+
+    # Ensure the Rent card is charged with double the rent
+    assert result is True
+    assert not player_2.bank
+    assert player_1.bank
+    if 'blue' in player_2.properties:
+        assert len(player_2.properties['blue']) == 0
+    assert 'blue' in player_1.properties
+    # Ensure "Double The Rent" card is discarded
+    assert rent_card not in player_1.hand
+    assert double_rent_card not in player_1.hand
+
+# Test 14: Double Rent should not be applied after actions used up
+def test_rent_with_double_the_rent_after_all_actions(players_with_properties, player_with_rent):
+    game, player_1, player_2 = players_with_properties
+    player, rent_card, _ = player_with_rent
+
+    # Add "Double The Rent" card to Player 1's hand
+    double_rent_card = ActionCard("Double The Rent", 4)
+    player_1.hand.append(double_rent_card)
+    player_2.bank = [MoneyCard(2)]
+
+    # Mock input to simulate using all actions (let's assume they use 2 actions already)
+    game.actions = 2  # All actions used
+    with patch('builtins.input', side_effect=['play', '0', 'property', 'blue', '0', 'y', 'bank', '0', 'y']):
+        action = Rent(player, game)
+        result = action.execute(rent_card)
+
+    # Ensure the Rent action is executed without doubling rent since all actions are used
+    assert result is True
+    assert player_2.bank
+    assert not player_1.bank
+    if 'blue' in player_2.properties:
+        assert len(player_2.properties['blue']) == 0
+    assert 'blue' in player_1.properties
+    assert rent_card not in player_1.hand
+    # Ensure "Double The Rent" card is still in hand
+    assert double_rent_card in player_1.hand
+
+# Test 15: "Double The Rent" card cancelled by player
+def test_rent_with_double_the_rent_cancelled(players_with_properties, player_with_rent):
+    game, player_1, player_2 = players_with_properties
+    player, rent_card, _ = player_with_rent
+
+    # Add "Double The Rent" card to Player 1's hand
+    double_rent_card = ActionCard("Double The Rent", 4)
+    player_1.hand.append(double_rent_card)
+    player_2.bank = [MoneyCard(2)]
+
+    # Mock input to simulate using all actions (let's assume they use 2 actions already)
+    game.actions = 2  # All actions used
+    with patch('builtins.input', side_effect=['play', 'n', '0', 'property', 'blue', '0', 'y', 'bank', '0', 'y']):
+        action = Rent(player, game)
+        result = action.execute(rent_card)
+
+    # Ensure the Rent action is executed without doubling rent since all actions are used
+    assert result is True
+    assert player_2.bank
+    assert not player_1.bank
+    if 'blue' in player_2.properties:
+        assert len(player_2.properties['blue']) == 0
+    assert 'blue' in player_1.properties
+    assert rent_card not in player_1.hand
+    # Ensure "Double The Rent" card is still in hand
+    assert double_rent_card in player_1.hand

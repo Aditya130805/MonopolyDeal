@@ -115,27 +115,6 @@ def test_bank_forced_deal(player_with_forced_deal):
         assert forced_deal_card in player.bank
         assert forced_deal_card not in player.hand
 
-""" TODO: WORRY ABOUT THIS TEST AFTER IMPLEMENTING WILD CARD LOGIC CORRECTLY
-# Test 6: Forced Deal with Multi-color Wild Cards
-def test_forced_deal_with_wild_card(players_with_properties, player_with_forced_deal):
-    game, player_1, player_2 = players_with_properties
-    player, forced_deal_card, _ = player_with_forced_deal
-
-    # Add a multi-color wild card to player 1's properties
-    wild_card = properties.wild_multicolor1
-    player_1.properties["Any"] = [wild_card]
-
-    # Mock inputs to execute Forced Deal where wild card is chosen
-    with patch('builtins.input', side_effect=['play', '0', '0']):
-        action = ForcedDeal(player, game)
-        result = action.execute(forced_deal_card)
-
-        # Validate that the wild card was successfully traded
-        assert result is True
-        assert wild_card not in player_1.properties["Any"]
-        assert wild_card in player_2.properties["Any"]
-"""
-
 # Test 7: Forced Deal When Only Complete Sets Are Available
 def test_forced_deal_only_complete_sets(players_with_properties, player_with_forced_deal, capsys):
     game, player_1, player_2 = players_with_properties

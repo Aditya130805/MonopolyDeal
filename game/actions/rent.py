@@ -60,7 +60,7 @@ class Rent(BaseAction):
                 print(f"{target_player.name} has no 'Just Say No' card. Rent Card is not blocked.")
                 return False  # No 'Just Say No' to block
     
-    def charge_rent(self, rent_card, target_player=None):
+    def charge_rent(self, rent_card, target_player=None, double_rent=False):
         """
         Charge rent to one or all players based on the RentCard used. 
         Only charge rent on properties matching the RentCard's colors.
@@ -100,6 +100,11 @@ class Rent(BaseAction):
             rent_amount += 3
         if any(isinstance(card, ActionCard) and card.name == "Hotel" for card in properties_to_charge[selected_color]):
             rent_amount += 4
+        
+        # Double rent if a double rent card is played
+        if double_rent:
+            self.game.actions += 1  # Count the Double The Rent as an action
+            rent_amount *= 2
 
         if isinstance(rent_card, RentCard) and rent_card.is_wild:
             if not target_player:
@@ -130,13 +135,34 @@ class Rent(BaseAction):
 
             if choice == 'play':
                 print(f"{self.player.name} plays Rent card!")
+                
+                # Check if the player has a Double The Rent card
+                double_rent = False
+                double_rent_card = next((c for c in self.player.hand if isinstance(c, ActionCard) and c.name == "Double The Rent"), None)
+                if double_rent_card and self.game.actions <= 1:
+                    while True:
+                        double_rent_choice = input(f"{self.player.name}, do you want to use a Double The Rent card? (y/n): ").strip().lower()
+                        if double_rent_choice == 'y':
+                            print(f"{self.player.name} plays Double The Rent card!")
+                            double_rent = True
+                            self.game.discard_card(double_rent_card)
+                            self.player.hand.remove(double_rent_card)
+                            break
+                        elif double_rent_choice == 'n':
+                            print(f"{self.player.name} chose not to use the Double The Rent card.")
+                            break
+                        else:
+                            print("Invalid choice. Please type 'y' or 'n'.")
+                elif double_rent_card:
+                    print(f"{self.player.name} cannot play Double The Rent because they have used all 3 actions this turn.")
+                
                 target_player = None
                 if isinstance(card, RentCard) and card.is_wild:
                     target_player = self.select_target_player()
                     if not target_player:
                         print("No target player selected. Rent action cancelled.")
                         return False
-                if not self.charge_rent(card, target_player=target_player):
+                if not self.charge_rent(card, target_player=target_player, double_rent=double_rent):
                     return False
                 
                 self.game.discard_card(card)

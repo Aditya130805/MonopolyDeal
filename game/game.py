@@ -10,6 +10,7 @@ class Game:
         self.players = [Player(name) for name in player_names]
         self.turn_index = 0
         self.winner = None
+        self.actions = 0
         self.start_game()
 
     def start_game(self):
@@ -40,12 +41,12 @@ class Game:
             current_player.draw_cards(self.deck, 2)
 
         # Let the player take up to 3 actions
-        actions = 0
-        while actions < 3:
-            self.print_colored(self.turn_index, f"\n--------------\nTurn {actions + 1}\n--------------")
+        self.actions = 0
+        while self.actions < 3:
+            self.print_colored(self.turn_index, f"\n--------------\nTurn {self.actions + 1}\n--------------")
             if not current_player.take_action(self):
                 break
-            actions += 1
+            self.actions += 1
 
         # Check if the player has won by collecting 3 full property sets
         if current_player.has_won():
