@@ -3,6 +3,7 @@ from game.card import PropertyCard, ActionCard
 from game.actions import common_functions
 from constants.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
+from game.actions.just_say_no import JustSayNo
 
 class DealBreaker(BaseAction):
     def select_cards_from_extra(self, target_properties, num_required):
@@ -103,40 +104,6 @@ class DealBreaker(BaseAction):
             except (ValueError, IndexError):
                 print("Invalid choice. Please select a valid set.")
 
-    def attempt_block_with_just_say_no(self, initiator, target_player):
-        """Allows players to counter each other's 'Just Say No' cards until one side runs out or chooses not to play."""
-        while True:
-            # Check if the target player has a "Just Say No" card
-            jsn_card = next((card for card in target_player.hand if card.name == "Just Say No"), None)
-            if jsn_card:
-                print(f"\n{target_player.name} has a 'Just Say No' card!")
-                choice = input(f"{target_player.name}, do you want to play 'Just Say No' to block the Deal Breaker? (y/n): ").strip().lower()
-                if choice == 'y':
-                    print(f"{target_player.name} plays 'Just Say No' to block the Deal Breaker.")
-                    target_player.hand.remove(jsn_card)
-
-                    # Now check if the initiator has a "Just Say No" to counter
-                    counter_jsn_card = next((card for card in initiator.hand if card.name == "Just Say No"), None)
-                    if counter_jsn_card:
-                        counter_choice = input(f"{initiator.name}, do you want to counter with another 'Just Say No'? (y/n): ").strip().lower()
-                        if counter_choice == 'y':
-                            print(f"{initiator.name} counters with 'Just Say No'.")
-                            initiator.hand.remove(counter_jsn_card)
-                            # Switch roles and continue the loop for another potential counter
-                            initiator, target_player = target_player, initiator
-                        else:
-                            print(f"{initiator.name} chose not to counter. Deal Breaker is blocked.")
-                            return True  # Final block
-                    else:
-                        print(f"{initiator.name} has no 'Just Say No' to counter. Deal Breaker is blocked.")
-                        return True  # Blocked without counter
-                else:
-                    print(f"{target_player.name} chose not to block the Deal Breaker. Deal Breaker is not blocked.")
-                    return False  # No block attempt
-            else:
-                print(f"{target_player.name} has no 'Just Say No' card. Deal Breaker is not blocked.")
-                return False  # No 'Just Say No' to block
-
     def execute(self, card):
         while True:
             choice = input(f"{self.player.name}, do you want to play the 'Deal Breaker' card, put it in the bank, or cancel it? (play/bank/cancel): ").strip().lower()
@@ -153,7 +120,7 @@ class DealBreaker(BaseAction):
                 target_player, target_color, target_properties = target_set
 
                 # Step 2: Allow the target player to block the action with 'Just Say No'
-                if self.attempt_block_with_just_say_no(self.player, target_player):
+                if JustSayNo.attempt_block_with_just_say_no(self.player, target_player, 'Deal Breaker'):
                     print(f"{self.player.name}'s Deal Breaker was ultimately blocked by {target_player.name}'s 'Just Say No'.")
                     self.game.discard_card(card)
                     self.player.hand.remove(card)
