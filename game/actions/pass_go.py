@@ -7,6 +7,11 @@ class PassGo(BaseAction):
             choice = input(f"{self.player.name}, do you want to play the 'Pass Go' card, put it in the bank, or cancel it? (play/bank/cancel): ").strip().lower()
 
             if choice == "play":
+                actions_remaining_after = 3 - self.game.actions - 1
+                future_hand_length = len(self.player.hand) + 2 - 1
+                if future_hand_length > 7 + actions_remaining_after:
+                    print("Playing Pass Go would result in exceeding the maximum number of cards allowed in hand at the end of the turn. Pass Go cannot be played.")
+                    return False
                 if len(self.game.deck) < 2:
                     print("Not enough cards in the deck to draw 2 cards. Pass Go cannot be played.")
                     return False  # Return False as the card cannot be played

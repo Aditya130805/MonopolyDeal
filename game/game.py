@@ -42,10 +42,14 @@ class Game:
 
         # Let the player take up to 3 actions
         self.actions = 0
-        while self.actions < 3:
+        while len(current_player.hand) > 7 or self.actions < 3:
             self.print_colored(self.turn_index, f"\n--------------\nTurn {self.actions + 1}\n--------------")
             if not current_player.take_action(self):
-                break
+                if len(current_player.hand) <= 7:
+                    break
+                else:
+                    print(f"You currently have {len(current_player.hand)} cards in hand. To comply with the maximum limit of 7 cards, you must play at least {len(current_player.hand) - 7} more action(s).")  # Make player play forcefully
+                    continue
             self.actions += 1
 
         # Check if the player has won by collecting 3 full property sets

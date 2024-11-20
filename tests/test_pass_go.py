@@ -5,6 +5,7 @@ from game.card import ActionCard
 from game.player import Player
 from game.deck import create_deck
 from game.game import Game
+from constants import properties
 
 @pytest.fixture
 def game_setup():
@@ -130,3 +131,25 @@ def test_only_pass_go_in_hand(player_with_pass_go):
         # Check if two cards are drawn after playing the "Pass Go" card
         assert len(player.hand) == 2  # The hand should contain the 2 newly drawn cards
         assert result is True  # The action was successfully played
+
+# Test 7: Test exceeding maximum number of cards in hand limit
+def test_exceed_hand_limit_after_pass_go(player_with_pass_go):
+    player, pass_go_card, game = player_with_pass_go
+    
+    game.actions = 1
+    player.hand = [properties.red1, properties.red2, properties.red3, properties.yellow1, properties.yellow2, properties.yellow3, properties.blue1, pass_go_card]
+    
+    # Mock the input to simulate the player choosing "play" when about to exceed
+    with patch('builtins.input', return_value='play'):
+        result = PassGo(player, game).execute(pass_go_card)
+    
+        assert result is False
+
+    game.actions = 2
+    player.hand = [properties.red1, properties.red2, properties.red3, properties.yellow1, properties.yellow2, properties.yellow3, pass_go_card]
+    
+    # Mock the input to simulate the player choosing "play" when about to exceed
+    with patch('builtins.input', return_value='play'):
+        result = PassGo(player, game).execute(pass_go_card)
+    
+        assert result is False

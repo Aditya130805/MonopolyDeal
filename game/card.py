@@ -3,7 +3,7 @@ class Card:
         self.name = name
         self.card_type = card_type
         self.value = value
-   
+
     def __str__(self):
         return self.name
 
