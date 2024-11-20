@@ -103,6 +103,16 @@ class Rent(BaseAction):
             if choice == 'play':
                 print(f"{self.player.name} plays Rent card!")
                 
+                # Filter properties based on the RentCard's colors
+                properties_to_charge = {}
+                for color in card.colors:
+                    if color in self.player.properties and any(isinstance(prop, PropertyCard) for prop in self.player.properties[color]):
+                        properties_to_charge[color] = self.player.properties[color]
+
+                if not properties_to_charge:
+                    print(f"{self.player.name} has no properties matching the Rent card colors to charge rent on.")
+                    return False
+                
                 # Check if the player has a Double The Rent card
                 double_rent = False
                 double_rent_card = next((c for c in self.player.hand if isinstance(c, ActionCard) and c.name == "Double The Rent"), None)
