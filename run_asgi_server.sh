@@ -1,2 +1,1 @@
-cd monopolydeal
-daphne monopolydeal.asgi:application
+daphne monopolydeal.monopolydeal.asgi:application

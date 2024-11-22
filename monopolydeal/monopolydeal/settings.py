@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f=kyuwceo#2n)m-j5_+=8y*5_4lb6o6v2acvk6vk$28d7f2z=@'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -65,7 +66,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'monopolydeal.urls'
+ROOT_URLCONF = 'monopolydeal.monopolydeal.urls'
 
 TEMPLATES = [
     {
@@ -85,7 +86,7 @@ TEMPLATES = [
 
 # Replace the WSGI (Web Server Gateway Interface) application with the ASGI (Asynchronous Server Gateway Interface) application
 # WSGI_APPLICATION = 'monopolydeal.wsgi.application'
-ASGI_APPLICATION = 'monopolydeal.asgi.application'
+ASGI_APPLICATION = 'monopolydeal.monopolydeal.asgi.application'
 
 
 # Database
