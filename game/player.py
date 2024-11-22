@@ -20,6 +20,14 @@ class Player:
         self.bank = []
         self.properties = {}
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "hand": [str(card) for card in self.hand],
+            "properties": {color: [str(card) for card in cards] for color, cards in self.properties.items()},
+            "bank": self.bank
+        }
+
     def draw_cards(self, deck, num=2):
         drawn_cards = []
         for _ in range(num):

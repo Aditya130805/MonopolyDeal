@@ -12,6 +12,15 @@ class Game:
         self.winner = None
         self.actions = 0
         self.start_game()
+        
+    def to_dict(self):
+        return {
+            "deck_count": len(self.deck),
+            "discard_pile_count": len(self.discard_pile),
+            "players": [player.to_dict() for player in self.players],
+            "current_turn": self.players[self.turn_index].name,
+            "winner": self.winner.name if self.winner else None
+        }
 
     def start_game(self):
         # Distribute 5 cards to each player
@@ -31,6 +40,7 @@ class Game:
             print(text)  # No color for other players
     
     def play_turn(self):
+        """Plays a single turn for the current player."""
         current_player = self.players[self.turn_index]
         self.print_colored(self.turn_index, f"\n{current_player.name}'s turn –––––––––––––––––>")
 
@@ -48,7 +58,9 @@ class Game:
                 if len(current_player.hand) <= 7:
                     break
                 else:
-                    print(f"You currently have {len(current_player.hand)} cards in hand. To comply with the maximum limit of 7 cards, you must play at least {len(current_player.hand) - 7} more action(s).")  # Make player play forcefully
+                    print(
+                        f"You currently have {len(current_player.hand)} cards in hand. To comply with the maximum limit of 7 cards, you must play at least {len(current_player.hand) - 7} more action(s)."
+                    )  # Make player play forcefully
                     continue
             self.actions += 1
 
