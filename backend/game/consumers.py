@@ -11,7 +11,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         This method is called when a WebSocket connection is established (when a player connects to the game).
         """
         # Add player to a game group
-        self.game_group_name = 'monopolydeal_game'
+        self.game_group_name = 'game1'
         await self.channel_layer.group_add(
             self.game_group_name,
             self.channel_name

@@ -1,1 +1,1 @@
-daphne monopolydeal.monopolydeal.asgi:application
+daphne backend.backend.asgi:application
