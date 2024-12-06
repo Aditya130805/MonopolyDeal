@@ -16,7 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.http import JsonResponse
+from backend.game import views as game_views
+
+def api_root(request):
+    return JsonResponse({
+        'status': 'ok',
+        'message': 'Monopoly Deal API is running'
+    })
 
 urlpatterns = [
+    path('', api_root, name='api_root'),
     path('admin/', admin.site.urls),
+    path('api/room/create/', game_views.create_room, name='create_room'),
+    path('api/room/<str:room_id>/', game_views.get_room, name='get_room'),
 ]

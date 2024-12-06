@@ -1,1 +1,2 @@
+export DJANGO_SETTINGS_MODULE=backend.backend.settings
 daphne backend.backend.asgi:application

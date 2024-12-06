@@ -2,5 +2,5 @@ from django.urls import path
 from .consumers import GameConsumer
 
 websocket_urlpatterns = [
-    path('ws/game/', GameConsumer.as_asgi()),  # as_asgi() method is a Channels-specific utility that wraps the consumer into an ASGI-compatible callable
+    path('ws/game/<str:room_id>/', GameConsumer.as_asgi()),  # Updated pattern to include room_id
 ]
