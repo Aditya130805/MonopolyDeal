@@ -2,8 +2,11 @@
 
 ### Updates:
 
-#### **GAMEPLAY LOGIC COMPLETE!**
+- Coming soon!
 
+### Complete:
+
+#### **GAMEPLAY LOGIC COMPLETE!**
 - Charted out logic for player.py, taking care of their hand, properties, and bank
 - Added wild property card functionality
 - 11 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
@@ -12,6 +15,7 @@
 ### Next steps:
 
 - Networking
+- User Authentication
 - Graphical User Interface
 
 ### Deviations from official Monopoly Deal rules:
