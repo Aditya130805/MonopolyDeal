@@ -14,7 +14,7 @@
 
 ### Next steps:
 
-- Integrate frontend with backend forupdating usernames and changing passwords for users
+- TBD
 
 ### Deviations from official Monopoly Deal rules:
 
