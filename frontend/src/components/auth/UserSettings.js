@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, KeyIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from './Navbar';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 const UserSettings = () => {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, setUser } = useAuth();
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
         username: user?.username || '',
@@ -17,6 +17,17 @@ const UserSettings = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Auto-dismiss notifications
+    useEffect(() => {
+        if (success || error) {
+            const timer = setTimeout(() => {
+                setSuccess('');
+                setError('');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [success, error]);
 
     const handleChange = (e) => {
         setFormData({
@@ -38,10 +49,43 @@ const UserSettings = () => {
         }
 
         try {
-            // Here we'll need to implement the actual API call
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const response = await fetch('http://localhost:8000/api/auth/me/', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    username: formData.username
+                })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                if (data.username) {
+                    setError(data.username);
+                } else if (data.detail) {
+                    setError(data.detail);
+                } else {
+                    setError('Failed to update username');
+                }
+                return;
+            }
+
             setSuccess('Username updated successfully!');
+            setUser(prev => ({
+                ...prev,
+                username: formData.username
+            }));
         } catch (error) {
-            setError(error.message || 'Failed to update username');
+            setError('Something went wrong');
         }
     };
 
@@ -51,7 +95,7 @@ const UserSettings = () => {
         setSuccess('');
 
         if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-            setError('All password fields are required');
+            setError('Please fill in all password fields');
             return;
         }
 
@@ -60,17 +104,57 @@ const UserSettings = () => {
             return;
         }
 
+        if (formData.newPassword.length < 6) {
+            setError('New password is too short (min. 6)');
+            return;
+        }
+
         try {
-            // Here we'll need to implement the actual API call
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const response = await fetch('http://localhost:8000/api/auth/me/password/', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    current_password: formData.currentPassword,
+                    new_password: formData.newPassword
+                })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Handle specific error messages from backend
+                if (data.current_password) {
+                    setError('Current password is incorrect');
+                } else if (data.new_password) {
+                    setError(data.new_password);
+                } else if (data.detail) {
+                    setError(data.detail);
+                } else {
+                    setError('Failed to update password');
+                }
+                return;
+            }
+
             setSuccess('Password updated successfully!');
-            setFormData({
-                ...formData,
+            
+            // Clear password fields
+            setFormData(prev => ({
+                ...prev,
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
-            });
+            }));
         } catch (error) {
-            setError(error.message || 'Failed to update password');
+            setError('Something went wrong');
         }
     };
 
@@ -158,31 +242,47 @@ const UserSettings = () => {
                 {/* Main Content */}
                 <div className="flex-1 overflow-y-auto bg-gray-50 pb-20 lg:pb-8">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                        {/* Feedback Messages */}
-                        {error && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 flex items-center gap-3 text-red-600 bg-red-50 px-4 py-3 rounded-lg shadow-sm"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-                                </svg>
-                                <p className="text-sm font-medium">{error}</p>
-                            </motion.div>
-                        )}
-                        {success && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-6 flex items-center gap-3 text-green-600 bg-green-50 px-4 py-3 rounded-lg shadow-sm"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM3 8a9 9 0 009 9 9 9 0 009-9z" clipRule="evenodd" />
-                                </svg>
-                                <p className="text-sm font-medium">{success}</p>
-                            </motion.div>
-                        )}
+                        {/* Notification Messages */}
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div 
+                                    initial={{ opacity: 0, x: 100, scale: 0.8 }}
+                                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                                    exit={{ opacity: 0, x: 100, scale: 0.8 }}
+                                    transition={{ 
+                                        type: "spring",
+                                        stiffness: 100,
+                                        damping: 15,
+                                        mass: 1
+                                    }}
+                                    className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-50 flex items-center gap-4 text-red-600 bg-red-50 px-6 py-4 rounded-xl shadow-2xl max-w-md border border-red-100"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 flex-shrink-0">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                    </svg>
+                                    <p className="text-base font-medium">{error}</p>
+                                </motion.div>
+                            )}
+                            {success && (
+                                <motion.div 
+                                    initial={{ opacity: 0, x: 100, scale: 0.8 }}
+                                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                                    exit={{ opacity: 0, x: 100, scale: 0.8 }}
+                                    transition={{ 
+                                        type: "spring",
+                                        stiffness: 100,
+                                        damping: 15,
+                                        mass: 1
+                                    }}
+                                    className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-50 flex items-center gap-4 text-green-600 bg-green-50 px-6 py-4 rounded-xl shadow-2xl max-w-md border border-green-100"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 flex-shrink-0">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                    </svg>
+                                    <p className="text-base font-medium">{success}</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Profile Tab */}
                         {activeTab === 'profile' && (
@@ -362,7 +462,7 @@ const UserSettings = () => {
                                                 <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>Create a password with at least 8 characters, including uppercase, lowercase, numbers, and special characters</span>
+                                                <span>Create a password with at least 6 characters, including uppercase, lowercase, numbers, and special characters</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
