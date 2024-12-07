@@ -2,7 +2,7 @@
 
 ### Updates:
 
-- Coming soon!
+-  Implemented user authentication and login
 
 ### Complete:
 
@@ -14,9 +14,7 @@
 
 ### Next steps:
 
-- Networking
-- User Authentication
-- Graphical User Interface
+- Integrate frontend with backend forupdating usernames and changing passwords for users
 
 ### Deviations from official Monopoly Deal rules:
 
