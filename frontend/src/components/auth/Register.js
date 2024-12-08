@@ -32,9 +32,14 @@ const Register = () => {
             return;
         }
 
-        const result = await register(formData);
+        const result = await register(
+            formData.username,
+            formData.email,
+            formData.password,
+            formData.password2
+        );
         if (result.success) {
-            navigate('/');  
+            navigate('/login');  
         } else {
             setError(result.error || 'Failed to register');
         }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserIcon, KeyIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { UserIcon, KeyIcon, ArrowRightOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -14,9 +14,11 @@ const UserSettings = () => {
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
+        deleteAccountPassword: ''
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Auto-dismiss notifications
     useEffect(() => {
@@ -167,6 +169,44 @@ const UserSettings = () => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        try {
+            if (!formData.deleteAccountPassword) {
+                setError('Please enter your current password');
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const response = await fetch('http://localhost:8000/api/auth/me/delete/', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    password: formData.deleteAccountPassword
+                })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                setError(data.error || 'Failed to delete account');
+                return;
+            }
+
+            // Account deleted successfully, log out and redirect
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            setError('Something went wrong while deleting your account');
+        }
+    };
+
     const tabs = [
         {
             id: 'profile',
@@ -258,7 +298,7 @@ const UserSettings = () => {
                                     className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-50 flex items-center gap-4 text-red-600 bg-red-50 px-6 py-4 rounded-xl shadow-2xl max-w-md border border-red-100"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 flex-shrink-0">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
                                     </svg>
                                     <p className="text-base font-medium">{error}</p>
                                 </motion.div>
@@ -277,7 +317,7 @@ const UserSettings = () => {
                                     className="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-50 flex items-center gap-4 text-green-600 bg-green-50 px-6 py-4 rounded-xl shadow-2xl max-w-md border border-green-100"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 flex-shrink-0">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
                                     <p className="text-base font-medium">{success}</p>
                                 </motion.div>
@@ -298,6 +338,8 @@ const UserSettings = () => {
                                     <h2 className="text-xl font-semibold text-gray-900">Profile Settings</h2>
                                     <p className="mt-2 text-sm text-gray-600">Update your profile information</p>
                                 </div>
+
+                                {/* Profile Card */}
                                 <div className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm w-full">
                                     <div className="flex items-start gap-4 mb-8">
                                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -329,6 +371,22 @@ const UserSettings = () => {
                                             Update Username
                                         </motion.button>
                                     </form>
+                                </div>
+
+                                {/* Email Card */}
+                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm w-full">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="text-lg font-medium text-gray-800">Email Address</div>
+                                            <div className="text-sm text-gray-800 mt-1">{user?.email}</div>
+                                            {/* <div className="text-xs text-gray-500 mt-2">This email is associated with your account and cannot be changed</div> */}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-6">
@@ -367,7 +425,7 @@ const UserSettings = () => {
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                                                 <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
                                             <h3 className="text-sm font-semibold text-purple-900">Gaming Identity</h3>
@@ -490,54 +548,167 @@ const UserSettings = () => {
                                             </li>
                                         </ul>
                                     </div>
+
+                                    {/* Delete Account Section */}
+                                    <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 sm:p-8 border border-red-200 shadow-sm w-full">
+                                        <div className="flex items-start gap-4 mb-6">
+                                            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </div>
+                                            <div className="text-left">
+                                                <div className="text-xl font-semibold text-red-900">Delete Account</div>
+                                                <div className="text-sm text-red-800 mt-1">This action cannot be undone. Please be certain.</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mb-4">
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                                                </div>
+                                                <input
+                                                    type="password"
+                                                    id="deleteAccountPassword"
+                                                    name="deleteAccountPassword"
+                                                    value={formData.deleteAccountPassword}
+                                                    onChange={handleChange}
+                                                    className="block w-full pl-10 pr-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                                    placeholder="Enter your current password"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <motion.button
+                                            whileHover={{ scale: 1.01 }}
+                                            whileTap={{ scale: 0.99 }}
+                                            onClick={() => {
+                                                if (!formData.deleteAccountPassword) {
+                                                    setError('Please enter your current password');
+                                                    return;
+                                                }
+
+                                                // Verify password before showing modal
+                                                const token = localStorage.getItem('accessToken');
+                                                fetch('http://localhost:8000/api/auth/me/password/verify/', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${token}`
+                                                    },
+                                                    body: JSON.stringify({
+                                                        password: formData.deleteAccountPassword
+                                                    })
+                                                })
+                                                .then(response => {
+                                                    if (response.ok) {
+                                                        setShowDeleteModal(true);
+                                                        return;
+                                                    }
+                                                    return response.json().then(data => {
+                                                        throw new Error(data.error || 'Password verification failed');
+                                                    });
+                                                })
+                                                .catch(error => {
+                                                    setError(error.message || 'Password verification failed');
+                                                });
+                                            }}
+                                            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors shadow-md"
+                                        >
+                                            Delete My Account
+                                        </motion.button>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
                     </div>
                 </div>
-            </div>
 
-            {/* Mobile Bottom Navigation - Outside scroll container */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-                <div className="flex justify-around items-center h-16">
-                    <button
-                        onClick={() => setActiveTab('profile')}
-                        className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
-                            activeTab === 'profile' ? 'text-blue-600' : 'text-gray-600'
-                        }`}
-                    >
-                        <UserIcon className="w-6 h-6" />
-                        <span className="text-xs mt-1">Profile</span>
-                        {activeTab === 'profile' && (
-                            <motion.div
-                                layoutId="activeTab"
-                                className="absolute inset-0 bg-blue-50 rounded-lg"
-                                style={{ zIndex: -1 }}
-                                initial={false}
-                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            />
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('security')}
-                        className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
-                            activeTab === 'security' ? 'text-blue-600' : 'text-gray-600'
-                        }`}
-                    >
-                        <KeyIcon className="w-6 h-6" />
-                        <span className="text-xs mt-1">Security</span>
-                        {activeTab === 'security' && (
-                            <motion.div
-                                layoutId="activeTab"
-                                className="absolute inset-0 bg-blue-50 rounded-lg"
-                                style={{ zIndex: -1 }}
-                                initial={false}
-                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            />
-                        )}
-                    </button>
+                {/* Mobile Bottom Navigation - Outside scroll container */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+                    <div className="flex justify-around items-center h-16">
+                        <button
+                            onClick={() => setActiveTab('profile')}
+                            className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
+                                activeTab === 'profile' ? 'text-blue-600' : 'text-gray-600'
+                            }`}
+                        >
+                            <UserIcon className="w-6 h-6" />
+                            <span className="text-xs mt-1">Profile</span>
+                            {activeTab === 'profile' && (
+                                <motion.div
+                                    layoutId="activeTab"
+                                    className="absolute inset-0 bg-blue-50 rounded-lg"
+                                    style={{ zIndex: -1 }}
+                                    initial={false}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('security')}
+                            className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
+                                activeTab === 'security' ? 'text-blue-600' : 'text-gray-600'
+                            }`}
+                        >
+                            <KeyIcon className="w-6 h-6" />
+                            <span className="text-xs mt-1">Security</span>
+                            {activeTab === 'security' && (
+                                <motion.div
+                                    layoutId="activeTab"
+                                    className="absolute inset-0 bg-blue-50 rounded-lg"
+                                    style={{ zIndex: -1 }}
+                                    initial={false}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Delete Account Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
+                    >
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">Delete Account</h3>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Are you sure you want to delete your account? This action cannot be undone and you will lose all your data.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleDeleteAccount}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                Yes, Delete
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
