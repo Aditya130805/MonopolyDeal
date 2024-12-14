@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -6,17 +6,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Check if user is logged in on mount
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            fetchUserProfile();
-        } else {
-            setLoading(false);
-        }
-    }, []);
-
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             const response = await fetch('http://localhost:8000/api/auth/me/', {
                 headers: {
@@ -26,6 +16,7 @@ export const AuthProvider = ({ children }) => {
             if (response.ok) {
                 const userData = await response.json();
                 setUser(userData);
+                // console.log('User profile fetched:', userData);
             } else {
                 // If token is invalid, clear it
                 logout();
@@ -36,7 +27,17 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        // Check if user is logged in on mount
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            fetchUserProfile();
+        } else {
+            setLoading(false);
+        }
+    }, [fetchUserProfile]);
 
     const login = async (email, password) => {
         try {
@@ -92,14 +93,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const value = {
-        user,
-        login,
-        logout,
-        register,
-        loading,
-        setUser
-    };
+    const value = { user, login, logout, register, loading, setUser };
 
     return (
         <AuthContext.Provider value={value}>

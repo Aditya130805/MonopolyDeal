@@ -8,6 +8,7 @@ class GameRoom(models.Model):
     player_count = models.IntegerField(default=0)
     max_players = models.IntegerField(default=4)
     is_active = models.BooleanField(default=True)
+    players = models.JSONField(default=list) # Stores player data with readiness - [{'name': 'Player 1', 'isReady': False}, ...]
 
     def __str__(self):
         return f"Game Room {self.room_id} ({self.player_count}/{self.max_players} players)"

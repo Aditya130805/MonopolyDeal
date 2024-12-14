@@ -29,6 +29,6 @@ urlpatterns = [
     path('', api_root, name='api_root'),
     path('admin/', admin.site.urls),
     path('api/room/create/', game_views.create_room, name='create_room'),
-    path('api/room/<str:room_id>/', game_views.get_room, name='get_room'),
+    path('api/room/<str:room_id>/', game_views.join_room, name='join_room'),
     path('api/auth/', include('backend.authentication.urls')),
 ]

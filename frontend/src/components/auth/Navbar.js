@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
-    UserIcon, 
+    // UserIcon, 
     ChevronDownIcon,
     Cog6ToothIcon,
-    ArrowRightOnRectangleIcon,
+    ArrowRightStartOnRectangleIcon,
     UserCircleIcon,
     PlayIcon
 } from '@heroicons/react/24/outline';
@@ -15,6 +15,7 @@ const Navbar = () => {
     const { user, logout } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const location = useLocation(); // Get the current location
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -45,17 +46,20 @@ const Navbar = () => {
                     <div className="flex items-center">
                         {user ? (
                             <>
-                                <Link to="/play">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="mr-4 bg-black text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center gap-2"
-                                    >
-                                        <span className="hidden sm:inline">Play Now</span>
-                                        <span className="sm:hidden">Play</span>
-                                        <PlayIcon className="w-4 h-4" />
-                                    </motion.button>
-                                </Link>
+                                {/* Conditionally show Play Now only if on homepage */}
+                                {location.pathname === '/' && (
+                                    <Link to="/play">
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="mr-4 bg-black text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center gap-2"
+                                        >
+                                            <span className="hidden sm:inline">Play Now</span>
+                                            <span className="sm:hidden">Play</span>
+                                            <PlayIcon className="w-4 h-4" />
+                                        </motion.button>
+                                    </Link>
+                                )}
                                 <div className="relative" ref={dropdownRef}>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -87,7 +91,7 @@ const Navbar = () => {
                                                 onClick={handleLogout}
                                                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                                             >
-                                                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                                                <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
                                                 Logout
                                             </button>
                                         </motion.div>

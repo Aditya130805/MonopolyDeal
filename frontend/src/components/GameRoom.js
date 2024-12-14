@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { createRoom, getRoom, connectToGameRoom, disconnectFromGameRoom } from '../services/gameService';
+import { createRoom, joinRoom } from '../services/gameService';
 import {
   ArrowLeftIcon,
   ClipboardDocumentIcon,
@@ -12,6 +12,8 @@ import {
   BuildingOffice2Icon,
   HomeIcon,
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
+import Navbar from './auth/Navbar';
 
 const GameRoom = () => {
   const [roomCode, setRoomCode] = useState('');
@@ -34,21 +36,7 @@ const GameRoom = () => {
     setRoomData(data);
   }, [navigate]);
 
-  useEffect(() => {
-    if (roomId) {
-      console.log('Fetching room data...');
-      fetchRoomData();
-      // Set up WebSocket connection
-      connectToGameRoom(roomId, handleUpdate, isCreator);
-
-      // Cleanup WebSocket connection on unmount
-      return () => {
-        disconnectFromGameRoom();
-      };
-    }
-  }, [roomId, isCreator, handleUpdate]);
-
-  const fetchRoomData = async () => {
+  const fetchRoomData = useCallback(async () => {
     try {
       const response = await getRoom(roomId);
       if (response.error) {
@@ -62,7 +50,7 @@ const GameRoom = () => {
       setError(error.message || 'Failed to fetch room data');
       navigate('/play');
     }
-  };
+  }, [roomId, navigate]);
 
   const generateRoomCode = async () => {
     try {
@@ -73,6 +61,7 @@ const GameRoom = () => {
         setIsCreator(true);  // Set isCreator to true when creating a room
         navigate(`/room/${response.room_id}`);
       } else {
+        console.log(response);
         setError(response.message || 'Failed to create room');
       }
     } catch (error) {
@@ -94,7 +83,7 @@ const GameRoom = () => {
         setError('Please enter a room code');
         return;
       }
-      const response = await getRoom(joinCode);
+      const response = await joinRoom(joinCode);
       if (response.status === 'success') {
         navigate(`/room/${joinCode}`);
       } else {
@@ -138,6 +127,7 @@ const GameRoom = () => {
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-br from-gray-50 to-white dark:bg-gray-900">
+      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-4 sm:p-6 relative overflow-hidden">
         {decorativeElements}
         
@@ -172,7 +162,7 @@ const GameRoom = () => {
           </div>
 
           {/* Game Room Features */}
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-8 relative">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-8 relative">
             {/* Create Room Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -186,9 +176,9 @@ const GameRoom = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 mb-6 sm:mb-8 text-gray-600">
+              <div className="flex items-center gap-2 mb-6 sm:mb-5 text-gray-600">
                 <BuildingOffice2Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <p className="text-sm sm:text-base">Start your own property empire and invite friends to join.</p>
+                <p className="text-sm sm:text-base text-left">Start your own property empire and invite friends to join.</p>
               </div>
 
               <div className="space-y-4 sm:space-y-6">
@@ -249,16 +239,16 @@ const GameRoom = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 mb-6 sm:mb-8 text-gray-600">
+              <div className="flex items-center gap-2 mb-6 sm:mb-5 text-gray-600">
                 <HomeIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <p className="text-sm sm:text-base">Join your friends' game room and compete for properties!</p>
+                <p className="text-sm sm:text-base text-left">Join your friends' game room and compete for properties!</p>
               </div>
 
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <label htmlFor="roomCode" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  {/* <label htmlFor="roomCode" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Room Code
-                  </label>
+                  </label> */}
                   <input
                     type="text"
                     id="roomCode"

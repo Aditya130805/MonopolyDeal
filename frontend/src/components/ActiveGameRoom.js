@@ -8,6 +8,8 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import Particles from './Particles';
+import Navbar from './auth/Navbar';
+import { useAuth } from '../contexts/AuthContext';
 
 const ActiveGameRoom = () => {
   const { roomId } = useParams();
@@ -16,9 +18,9 @@ const ActiveGameRoom = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const maxPlayers = 4;
+  const requiredPlayers = 2;
   const wsRef = useRef(null);
-
-  console.log("Entered ACTIVE GAME ROOM!")
+  const { user } = useAuth();
 
   useEffect(() => {
     // Initialize WebSocket connection
@@ -27,14 +29,17 @@ const ActiveGameRoom = () => {
 
     ws.onopen = () => {
       console.log('WebSocket Connected');
+      ws.send(JSON.stringify({ action: 'establish_connection', player_id: user.unique_id }));
+      console.log('Player Connected');
       setIsLoading(false);
     };
 
     ws.onmessage = (event) => {
+      // console.log('WebSocket Message:', event.data);
       const data = JSON.parse(event.data);
-      console.log(data);
-      if (data.type && data.type == "rejection") {
-        navigate("/");
+      // console.log(data);
+      if (data.type && data.type === "rejection") {
+        navigate("/play");
       }
       if (data.players) {
         setPlayers(data.players);
@@ -42,7 +47,7 @@ const ActiveGameRoom = () => {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      // console.log('WebSocket error:', error);
       setIsLoading(false);
     };
 
@@ -56,7 +61,7 @@ const ActiveGameRoom = () => {
         wsRef.current.close();
       }
     };
-  }, [roomId]);
+  }, [roomId, navigate]);
 
   const handleLeaveRoom = () => {
     if (wsRef.current) {
@@ -87,9 +92,12 @@ const ActiveGameRoom = () => {
     );
   }
 
+  const isGameStartDisabled = players.length < requiredPlayers || !players.every(p => p.isReady);
+
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-br from-gray-50 to-white dark:bg-gray-900">
       <Particles />
+      <Navbar />
       <div className="relative z-10">
         {/* Glass Container */}
         <div className="max-w-6xl mx-auto p-4 sm:p-6 relative z-10">
@@ -148,7 +156,7 @@ const ActiveGameRoom = () => {
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="text-xs text-gray-600"
+                          className="text-xs text-gray-600 text-left"
                         >
                           Online
                         </motion.div>
@@ -206,18 +214,20 @@ const ActiveGameRoom = () => {
             >
               {isReady ? 'Not Ready' : 'Ready'}
             </motion.button>
-            
-            {players.length >= 2 && players.every(p => p.isReady) && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 sm:px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 bg-black text-white w-full sm:w-auto"
-              >
-                Start Game
-              </motion.button>
-            )}
+
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={!isGameStartDisabled ? { scale: 1.05 } : {}}
+              whileTap={{ scale: 0.95 }}
+              disabled={isGameStartDisabled}
+              className={`px-6 sm:px-8 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 ${
+                isGameStartDisabled ? 'bg-gray-200 text-gray-500' : 'bg-black text-white'
+              } w-full sm:w-auto`}
+            >
+              Start Game
+            </motion.button>
+
           </motion.div>
         </div>
       </div>

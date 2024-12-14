@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserIcon, KeyIcon, ArrowRightOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { UserIcon, KeyIcon, ArrowRightStartOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
@@ -273,7 +273,7 @@ const UserSettings = () => {
                             onClick={handleLogout}
                             className="w-full flex items-center gap-3 p-4 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                         >
-                            <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                            <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
                             <span className="text-sm font-medium">Log Out</span>
                         </motion.button>
                     </div>
