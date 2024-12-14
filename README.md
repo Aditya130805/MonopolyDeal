@@ -2,11 +2,14 @@
 
 ### Updates:
 
--  Implemented user authentication and login
+- Implemented user authentication, login, and registration
+- Implemented user settings page: change username, change password, delete account
+- Implemented game room creation and joining
 
 ### Complete:
 
 #### **GAMEPLAY LOGIC COMPLETE!**
+
 - Charted out logic for player.py, taking care of their hand, properties, and bank
 - Added wild property card functionality
 - 11 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
@@ -14,7 +17,7 @@
 
 ### Next steps:
 
-- TBD
+- Start game!
 
 ### Deviations from official Monopoly Deal rules:
 
