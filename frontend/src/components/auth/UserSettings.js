@@ -106,8 +106,8 @@ const UserSettings = () => {
             return;
         }
 
-        if (formData.newPassword.length < 6) {
-            setError('New password is too short (min. 6)');
+        if (formData.newPassword.length < 8) {
+            setError('New password is too short (min. 8)');
             return;
         }
 

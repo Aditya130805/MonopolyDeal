@@ -12,6 +12,25 @@ from rest_framework.decorators import api_view, permission_classes
 
 logger = logging.getLogger(__name__)
 
+def fetch_rooms(request):
+    try:
+        rooms = GameRoom.objects.all()  # Fetch all game rooms
+        room_list = [{
+            'room_id': room.room_id,
+            'player_count': room.player_count,
+            'max_players': room.max_players,
+            'has_started': room.has_started,
+            'players': room.players
+        } for room in rooms]
+        
+        return JsonResponse(room_list, safe=False)
+    except Exception as e:
+        logger.error(f"Error fetching rooms: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
 def generate_room_code():
     """
     Generate a 6-character room code.
@@ -26,8 +45,6 @@ def generate_room_code():
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_room(request):
-    print("USER:", request.user.unique_id)
-    logger.info(f"Attempting to create a new room")
     max_attempts = 10  # Prevent infinite loop in the extremely unlikely case of collisions
     attempts = 0
     
@@ -41,8 +58,7 @@ def create_room(request):
         
         if attempts == max_attempts:
             raise Exception("Failed to generate unique room code")
-            
-        logger.info(f"Generated room ID: {room_id}")
+        
         room = GameRoom.objects.create(room_id=room_id, player_count=0, players=[])
         logger.info(f"Successfully created room with ID: {room_id}")
         
@@ -73,6 +89,12 @@ def join_room(request, room_id):
         id = str(request.user.unique_id)
         username = request.user.username
         # Check if player is already in the room
+        if room.has_started:
+            logger.info(f"This room has already started playing.")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'This room has already started playing.'
+            })
         player_exists = any(player['id'] == id for player in room.players)
         if player_exists:
             logger.info(f"You are already in this room!")
@@ -92,7 +114,7 @@ def join_room(request, room_id):
             'room_id': room.room_id,
             'player_count': room.player_count,
             'max_players': room.max_players,
-            'is_active': room.is_active,
+            'has_started': room.has_started,
             'players': room.players
         }
 

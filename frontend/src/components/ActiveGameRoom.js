@@ -6,93 +6,111 @@ import {
   ArrowLeftIcon,
   UserCircleIcon,
   SparklesIcon,
+  ClipboardIcon,
 } from '@heroicons/react/24/outline';
 import Particles from './Particles';
 import Navbar from './auth/Navbar';
 import { useAuth } from '../contexts/AuthContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 const ActiveGameRoom = () => {
   const { roomId } = useParams();
-  const navigate = useNavigate();
   const [players, setPlayers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const maxPlayers = 4;
   const requiredPlayers = 2;
-  const wsRef = useRef(null);
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { socket, wsLoading } = useWebSocket();
 
+  // Set up socket's message handler
   useEffect(() => {
-    // Initialize WebSocket connection
-    const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomId}/`);
-    wsRef.current = ws;
+    if (!socket) {
+        console.log("Socket is null; waiting for WebSocket connection.");
+        return;
+    }
+    console.log("Socket connected:", socket);
+    socket.onmessage = handleMessage;
+  }, [socket, wsLoading]);
 
-    ws.onopen = () => {
-      console.log('WebSocket Connected');
-      ws.send(JSON.stringify({ action: 'establish_connection', player_id: user.unique_id }));
-      console.log('Player Connected');
-      setIsLoading(false);
-    };
-
-    ws.onmessage = (event) => {
-      // console.log('WebSocket Message:', event.data);
+  const handleMessage = (event) => {
+    try {
+      console.log(`WebSocket message in room ${roomId}:`, event.data);
       const data = JSON.parse(event.data);
-      // console.log(data);
       if (data.type && data.type === "rejection") {
         navigate("/play");
+      } else if (data.type && data.type === "broadcast_game_started") {
+        navigate(`/game/${roomId}`);
       }
       if (data.players) {
         setPlayers(data.players);
       }
-    };
-
-    ws.onerror = (error) => {
-      // console.log('WebSocket error:', error);
-      setIsLoading(false);
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket Disconnected');
-    };
-
-    // Cleanup function
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, [roomId, navigate]);
+    } catch (error) {
+      console.error("Error parsing WebSocket message:", error);
+    }
+  };
 
   const handleLeaveRoom = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
+    if (socket) socket.close();
     navigate('/play');
   };
 
   const handleReady = () => {
     setIsReady(!isReady);
-    if (wsRef.current) {
-      wsRef.current.send(JSON.stringify({
+    if (socket) {
+      socket.send(JSON.stringify({
         action: 'player_ready',
         isReady: !isReady
       }));
     }
   };
 
-  if (isLoading) {
+  const handleStartGame = () => {
+    if (socket) {
+      socket.send(JSON.stringify({
+        action: 'start_game',
+        player_name: user.username
+      }));
+    }
+  };
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(roomId).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
+
+  const isGameStartDisabled = players.length < requiredPlayers || !players.every(p => p.isReady);
+
+  if (wsLoading || !socket) {
     return (
-      <div className="relative min-h-screen w-full bg-gray-50 dark:bg-gray-900">
+      <div className="relative min-h-screen w-full bg-gradient-to-br from-gray-50 to-white dark:bg-gray-900">
         <Particles />
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading game room...</p>
+        <Navbar />
+        <div className="relative z-10 max-w-6xl mx-auto p-4 sm:p-6 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+          {/* Glass Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-3xl text-center"
+          >
+            <div className="flex flex-col items-center gap-6">
+              {/* Loading Spinner */}
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-black border-opacity-60"></div>
+              
+              {/* Loading Text */}
+              <h2 className="text-2xl font-bold text-gray-800">Loading Room {roomId} ...</h2>
+              <p className="text-gray-600 text-sm">
+                Please wait while we set up your room. This won't take long!
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
     );
   }
-
-  const isGameStartDisabled = players.length < requiredPlayers || !players.every(p => p.isReady);
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-br from-gray-50 to-white dark:bg-gray-900">
@@ -117,14 +135,20 @@ const ActiveGameRoom = () => {
                 <ArrowLeftIcon className="w-5 h-5" />
                 <span className="hidden sm:inline">Leave Room</span>
               </motion.button>
-              <div className="text-center flex-grow">
+              <div className="text-center flex-grow flex items-center justify-center gap-2">
                 <h1 className="text-2xl sm:text-3xl font-bold text-black flex items-center gap-2 justify-center">
                   <SparklesIcon className="w-6 h-6" />
                   <span className="hidden sm:inline">Room:</span> {roomId}
                 </h1>
-                <p className="text-gray-600 text-sm mt-1">
-                  {players.length}/{maxPlayers} Players
-                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCopyToClipboard}
+                  className={`flex items-center gap-1 ${copySuccess ? 'text-green-500' : 'text-gray-600'}`}
+                  title="Copy Room ID"
+                >
+                  <ClipboardIcon className="w-6 h-6" />
+                </motion.button>
               </div>
               <div className="w-[52px] sm:w-20"></div>
             </div>
@@ -220,6 +244,7 @@ const ActiveGameRoom = () => {
               animate={{ opacity: 1, scale: 1 }}
               whileHover={!isGameStartDisabled ? { scale: 1.05 } : {}}
               whileTap={{ scale: 0.95 }}
+              onClick={handleStartGame}
               disabled={isGameStartDisabled}
               className={`px-6 sm:px-8 py-3 rounded-xl font-semibold shadow-lg transition-all duration-200 ${
                 isGameStartDisabled ? 'bg-gray-200 text-gray-500' : 'bg-black text-white'
@@ -227,7 +252,17 @@ const ActiveGameRoom = () => {
             >
               Start Game
             </motion.button>
+          </motion.div>
 
+          {/* Information Box */}
+          <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border-4 border-blue-400 bg-blue-50 p-4 rounded-xl mb-8 mt-8 shadow-lg text-center w-full"
+          >
+              <p className="text-md"><span className="text-lg"><strong>Note: </strong></span>
+              To start the game, a minimum of {requiredPlayers} players are required, and all players must be ready.
+              </p>
           </motion.div>
         </div>
       </div>

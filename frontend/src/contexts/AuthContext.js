@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     const fetchUserProfile = useCallback(async () => {
         try {
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (!response.ok) {
-                throw new Error('Login failed');
+                throw new Error('The email or password you entered is incorrect. Please try again.');
             }
 
             const data = await response.json();
@@ -77,7 +79,10 @@ export const AuthProvider = ({ children }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(Object.values(errorData)[0][0] || 'Registration failed');
+                // Capitalize the first letter of the error message
+                const errorMessage = Object.values(errorData)[0][0];
+                const capitalizedError = errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1);
+                throw new Error(capitalizedError || 'Registration failed');
             }
 
             return { success: true };
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         setUser(null);
+        navigate('/login')
     };
 
     const value = { user, login, logout, register, loading, setUser };

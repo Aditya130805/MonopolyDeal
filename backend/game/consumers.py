@@ -6,6 +6,8 @@ import asyncio
 
 class GameConsumer(AsyncWebsocketConsumer):
     
+    game_instances = {}
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.player_id = None
@@ -25,6 +27,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         user = await self.get_user_by_unique_id(player_id)
         if not user:
             await self.reject_connection("User not found")
+            return
+        if room.has_started:
+            await self.reject_connection("The game has already begun")
             return
         
         # Check if player is already in the room
@@ -87,9 +92,20 @@ class GameConsumer(AsyncWebsocketConsumer):
             readiness = data.get('isReady')
             await self.set_player_ready(readiness)
         elif action == 'start_game':
-            player_name = data.get('player_name', 'Player1')
             # Create a new game instance for this room
-            GameConsumer.game_instances[self.room_id] = Game([player_name])
+            room = await self.get_room_by_id(self.room_id)
+            await self.mark_game_start_db(room)
+            GameConsumer.game_instances[self.room_id] = Game(room.players)
+            
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_game_started',
+                    'message': 'The game has started!',
+                }
+            )
+            # await self.broadcast_game_state()
+            return
         # Broadcast updated state to ALL clients in the group
         await self.broadcast_room_update()
 
@@ -104,6 +120,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             'data': reason
         }))
         await self.close()
+
+    async def broadcast_game_started(self, event):
+        # This method will be called when a game has started
+        await self.send(text_data=json.dumps({
+            'type': 'broadcast_game_started',
+            'message': event.get('message', 'The game has started!'),
+        }))
 
     async def broadcast_game_state(self):
         """
@@ -145,6 +168,14 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event['data']))
 
     @database_sync_to_async
+    def mark_game_start_db(self, room):
+        """
+        Mark the game as started and update the database.
+        """
+        room.has_started = True
+        room.save()
+
+    @database_sync_to_async
     def get_room_by_id(self, room_id):
         """
         Retrieve a game room by its ID.
@@ -167,7 +198,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'id': room_id,
                 'player_count': room.player_count,
                 'max_players': room.max_players,
-                'is_active': room.is_active,
+                'has_started': room.has_started,
                 'players': room.players
             }
             return room_data
@@ -208,8 +239,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             room.player_count -= 1
             room.save()
             """CHANGE IF YOU WANT TO REMOVE GAME ROOM FROM DATABASE IF NO PLAYERS IN"""
-            # if room.player_count <= 0:
-                # GameRoom.objects.filter(room_id=self.room_id).delete()
+            if room.player_count <= 0:
+                GameRoom.objects.filter(room_id=self.room_id).delete()
         except GameRoom.DoesNotExist:
             pass
 

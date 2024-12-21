@@ -31,4 +31,5 @@ urlpatterns = [
     path('api/room/create/', game_views.create_room, name='create_room'),
     path('api/room/<str:room_id>/', game_views.join_room, name='join_room'),
     path('api/auth/', include('backend.authentication.urls')),
+    path('api/rooms', game_views.fetch_rooms, name='fetch_rooms'),
 ]

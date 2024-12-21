@@ -7,7 +7,7 @@ class Game:
     def __init__(self, player_names):
         self.deck = create_deck()
         self.discard_pile = []
-        self.players = [Player(name) for name in player_names]
+        self.players = [Player(user['name']) for user in player_names]
         self.turn_index = 0
         self.winner = None
         self.actions = 0

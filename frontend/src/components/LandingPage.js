@@ -30,7 +30,7 @@ const LandingPage = () => {
           className="text-center max-w-4xl mx-auto relative"
         >
           <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full text-sm font-medium">
-            New Release 
+            New Release 🥳
           </div>
           <h1 className="text-7xl font-bold mb-6 text-black mt-10 leading-tight pb-2">
             Monopoly Deal Digital

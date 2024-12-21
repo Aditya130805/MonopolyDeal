@@ -7,7 +7,7 @@ class GameRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     player_count = models.IntegerField(default=0)
     max_players = models.IntegerField(default=4)
-    is_active = models.BooleanField(default=True)
+    has_started = models.BooleanField(default=False)
     players = models.JSONField(default=list) # Stores player data with readiness - [{'name': 'Player 1', 'isReady': False}, ...]
 
     def __str__(self):

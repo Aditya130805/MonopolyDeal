@@ -296,7 +296,7 @@ const GameRoom = () => {
                 </p>
                 <p className="flex items-center gap-2">
                   <BuildingOffice2Icon className="w-5 h-5" />
-                  Status: {roomData.is_active ? 'Active' : 'Inactive'}
+                  Status: {roomData.has_started ? 'Active' : 'Inactive'}
                 </p>
               </div>
             </motion.div>
