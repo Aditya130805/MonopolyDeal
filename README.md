@@ -18,6 +18,12 @@
 ### Next steps:
 
 - Start game!
+- Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
+
+### Potential issues:
+
+- Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
+- User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 
 ### Deviations from official Monopoly Deal rules:
 
