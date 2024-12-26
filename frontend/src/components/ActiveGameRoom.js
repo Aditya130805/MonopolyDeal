@@ -258,7 +258,7 @@ const ActiveGameRoom = () => {
           <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="border-4 border-blue-400 bg-blue-50 p-4 rounded-xl mb-8 mt-8 shadow-lg text-center w-full"
+              className="border-4 border-gray-400 bg-gray-50 p-4 rounded-xl mb-8 mt-8 shadow-lg text-center w-full"
           >
               <p className="text-md"><span className="text-lg"><strong>Note: </strong></span>
               To start the game, a minimum of {requiredPlayers} players are required, and all players must be ready.
