@@ -5,6 +5,7 @@
 - Implemented user authentication, login, and registration
 - Implemented user settings page: change username, change password, delete account
 - Implemented game room creation and joining
+- Designed card components
 
 ### Complete:
 
@@ -17,7 +18,7 @@
 
 ### Next steps:
 
-- Start game!
+- Start game - connect frontend to backend as you go along
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 
 ### Potential issues:
