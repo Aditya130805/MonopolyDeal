@@ -30,7 +30,7 @@ const GameRoom = () => {
     if (data.type === 'rejection') {
       console.log("REJECTED 2!");
       setError(data.message);
-      navigate('/play');
+      navigate('/');
       return;
     }
     setRoomData(data);
@@ -41,14 +41,14 @@ const GameRoom = () => {
       const response = await getRoom(roomId);
       if (response.error) {
         setError(response.error);
-        navigate('/play');
+        navigate('/');
         return;
       }
       setRoomData(response);
     } catch (error) {
       console.error('Error fetching room:', error);
       setError(error.message || 'Failed to fetch room data');
-      navigate('/play');
+      navigate('/');
     }
   }, [roomId, navigate]);
 

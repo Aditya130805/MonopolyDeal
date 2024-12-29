@@ -96,7 +96,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             room = await self.get_room_by_id(self.room_id)
             await self.mark_game_start_db(room)
             GameConsumer.game_instances[self.room_id] = Game(room.players)
-            
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
@@ -104,7 +103,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'message': 'The game has started!',
                 }
             )
-            # await self.broadcast_game_state()
+            return
+        elif action == 'initial_game_state':
+            await self.broadcast_game_state()
             return
         # Broadcast updated state to ALL clients in the group
         await self.broadcast_room_update()
@@ -134,6 +135,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         """
         if self.room_id in GameConsumer.game_instances:
             state = GameConsumer.game_instances[self.room_id].to_dict()
+            print("STATE:",state)
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
@@ -159,7 +161,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         """
         Send game state update to WebSocket.
         """
-        await self.send(text_data=json.dumps(event['state']))
+        await self.send(text_data=json.dumps({
+            'type': 'game_update',
+            'state': event['state']
+        }))
 
     async def room_update(self, event):
         """

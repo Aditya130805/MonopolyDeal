@@ -7,7 +7,7 @@ class Game:
     def __init__(self, player_names):
         self.deck = create_deck()
         self.discard_pile = []
-        self.players = [Player(user['name']) for user in player_names]
+        self.players = [Player(user['id'], user['name']) for user in player_names]
         self.turn_index = 0
         self.winner = None
         self.actions = 0
@@ -16,8 +16,9 @@ class Game:
     def to_dict(self):
         return {
             "deck_count": len(self.deck),
-            "discard_pile_count": len(self.discard_pile),
+            # "discard_pile_count": len(self.discard_pile),
             "players": [player.to_dict() for player in self.players],
+            "discard_pile": self.discard_pile.to_dict() if self.discard_pile else None,
             "current_turn": self.players[self.turn_index].name,
             "winner": self.winner.name if self.winner else None
         }

@@ -31,7 +31,7 @@ const ActionCard = ({
   const getColorClass = (colorName) => {
     switch (colorName.toLowerCase()) {
       case 'brown': return 'bg-[#8B4513]';
-      case 'light-blue': return 'bg-[#87CEEB]';
+      case 'light blue': return 'bg-[#87CEEB]';
       case 'pink': return 'bg-[#FF1493]';
       case 'orange': return 'bg-[#FF7C2D]';
       case 'red': return 'bg-[#FF0000]';
@@ -119,7 +119,7 @@ const ActionCard = ({
       case 'just say no':
         return {
           value: 4,
-          description: 'Use any time when an action card is played against you to cancel its effect'
+          description: 'Cancel an action card played against you'
         };
         break;
       default:

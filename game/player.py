@@ -14,7 +14,8 @@ from game.actions import common_functions
 from constants import properties
 
 class Player:
-    def __init__(self, name):
+    def __init__(self, id, name):
+        self.id = id
         self.name = name
         self.hand = []
         self.bank = []
@@ -22,10 +23,11 @@ class Player:
 
     def to_dict(self):
         return {
+            "id": self.id,
             "name": self.name,
-            "hand": [str(card) for card in self.hand],
-            "properties": {color: [str(card) for card in cards] for color, cards in self.properties.items()},
-            "bank": self.bank
+            "hand": [card.to_dict() for card in self.hand],
+            "properties": {color: [card.to_dict() for card in cards] for color, cards in self.properties.items()},
+            "bank": [card.to_dict() for card in self.bank]
         }
 
     def draw_cards(self, deck, num=2):

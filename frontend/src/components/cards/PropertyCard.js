@@ -9,8 +9,8 @@ const PropertyCard = ({
   isWild = false
 }) => {
   const colorMap = {
-    'brown': { bg: '#8B4513', border: '#654321', light: '#FFF6F0', text: '#8B4513', rent: [1, 2], isUtility: false, isRailroad: false },
-    'light-blue': { bg: '#87CEEB', border: '#4682B4', light: '#F0FAFF', text: '#4682B4', rent: [1, 2, 3], isUtility: false, isRailroad: false },
+    'brown': { bg: '#8B4513', border: '#654321', light: '#F3EBE5', text: '#8B4513', rent: [1, 2], isUtility: false, isRailroad: false },
+    'light blue': { bg: '#87CEEB', border: '#4682B4', light: '#F0FAFF', text: '#4682B4', rent: [1, 2, 3], isUtility: false, isRailroad: false },
     'pink': { bg: '#FF1493', border: '#C71585', light: '#FFF0F7', text: '#C71585', rent: [1, 2, 4], isUtility: false, isRailroad: false },
     'orange': { bg: '#FF7C2D', border: '#E65A00', light: '#FFF4F0', text: '#CC4E00', rent: [1, 3, 5], isUtility: false, isRailroad: false },
     'red': { bg: '#FF0000', border: '#DC143C', light: '#FFF0F0', text: '#DC143C', rent: [2, 3, 6], isUtility: false, isRailroad: false },
@@ -50,7 +50,7 @@ const PropertyCard = ({
       return {
         bg: `bg-[${bg}]`,
         border: `border-[${border}]`,
-        light: `bg-[${light}]`,
+        light: `${light}`,
         text: `text-[${text}]`,
         rent: rent,
         isUtility: isUtility,
@@ -91,8 +91,9 @@ const PropertyCard = ({
     >
       {!isWild ? (
         // Regular Property Card Design
-        <div className={`relative flex flex-col ${colors.light} 
-          border-2 ${colors.border} rounded-lg shadow-md overflow-hidden h-full`}>
+        <div className={`relative flex flex-col
+          border-2 ${colors.border} rounded-lg shadow-md overflow-hidden h-full`}
+          style={{ backgroundColor: colors.light }}>
           {/* Property Title Area */}
           <div className={`${colors.bg} px-3 flex flex-col items-center border-b-4 ${colors.border} h-14 relative`}>
             <div className="text-center font-bold text-white text-sm tracking-wide uppercase pl-2 flex items-center h-full">
