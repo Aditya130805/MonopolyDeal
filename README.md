@@ -6,6 +6,7 @@
 - Implemented user settings page: change username, change password, delete account
 - Implemented game room creation and joining
 - Designed card components
+- Implemented displaying player cards, bank, and properties (2-player only)
 
 ### Complete:
 
@@ -18,7 +19,9 @@
 
 ### Next steps:
 
-- Start game - connect frontend to backend as you go along
+- Continue game - connect frontend to backend as you go along
+- Start working on drag and drop onto bank -> properties -> action pile
+- Modify MainGame to allow for multiple players
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 
 ### Potential issues:
