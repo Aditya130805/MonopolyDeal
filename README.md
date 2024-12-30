@@ -7,6 +7,7 @@
 - Implemented game room creation and joining
 - Designed card components
 - Implemented displaying player cards, bank, and properties (2-player only)
+- Implemented card dragging capability
 
 ### Complete:
 
@@ -20,9 +21,10 @@
 ### Next steps:
 
 - Continue game - connect frontend to backend as you go along
-- Start working on drag and drop onto bank -> properties -> action pile
+- Start working on implementing functionality after dragging and dropping onto bank -> properties -> action pile
 - Modify MainGame to allow for multiple players
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
+- Fix 'card being cut while dragging' in Safari
 
 ### Potential issues:
 

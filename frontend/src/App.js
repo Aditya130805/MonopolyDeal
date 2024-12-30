@@ -11,6 +11,8 @@ import PrivateRoute from './components/auth/PrivateRoute';
 import PublicRoute from './components/auth/PublicRoute';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import './App.css';
 
 function App() {
@@ -36,8 +38,9 @@ function AppContent() { // New component to use the hook
   }, [user]);
 
   return (
-      <WebSocketProvider playerId={playerId}> {/* ONE provider at the top */}
-          <div className="App">
+      <DndProvider backend={HTML5Backend}>
+        <WebSocketProvider playerId={playerId}> {/* ONE provider at the top */}
+            <div className="App">
           <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route 
@@ -95,7 +98,8 @@ function AppContent() { // New component to use the hook
               )}
             </Routes>
           </div>
-      </WebSocketProvider>
+        </WebSocketProvider>
+      </DndProvider>
   );
 }
 
