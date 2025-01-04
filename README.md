@@ -7,7 +7,9 @@
 - Implemented game room creation and joining
 - Designed card components
 - Implemented displaying player cards, bank, and properties (2-player only)
-- Implemented card dragging capability
+- Implemented card dragging and dropping onto the bank, properties, and action pile
+- Implemented bank and property area additions
+- Implemented pass go action
 
 ### Complete:
 
@@ -21,10 +23,13 @@
 ### Next steps:
 
 - Continue game - connect frontend to backend as you go along
-- Start working on implementing functionality after dragging and dropping onto bank -> properties -> action pile
 - Modify MainGame to allow for multiple players
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 - Fix 'card being cut while dragging' in Safari
+- Fix the the sudden un-hover effect after a card drop and after error message
+- Bring back the fan effect for opponent's cards
+- Implement Sly Deal, ForcedDeal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
+- ̦Potentially display an animation in the background highlighting the action that's been played
 
 ### Potential issues:
 
