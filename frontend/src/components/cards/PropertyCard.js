@@ -1,25 +1,44 @@
 import React from 'react';
 
+const colorMap = {
+  'brown': { bg: '#8B4513', border: '#654321', light: '#F3EBE5', text: '#8B4513' },
+  'light blue': { bg: '#87CEEB', border: '#4682B4', light: '#F0FAFF', text: '#4682B4' },
+  'pink': { bg: '#FF1493', border: '#C71585', light: '#FFF0F7', text: '#C71585' },
+  'orange': { bg: '#FF7C2D', border: '#E65A00', light: '#FFF4F0', text: '#CC4E00' },
+  'red': { bg: '#FF0000', border: '#DC143C', light: '#FFF0F0', text: '#DC143C' },
+  'yellow': { bg: '#FFE026', border: '#E6BC00', light: '#FFFBF0', text: '#BF9C00' },
+  'green': { bg: '#00A352', border: '#008544', light: '#F0FFF7', text: '#006837' },
+  'blue': { bg: '#0055EE', border: '#0052CC', light: '#F0F7FF', text: '#003D99' },
+  'mint': { bg: '#C8E0CF', border: '#ACC4B5', light: '#F2F9F4', text: '#829988' },
+  'black': { bg: '#1A1A1A', border: '#000000', light: '#F8F8F8', text: '#1A1A1A' }
+};
+
+// Function to get JSON representation of the PropertyCard
+export const getPropertyCardJSON = ({ id, name, color, value, rent, isWild, isUtility, isRailroad }) => {
+  return {
+    id,
+    type: 'property',
+    name,
+    color: color,
+    value,
+    rent,
+    isWild,
+    isUtility,
+    isRailroad
+  };
+};
+
 const PropertyCard = ({ 
   name = 'Wild',
   color, // string for regular cards, array for wild cards
   value,
+  rent,
+  isWild = false,
+  isUtility = false,
+  isRailroad = false,
   width = 160,
-  height = 220,
-  isWild = false
+  height = 220
 }) => {
-  const colorMap = {
-    'brown': { bg: '#8B4513', border: '#654321', light: '#F3EBE5', text: '#8B4513', rent: [1, 2], isUtility: false, isRailroad: false },
-    'light blue': { bg: '#87CEEB', border: '#4682B4', light: '#F0FAFF', text: '#4682B4', rent: [1, 2, 3], isUtility: false, isRailroad: false },
-    'pink': { bg: '#FF1493', border: '#C71585', light: '#FFF0F7', text: '#C71585', rent: [1, 2, 4], isUtility: false, isRailroad: false },
-    'orange': { bg: '#FF7C2D', border: '#E65A00', light: '#FFF4F0', text: '#CC4E00', rent: [1, 3, 5], isUtility: false, isRailroad: false },
-    'red': { bg: '#FF0000', border: '#DC143C', light: '#FFF0F0', text: '#DC143C', rent: [2, 3, 6], isUtility: false, isRailroad: false },
-    'yellow': { bg: '#FFE026', border: '#E6BC00', light: '#FFFBF0', text: '#BF9C00', rent: [2, 4, 6], isUtility: false, isRailroad: false },
-    'green': { bg: '#00A352', border: '#008544', light: '#F0FFF7', text: '#006837', rent: [2, 4, 7], isUtility: false, isRailroad: false },
-    'blue': { bg: '#0055EE', border: '#0052CC', light: '#F0F7FF', text: '#003D99', rent: [3, 8], isUtility: false, isRailroad: false },
-    'mint': { bg: '#C8E0CF', border: '#ACC4B5', light: '#F2F9F4', text: '#829988', rent: [1, 2], isUtility: true, isRailroad: false },
-    'black': { bg: '#1A1A1A', border: '#000000', light: '#F8F8F8', text: '#1A1A1A', rent: [1, 2, 3, 4], isUtility: false, isRailroad: true }
-  };
 
   const getColorScheme = () => {
     if (isWild) {
@@ -37,8 +56,8 @@ const PropertyCard = ({
           };
         }
         return {
-          colors,
-          isWild: true
+          isWild: true,
+          colors
         };
       }
     }
@@ -46,15 +65,12 @@ const PropertyCard = ({
     // Regular property card
     const lowerCaseColor = typeof color === 'string' ? color.toLowerCase() : '';
     if (colorMap[lowerCaseColor]) {
-      const { bg, border, light, text, rent, isUtility, isRailroad } = colorMap[lowerCaseColor];
+      const { bg, border, light, text } = colorMap[lowerCaseColor];
       return {
         bg: `bg-[${bg}]`,
         border: `border-[${border}]`,
         light: `${light}`,
-        text: `text-[${text}]`,
-        rent: rent,
-        isUtility: isUtility,
-        isRailroad: isRailroad
+        text: `text-[${text}]`
       };
     }
 
@@ -62,10 +78,7 @@ const PropertyCard = ({
       bg: 'bg-gray-400',
       border: 'border-gray-500',
       light: 'bg-gray-50',
-      text: 'text-gray-600',
-      rent: [1],
-      isUtility: false,
-      isRailroad: false
+      text: 'text-gray-600'
     };
   };
 
@@ -107,12 +120,12 @@ const PropertyCard = ({
           </div>
 
           {/* Rent Information */}
-          <div className={`flex-1 px-3 ${colors.rent.length === 4 ? 'pt-1' : 'pt-6'} pb-2`}>
+          <div className={`flex-1 px-3 ${rent.length === 4 ? 'pt-1' : 'pt-6'} pb-2`}>
             <div className="flex flex-col h-full">
               <div className="space-y-1.5">
-                {colors.rent.map((amount, index) => (
+                {rent.map((amount, index) => (
                   <div key={index} 
-                    className={`flex justify-between items-center bg-white/80 px-3 ${colors.rent.length === 4 ? 'py-1' : 'py-1.5'} rounded-md text-sm shadow-sm`}>
+                    className={`flex justify-between items-center bg-white/80 px-3 ${rent.length === 4 ? 'py-1' : 'py-1.5'} rounded-md text-sm shadow-sm`}>
                     <span className="text-gray-600 font-medium">{getRentDescription(index)}</span>
                     <span className={`font-bold ${colors.text} ml-2`}>{amount}M</span>
                   </div>

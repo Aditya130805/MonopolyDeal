@@ -84,7 +84,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         """
         data = json.loads(text_data)
         action = data.get('action')
-        
+
         if action == 'establish_connection':
             player_id = str(data.get('player_id'))
             await self.checkValid(self.room_id, self.game_group_name, player_id)
@@ -96,6 +96,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             room = await self.get_room_by_id(self.room_id)
             await self.mark_game_start_db(room)
             GameConsumer.game_instances[self.room_id] = Game(room.players)
+            # Draw 2 cards for the first player
+            game_state = GameConsumer.game_instances[self.room_id]
+            first_player = game_state.players[game_state.turn_index]
+            first_player.draw_cards(game_state.deck, 2)
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
@@ -107,8 +111,67 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == 'initial_game_state':
             await self.broadcast_game_state()
             return
+        elif action == 'skip_turn':
+            game_state = GameConsumer.game_instances[self.room_id]
+            player_id = data.get('player')
+            if player_id == str(game_state.players[game_state.turn_index].id):
+                game_state.actions_remaining = 1  # This will trigger the turn switch in handle_action
+                await self.handle_action('skip', None, player_id)  # This will process the action and switch turns
+            return
+        else:
+            # Game actions
+            card = data.get('card')
+            player_id = data.get('player')
+            print("GAME ACTIONS:")
+            await self.handle_action(action, card, player_id)
+
         # Broadcast updated state to ALL clients in the group
         await self.broadcast_room_update()
+
+    async def handle_action(self, action, card, player_id):
+        print("CARD:", card)
+        game_state = GameConsumer.game_instances[self.room_id]
+        player = next((p for p in game_state.players if p.id == player_id), None)
+        
+        if action == 'to_bank':
+            if player:
+                card_to_move = next((c for c in player.hand if c.id == card['id']), None)
+                if card_to_move:
+                    player.hand.remove(card_to_move)
+                    player.bank.append(card_to_move)
+        elif action == 'to_properties':
+            if player:
+                card_to_move = next((c for c in player.hand if c.id == card['id']), None)
+                if card_to_move:
+                    card_to_move.current_color = card['currentColor']
+                    player.hand.remove(card_to_move)
+                    if not player.properties.get(card_to_move.current_color):
+                        player.properties[card_to_move.current_color] = []
+                    player.properties[card_to_move.current_color].append(card_to_move)    
+        
+        elif action == 'pass_go':
+            if player:
+                card_to_move = next((c for c in player.hand if c.id == card['id']), None)
+                if card_to_move:
+                    player.hand.remove(card_to_move)
+                    player.draw_cards(game_state.deck, 2)
+        
+        elif action == 'skip':
+            pass        
+        
+        if game_state.actions_remaining == 1:
+            # Switch to next player's turn
+            game_state.turn_index = (game_state.turn_index + 1) % len(game_state.players)
+            game_state.actions_remaining = 3
+            next_player = game_state.players[game_state.turn_index]
+            if len(next_player.hand) == 0:
+                next_player.draw_cards(game_state.deck, 5)
+            else:
+                next_player.draw_cards(game_state.deck, 2)
+        else:
+            game_state.actions_remaining -= 1
+        
+        await self.broadcast_game_state()
 
     async def reject_connection(self, reason):
         """

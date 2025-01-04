@@ -1,9 +1,98 @@
 import React from 'react';
 
+
+// Card data mapping
+const getCardData = (name) => {
+  const cardName = name.toLowerCase();
+
+  // Handle other action cards
+  switch (cardName) {
+    case 'multicolor rent':
+      return {
+        value: 3,
+        description: 'Collect rent from ONE player for any property'
+      };
+    case 'rent':
+      return {
+        value: 1,
+        description: `Collect rent from all players for any of the two colors`
+      };
+    case 'deal breaker':
+      return {
+        value: 5,
+        description: 'Steal a complete property set from any player'
+      };
+    case 'forced deal':
+      return {
+        value: 3,
+        description: 'Swap any property with another player'
+      };
+    case 'sly deal':
+      return {
+        value: 3,
+        description: 'Steal a property card from any player'
+      };
+    case 'debt collector':
+      return {
+        value: 3,
+        description: 'Force any player to pay you 5M'
+      };
+    case 'double the rent':
+      return {
+        value: 1,
+        description: 'Use with a Rent card to double the rent value'
+      };
+    case 'it\'s your birthday':
+      return {
+        value: 2,
+        description: 'All players must pay you 2M as a birthday gift'
+      };
+    case 'pass go':
+      return {
+        value: 1,
+        description: 'Draw 2 extra cards from the deck'
+      };
+    case 'house':
+      return {
+        value: 3,
+        description: 'Add to a full property set to add 3M to the rent value'
+      };
+    case 'hotel':
+      return {
+        value: 4,
+        description: 'Add to a full property set with a house to add 4M to the rent value'
+      };
+    case 'just say no':
+      return {
+        value: 4,
+        description: 'Cancel an action card played against you'
+      };
+    default:
+      return {
+        value: 0,
+        description: 'Action card description'
+      };
+  }
+};
+
+// Function to get JSON representation of the ActionCard
+export const getActionCardJSON = ({ id, name, rentColors = []}) => {
+  const cardData = getCardData(name);
+  return {
+    type: 'action',
+    id: id,
+    name: name,
+    value: cardData.value,
+    description: cardData.description,
+    rentColors: rentColors
+  };
+};
+
+
 const ActionCard = ({ 
   name,
   width = 160, 
-  height = 220, 
+  height = 220,
   rentColors = []
 }) => {
   // Calculate proportional sizes based on the card dimensions
@@ -44,91 +133,7 @@ const ActionCard = ({
     }
   };
 
-  // Card data mapping
-  const getCardData = () => {
-    const cardName = name.toLowerCase();
-
-    // Handle other action cards
-    switch (cardName) {
-      case 'multicolor rent':
-        return {
-          value: 3,
-          description: 'Collect rent from ONE player for any property'
-        };
-        break;
-      case 'rent':
-        return {
-          value: 1,
-          description: `Collect rent from all players for any of the two colors`
-        };
-        break;
-      case 'deal breaker':
-        return {
-          value: 5,
-          description: 'Steal a complete property set from any player'
-        };
-        break;
-      case 'forced deal':
-        return {
-          value: 3,
-          description: 'Swap any property with another player'
-        };
-        break;
-      case 'sly deal':
-        return {
-          value: 3,
-          description: 'Steal a property card from any player'
-        };
-        break;
-      case 'debt collector':
-        return {
-          value: 3,
-          description: 'Force any player to pay you 5M'
-        };
-        break;
-      case 'double the rent':
-        return {
-          value: 1,
-          description: 'Use with a Rent card to double the rent value'
-        };
-        break;
-      case 'it\'s your birthday':
-        return {
-          value: 2,
-          description: 'All players must pay you 2M as a birthday gift'
-        };
-        break;
-      case 'pass go':
-        return {
-          value: 1,
-          description: 'Draw 2 extra cards from the deck'
-        };
-        break;
-      case 'house':
-        return {
-          value: 3,
-          description: 'Add to a full property set to add 3M to the rent value'
-        };
-        break;
-      case 'hotel':
-        return {
-          value: 4,
-          description: 'Add to a full property set with a house to add 4M to the rent value'
-        };
-        break;
-      case 'just say no':
-        return {
-          value: 4,
-          description: 'Cancel an action card played against you'
-        };
-        break;
-      default:
-        return {
-          value: 0,
-          description: 'Action card description'
-        };
-    }
-  };
+  const cardData = getCardData(name);
 
   // Color scheme for action cards - purple with accents
   const getColorScheme = () => {
@@ -142,7 +147,6 @@ const ActionCard = ({
   };
 
   const colors = getColorScheme();
-  const cardData = getCardData();
 
   // Helper function to get the background color from border color
   const getBgFromBorder = (borderClass) => {

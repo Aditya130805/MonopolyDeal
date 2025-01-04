@@ -1,5 +1,14 @@
 import React from 'react';
 
+// Function to get JSON representation of the MoneyCard
+export const getMoneyCardJSON = ({ id, value }) => {
+  return {
+    type: 'money',
+    id: id,
+    value: value
+  };
+};
+
 const MoneyCard = ({ value, width = 160, height = 220 }) => {
   // Simple color scheme based on value
   const getColorSchemeColored = () => {

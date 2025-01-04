@@ -2,6 +2,7 @@ import React from 'react';
 import { useDrop } from 'react-dnd';
 import { BanknotesIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import CardBack from '../cards/CardBack';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BankAndCards = ({ 
   hand, 
@@ -15,11 +16,23 @@ const BankAndCards = ({
   // Bank calculations
   const moneyCards = bank;
   const denominations = [1, 2, 3, 4, 5, 10];
-  const counts = denominations.reduce((acc, val) => {
-    acc[val] = moneyCards.filter(card => card.value === val).length;
-    return acc;
-  }, {});
-  const total = moneyCards.reduce((sum, card) => sum + card.value, 0);
+  
+  // Initialize counts object
+  const counts = {};
+  for (const val of denominations) {
+    counts[val] = 0;
+    for (const card of moneyCards) {
+      if (card.value === val) {
+        counts[val]++;
+      }
+    }
+  }
+
+  // Calculate total
+  let total = 0;
+  for (const card of moneyCards) {
+    total += card.value;
+  }
 
   // Bank drop zone
   const [{ isOver }, drop] = useDrop(() => ({
@@ -49,7 +62,7 @@ const BankAndCards = ({
             }}
           >
             <div className="text-emerald-700 font-semibold text-lg transform hover:scale-105 transition-transform">
-              Drop to Bank It
+              Drop to Bank
             </div>
           </div>
         )}
@@ -93,43 +106,68 @@ const BankAndCards = ({
       {/* Cards Section */}
       <div className="flex flex-shrink">
         <div className={`flex ${isOpponent ? '-space-x-24' : '-space-x-14'} relative`}>
-          {hand.map((card, index) => {
-            // Calculate the angle for each card in the fan
-            const angle = isOpponent
-              ? -((index - (totalCards - 1) / 2) * (fanAngleRange / Math.max(totalCards - 1, 1)))
-              : 0;
-              
-            return (
-              <div
-                key={card.id}
-                className="relative"
-                style={{
-                  zIndex: index,
-                  transform: isOpponent ? `rotate(${angle}deg)` : 'none',
-                  transformOrigin: isOpponent ? 'bottom center' : 'center',
-                  WebkitTransform: isOpponent ? `rotate(${angle}deg)` : 'none',
-                  WebkitTransformOrigin: isOpponent ? 'bottom center' : 'center'
-                }}
-              >
-                {!isOpponent ? (
-                  <DraggableCard card={card}>
-                    <div
-                      className="transition-transform duration-300 ease-in-out hover:-translate-y-12 transform"
-                      style={{
-                        willChange: 'transform'
-                      }}
-                    >
-                      {renderCardContent(card)}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {hand.map((card, index) => {
+              // Calculate the angle for each card in the fan
+              const angle = isOpponent
+                ? -((index - (totalCards - 1) / 2) * (fanAngleRange / Math.max(totalCards - 1, 1)))
+                : 0;
+                
+              return (
+                <motion.div
+                  key={card.id}
+                  className="relative"
+                  layout
+                  layoutId={`card-${card.id}`}
+                  initial={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ 
+                    opacity: 0,
+                    scale: 0.8,
+                    x: 100,
+                    transition: { 
+                      duration: 0.3,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  transition={{
+                    layout: {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 25
+                    }
+                  }}
+                  style={{
+                    transform: `rotate(${angle}deg)`,
+                    transformOrigin: isOpponent ? 'bottom center' : 'center',
+                    zIndex: index
+                  }}
+                >
+                  {!isOpponent ? (
+                    <DraggableCard card={card}>
+                      <motion.div
+                        whileHover={{ y: -48 }}
+                        initial={{ y: 0 }}
+                        animate={{ y: 0 }}
+                        transition={{ 
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                          mass: 0.8
+                        }}
+                        className="transform-gpu"
+                      >
+                        {renderCardContent(card)}
+                      </motion.div>
+                    </DraggableCard>
+                  ) : (
+                    <div className="transform rotate-180">
+                      <CardBack width={160} height={220} />
                     </div>
-                  </DraggableCard>
-                ) : (
-                  <div className="transform rotate-180">
-                    <CardBack width={160} height={220} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -68,26 +68,26 @@ def create_deck():
     
     # Add Rent Cards
     rents = [
-        *[RentCard(['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], 3, True, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[RentCard(['blue', 'green'], 1, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[RentCard(['mint', 'black'], 1, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[RentCard(['red', 'yellow'], 1, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[RentCard(['orange', 'pink'], 1, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[RentCard(['brown', 'light blue'], 1, card_id=((card_id := card_id + 1))) for _ in range(2)]
+        *[RentCard(['brown', 'mint', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'blue', 'black'], True, card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[RentCard(['blue', 'green'], card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[RentCard(['mint', 'black'], card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[RentCard(['red', 'yellow'], card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[RentCard(['orange', 'pink'], card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[RentCard(['brown', 'light blue'], card_id=((card_id := card_id + 1))) for _ in range(2)]
     ]
     
     # Add Action Cards
     actions = [
-        *[ActionCard("Deal Breaker", 5, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[ActionCard("Debt Collector", 3, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("Double The Rent", 1, card_id=((card_id := card_id + 1))) for _ in range(2)],
-        *[ActionCard("Just Say No", 4, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("Sly Deal", 3, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("It's Your Birthday", 2, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("House", 3, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("Hotel", 4, card_id=((card_id := card_id + 1))) for _ in range(3)],
-        *[ActionCard("Pass Go", 1, card_id=((card_id := card_id + 1))) for _ in range(10)],
-        *[ActionCard("Forced Deal", 3, card_id=((card_id := card_id + 1))) for _ in range(4)]
+        *[ActionCard("Deal Breaker", card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[ActionCard("Debt Collector", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("Double The Rent", card_id=((card_id := card_id + 1))) for _ in range(2)],
+        *[ActionCard("Just Say No", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("Sly Deal", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("It's Your Birthday", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("House", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("Hotel", card_id=((card_id := card_id + 1))) for _ in range(3)],
+        *[ActionCard("Pass Go", card_id=((card_id := card_id + 1))) for _ in range(10)],
+        *[ActionCard("Forced Deal", card_id=((card_id := card_id + 1))) for _ in range(4)]
     ]
     
     # Add Money Cards
