@@ -42,7 +42,7 @@ def create_deck():
         
         # Green
         PropertyCard("Pacific Avenue", "green", 4, card_id=((card_id := card_id + 1))),
-        PropertyCard("North Carolina Avenue", "green", 4, card_id=((card_id := card_id + 1))),
+        PropertyCard("N. Carolina Avenue", "green", 4, card_id=((card_id := card_id + 1))),
         PropertyCard("Pennsylvania Avenue", "green", 4, card_id=((card_id := card_id + 1))),
         
         # Blue

@@ -12,10 +12,7 @@ const colorStyles = {
 };
 
 export const handleHotelPlacement = (card, playerProperties, setError, socket, user, setRequirements, mainSets, overflowSets) => {
-  console.log("Handling hotel placement with properties:", playerProperties);
-  console.log("Main sets:", mainSets);
-  console.log("Overflow sets:", overflowSets);
-
+  
   let completeSets = [];
 
   // First find complete sets in mainSets that have a house but no hotel
@@ -28,8 +25,6 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
     const hasHouse = cards.some(c => c.type === 'action' && c.name.toLowerCase() === 'house');
     const hasHotel = cards.some(c => c.type === 'action' && c.name.toLowerCase() === 'hotel');
     const isComplete = propertyCards.length >= setRequirements[color];
-    
-    console.log("Checking main set:", color, "Cards:", propertyCards.length, "Required:", setRequirements[color], "Has House:", hasHouse, "Has Hotel:", hasHotel);
     
     if (isComplete && hasHouse && !hasHotel) {
       // Complete set with house but no hotel - add to completeSets
@@ -46,8 +41,6 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
       }
     }
   });
-
-  console.log("Complete sets with houses:", completeSets);
 
   if (completeSets.length === 0) {
     setError('No valid property sets to add a hotel to');

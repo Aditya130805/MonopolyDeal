@@ -12,9 +12,6 @@ const colorStyles = {
 };
 
 export const handleHousePlacement = (card, playerProperties, setError, socket, user, setRequirements, mainSets, overflowSets) => {
-  console.log("Handling house placement with properties:", playerProperties);
-  console.log("Main sets:", mainSets);
-  console.log("Overflow sets:", overflowSets);
 
   let completeSets = [];
 
@@ -27,8 +24,6 @@ export const handleHousePlacement = (card, playerProperties, setError, socket, u
     const propertyCards = cards.filter(c => c.type === 'property');
     const hasHouse = cards.some(c => c.type === 'action' && c.name.toLowerCase() === 'house');
     const isComplete = propertyCards.length >= setRequirements[color];
-    
-    console.log("Checking main set:", color, "Cards:", propertyCards.length, "Required:", setRequirements[color], "Has House:", hasHouse);
     
     if (isComplete && !hasHouse) {
       // Complete set without house - add to completeSets
@@ -44,9 +39,7 @@ export const handleHousePlacement = (card, playerProperties, setError, socket, u
       }
     }
   });
-
-  console.log("Complete sets:", completeSets);
-
+  
   if (completeSets.length === 0) {
     setError('No valid property sets to add a house to');
     return;

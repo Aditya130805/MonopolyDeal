@@ -9,11 +9,19 @@ import ActionCard from './cards/ActionCard';
 import BankAndCards from './game/BankAndCards';
 import PropertySet from './game/PropertySet';
 import GameCenter from './game/GameCenter';
+import ActionAnimation from './animations/ActionAnimation';
+import CardNotification from './animations/CardNotification';
+import RentModal from './modals/RentModal';
+import ErrorNotification from './notifications/ErrorNotification';
+import RentCollectionOverlay from './overlays/RentCollectionOverlay';
+import PaymentSuccessfulOverlay from './animations/PaymentSuccessfulOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
+import { handleWildPropertySelection } from '../utils/wildPropertyHandler';
+import { handleRentColorSelection } from '../utils/rentActionHandler';
 
 const MainGame = () => {  
   const { roomId } = useParams();
@@ -33,31 +41,56 @@ const MainGame = () => {
   const [lastAction, setLastAction] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
-  const [pendingHouseCard, setPendingHouseCard] = useState(null);
-  const [pendingHotelCard, setPendingHotelCard] = useState(null);
-  const [pendingPassGoCard, setPendingPassGoCard] = useState(null);
   const [currentTurnPlayerId, setCurrentTurnPlayerId] = useState('');
   const [currentTurnPlayerName, setCurrentTurnPlayerName] = useState('');
   const [actionsRemaining, setActionsRemaining] = useState(3);
+  const [showActionAnimation, setShowActionAnimation] = useState({ visible: false, action: null, onComplete: null });
+  const [showCardNotification, setShowCardNotification] = useState({ visible: false, card: null, actionType: null });
+  const cardNotificationTimeoutRef = useRef(null);
+  const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
   const isUserTurnRef = useRef(false);
+  const [pendingHouseCard, setPendingHouseCard] = useState(null);
+  const [pendingHotelCard, setPendingHotelCard] = useState(null);
+  const [pendingPassGoCard, setPendingPassGoCard] = useState(null);
+  const [pendingItsYourBirthdayCard, setPendingItsYourBirthdayCard] = useState(null);
+  const [pendingDebtCollectorCard, setPendingDebtCollectorCard] = useState(null);
+  const [pendingRentCard, setPendingRentCard] = useState(null);
+  const [rentAmount, setRentAmount] = useState(0);
+  const [rentRecipientId, setRentRecipientId] = useState(null);
+  const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState(false);
 
-  // Auto-dismiss notifications
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        setError('');
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+  // State for rent modal
+  const [rentModalOpen, setRentModalOpen] = useState(false);
 
-  // Check if it's user's turn whenever currentTurnPlayerId changes
   useEffect(() => {
-    console.log(currentTurnPlayerId, user.unique_id, currentTurnPlayerId === user.unique_id);
+    return () => {
+      if (cardNotificationTimeoutRef.current) {
+        clearTimeout(cardNotificationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleRentPayment = (selectedCards) => {
+    // Send the payment to the server
+    console.log("Sending rent payment for selected cards:", selectedCards);
+    const message = {
+      action: 'rent_payment',
+      player: user.unique_id,
+      recipient_id: rentRecipientId,
+      card: {
+        selected_cards: selectedCards.map(card => card.id),
+      }
+    };
+    console.log("Sending rent payment message:", message);
+    socket.send(JSON.stringify(message));
+  };
+
+  //////////////////// CHECK IF IT'S USER'S TURN
+  useEffect(() => {
     isUserTurnRef.current = currentTurnPlayerId === user.unique_id;
   }, [currentTurnPlayerId, user.unique_id]);
 
-  // CONSTANTS
+  //////////////////// CONSTANTS
   const colorOrder = ['brown', 'mint', 'blue', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'black']
   const setRequirements = {
     'brown': 2, 'mint': 2, 'blue': 2,
@@ -68,7 +101,7 @@ const MainGame = () => {
     CARD: 'card'
   };
 
-  // Split properties into main sets and overflow
+  //////////////////// PROPERTIES INTO MAIN SETS AND OVERFLOW SETS
   const splitProperties = (properties) => {
     const mainSets = {};
     const overflowSets = {};
@@ -111,26 +144,22 @@ const MainGame = () => {
 
     return { mainSets, overflowSets };
   };
-
-  // Update mainSets and overflowSets whenever properties change
   useEffect(() => {
     const { mainSets: newMainSets, overflowSets: newOverflowSets } = splitProperties(playerProperties);
     setMainSets(newMainSets);
     setOverflowSets(newOverflowSets);
   }, [playerProperties]);
 
-  // SOCKET HANDLING
-  
+  //////////////////// SOCKET HANDLING
   useEffect(() => {
     if (!socket) {
         console.log("Socket is null; waiting for WebSocket connection.");
-        return;
+      return;
     }
     console.log("(Socket 2) Connected:", socket);
     socket.onmessage = handleMessage;
     setTimeout(() => setIsSocketReady(true), 0);
   }, [socket]);
-
   useEffect(() => {
     if (isSocketReady) {
       socket.send(JSON.stringify({
@@ -140,16 +169,89 @@ const MainGame = () => {
     }
   }, [isSocketReady]);
 
+  //////////////////// HANDLE WEBSOCKET MESSAGES
   const handleMessage = (event) => {
     try {
-      console.log(`(Handler 2) WebSocket message in room ${roomId}:`, event.data);
       const data = JSON.parse(event.data);
-      if (data.type && data.type === 'game_update') {
+      console.log(`(Handler 2) WebSocket message in room ${roomId}:`, data);
+
+      // CARD_PLAYED
+      if (data.type && data.type === 'card_played') {
+        // Clear any existing timeout
+        if (cardNotificationTimeoutRef.current) {
+          clearTimeout(cardNotificationTimeoutRef.current);
+        }
+        
+        // Show notification to all players
+        setShowCardNotification({ 
+          visible: true, 
+          card: data.card,
+          actionType: data.action_type 
+        });
+        
+        // Set new timeout to hide notification
+        cardNotificationTimeoutRef.current = setTimeout(() => {
+          setShowCardNotification(prev => ({ ...prev, visible: false }));
+          cardNotificationTimeoutRef.current = null;
+        }, 2000);
+        
+        // Additionally show action animation for specific cases
+        if (data.player_id === user.unique_id && data.card.type === 'action' && data.card.name.toLowerCase() !== 'house' && data.card.name.toLowerCase() !== 'hotel' && data.action_type !== 'to_bank' && data.action_type !== 'to_properties') {
+          setShowActionAnimation({ visible: true, action: data.action });
+          // Hide animation after 2 seconds
+          setTimeout(() => {
+            setShowActionAnimation(prev => ({ ...prev, visible: false }));
+          }, 2000);
+        }
+        return;
+      }
+
+      // RENT_REQUEST
+      else if (data.type && data.type === 'rent_request') {
+        console.log("RENT REQUEST DATA:", data)
+        setRentAmount(data.amount);
+        setRentRecipientId(data.recipient_id);
+        if (data.recipient_id !== user.unique_id) {
+          setRentModalOpen(true);
+        }
+        else {
+          // Show rent animation first for the player who played the rent card
+          setShowActionAnimation({
+            visible: true,
+            action: data.rent_type === "it's your birthday" ? 'Birthday Request' : data.rent_type === "debt collector" ? 'Debt Request' : 'Rent Request'
+          });
+          // Wait 2 seconds then start transitioning
+          setTimeout(() => {
+            // Hide action animation (will trigger fade out)
+            setShowActionAnimation(prev => ({ ...prev, visible: false }));
+            // Show rent collection overlay
+            setShowRentCollectionOverlay(true);
+          }, 2000);
+        }
+      }
+
+      // RENT_PAID
+      else if (data.type === 'rent_paid') {
+        console.log("RENT PAID RECEIVED!", data)
+        // Hide overlay for the player who requested rent
+        setShowRentCollectionOverlay(false);
+        // Clear states since rent collection is complete
+        setRentModalOpen(false);
+        setRentAmount(0);
+        setRentRecipientId(null);
+        setShowPaymentSuccessfulOverlay(true);
+        // Hide overlay after 2 seconds
+        setTimeout(() => {
+          setShowPaymentSuccessfulOverlay(false);
+        }, 2000);
+
+      }
+
+      // GAME_UPDATE
+      else if (data.type && data.type === 'game_update') {
         const gameState = data.state;
-        console.log("STATE:", gameState);
         
         // Find current player and update their hand
-        console.log(gameState.players);
         const currentPlayer = gameState.players.find(p => p.id === user.unique_id);
         if (currentPlayer) {
           setPlayerHand(currentPlayer.hand);
@@ -178,31 +280,27 @@ const MainGame = () => {
     }
   };
 
+  //////////////////// ACTION USE EFFECTS
   useEffect(() => {
     if (pendingHouseCard) {
-      console.log("Handling pending house with properties:", playerProperties);
       handleHousePlacement(pendingHouseCard, playerProperties, setError, socket, user, setRequirements, mainSets, overflowSets);
       setPendingHouseCard(null);
     }
   }, [pendingHouseCard]);
-
   useEffect(() => {
     if (pendingHotelCard) {
-      console.log("Handling pending hotel with properties:", playerProperties);
       handleHotelPlacement(pendingHotelCard, playerProperties, setError, socket, user, setRequirements, mainSets, overflowSets);
       setPendingHotelCard(null);
     }
   }, [pendingHotelCard])
-
   useEffect(() => {
     if (pendingPassGoCard) {
-      console.log("Handling pending Pass Go with hand:", playerHand);
-      console.log(2 - 1 + playerHand.length - (actionsRemaining - 1), (2 - 1 + playerHand.length - (actionsRemaining - 1) > 7));
       if (2 - 1 + playerHand.length - (actionsRemaining - 1) > 7) {
         setError('Pass Go cannot be played as it will exceed the 7-card limit');
         setPendingPassGoCard(null);
         return;
       }
+      setShowActionAnimation({ visible: true, action: 'pass_go' });
       socket.send(JSON.stringify({
         'action': 'pass_go',
         'player': user.unique_id,
@@ -211,192 +309,138 @@ const MainGame = () => {
       setPendingPassGoCard(null);
     }
   }, [pendingPassGoCard]);
+  useEffect(() => {
+    if (pendingItsYourBirthdayCard) {
+      setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
+      socket.send(JSON.stringify({
+        action: "it's_your_birthday",
+        player: user.unique_id,
+        card: pendingItsYourBirthdayCard
+      }));
+      setPendingItsYourBirthdayCard(null);
+    }
+  }, [pendingItsYourBirthdayCard]);
+  useEffect(() => {
+    if (pendingDebtCollectorCard) {
+      setShowActionAnimation({ visible: true, action: "Debt Collector" });
+      socket.send(JSON.stringify({
+        action: "debt_collector",
+        player: user.unique_id,
+        card: pendingDebtCollectorCard
+      }))
+      setPendingDebtCollectorCard(null);
+    }
+  }, [pendingDebtCollectorCard]);
+  useEffect(() => {
+    if (pendingRentCard) {
 
+      console.log("Player properties:", playerProperties);
+
+      let hasMatchingProperties = false;
+      for (let rentColor of pendingRentCard.rentColors) {
+        for (let [color, cards] of Object.entries(playerProperties)) {
+          if (color.toLowerCase() === rentColor.toLowerCase()) {
+            const hasPropertyCards = cards.some(c => c.type === 'property');
+            if (hasPropertyCards) {
+              hasMatchingProperties = true;
+              break;
+            }
+          }
+        }
+        if (hasMatchingProperties) {
+          break;
+        }
+      }
+      if (!hasMatchingProperties) {
+        setError("You don't have any properties matching the rent card colors!");
+        setPendingRentCard(null);
+        return;
+      }
+      handleRentColorSelection(pendingRentCard, playerProperties, socket, user, setShowActionAnimation, setPendingRentCard);
+    }
+  }, [pendingRentCard]);
+
+  //////////////////// DROP ZONE HANDLERS
   const handleCardDropBank = (card) => {
-    console.log("Dropping card to bank:", card);
-    console.log("IS TURN:", isUserTurnRef.current);
-    // if (!checkIsUserTurn()) return;
+    console.log("Dropping CARD to BANK:", card);
     if (!isUserTurnRef.current) {
-      setError('It is not your turn yet');
+      setError('Please wait for your turn to play');
       return;
     }
-    
-    // Function to send card to bank
+    if (card.type === 'property') {
+      setError('Properties cannot be placed in the bank');
+      return;
+    }
     const sendToBank = () => {
-      if (card.type === 'property') {
-        setError('Properties cannot be placed in the bank');
-        return;
-      } 
       socket.send(JSON.stringify({
         'action': 'to_bank',
         'player': user.unique_id,
         'card': card
       }))
     };
-
     // Delay the actual card removal to allow for animation
     setTimeout(sendToBank, 300);
   };
-
   const handleCardDropProperty = (card) => {
-    console.log("Dropping card to property:", card);
-    // if (!checkIsUserTurn()) return;
+    console.log("Dropping CARD to PROPERTY:", card);
     if (!isUserTurnRef.current) {
-      setError('It is not your turn yet');
+      setError('Please wait for your turn to play');
       return; 
     }
+    if (card.type === 'money') {
+      setError('Money cards cannot be placed in properties');
+      return;
+    } else if (card.type === 'action' && card.name.toLowerCase() !== 'house' && card.name.toLowerCase() !== 'hotel') {
+      setError('Only house and hotel action cards can be placed in properties');
+      return;
+    }
     const sendToProperties = () => {
-      if (card.type === 'money') {
-        setError('Money cards cannot be placed in properties');
-        return;
-      }
-      else if (card.type === 'action') {
+      if (card.type === 'action') {
         if (card.name.toLowerCase() === 'house') {
-          console.log("Setting pending house card");
           setPendingHouseCard(card);
         } else if (card.name.toLowerCase() === 'hotel') {
-          console.log("Setting pending hotel card");
           setPendingHotelCard(card);
-        } else {
-          setError('Only house and hotel action cards can be placed in properties');
         }
         return;
       }
       else if (card.type === 'property' && card.isWild) {
-        // Create color selection buttons
-        const colorButtons = document.createElement('div');
-        
-        // Function to update position
-        const updatePosition = () => {
-          const propertySet = document.querySelector('.property-set');
-          if (!propertySet || !colorButtons) return;
-          const rect = propertySet.getBoundingClientRect();
-          colorButtons.style.position = 'fixed';
-          colorButtons.style.top = rect.top + 'px';
-          colorButtons.style.left = rect.left + 'px';
-          colorButtons.style.width = rect.width + 'px';
-          colorButtons.style.height = rect.height + 'px';
-        };
-
-        // Initial position
-        updatePosition();
-        
-        // Add resize listener
-        const resizeObserver = new ResizeObserver(updatePosition);
-        resizeObserver.observe(document.querySelector('.property-set'));
-        window.addEventListener('resize', updatePosition);
-        
-        colorButtons.style.backgroundColor = 'transparent';
-        colorButtons.style.display = 'flex';
-        colorButtons.style.flexDirection = 'column';
-        colorButtons.style.borderRadius = '8px';
-        colorButtons.style.overflow = 'hidden';
-        colorButtons.style.zIndex = '1000';
-        
-        const colorStyles = {
-          'brown': '#92400E',
-          'light blue': '#7DD3FC',
-          'pink': '#F9A8D4',
-          'orange': '#FB923C',
-          'red': '#EF4444',
-          'yellow': '#FDE047',
-          'green': '#16A34A',
-          'blue': '#2563EB',
-          'black': '#1F2937',
-          'mint': '#A7F3D0'
-        };
-        
-        // Create split sections for each color
-        card.color.forEach((color, index) => {
-          const section = document.createElement('div');
-          section.style.flex = `1`;
-          section.style.backgroundColor = colorStyles[color];
-          section.style.opacity = '0.8';
-          section.style.cursor = 'pointer';
-          section.style.position = 'relative';
-          section.style.transition = 'opacity 0.2s ease';
-          
-          // Add color label
-          const label = document.createElement('div');
-          label.textContent = color;
-          label.style.position = 'absolute';
-          label.style.left = '50%';
-          label.style.top = '50%';
-          label.style.transform = 'translate(-50%, -50%)';
-          label.style.color = ['yellow', 'mint', 'light blue'].includes(color) ? '#1F2937' : 'white';
-          label.style.fontSize = '1rem';
-          label.style.fontWeight = '600';
-          label.style.textTransform = 'capitalize';
-          label.style.textShadow = ['yellow', 'mint', 'light blue'].includes(color) ? 'none' : '0 1px 2px rgba(0,0,0,0.2)';
-          label.style.pointerEvents = 'none'; // Ensure hover works properly
-          
-          section.appendChild(label);
-          
-          section.onmouseover = () => {
-            section.style.opacity = '0.9';
-          };
-          
-          section.onmouseout = () => {
-            section.style.opacity = '0.8';
-          };
-          
-          section.onclick = () => {
-            section.style.opacity = '1';
-            setTimeout(() => {
-              console.log("COLOR:", color);
-              card.currentColor = color;
-              console.log(card);
-              socket.send(JSON.stringify({
-                'action': 'to_properties',
-                'player': user.unique_id,
-                'card': card
-              }));
-              resizeObserver.disconnect();
-              window.removeEventListener('resize', updatePosition);
-              document.body.removeChild(colorButtons);
-            }, 50);
-          };
-          
-          colorButtons.appendChild(section);
-        });
-        
-        document.body.appendChild(colorButtons);
+        handleWildPropertySelection(card, socket, user);
         return;
       }
-
       socket.send(JSON.stringify({
         'action': 'to_properties',
         'player': user.unique_id,
         'card': card
       }));
-    }
-
+    };
     // Delay the actual card removal to allow for animation
     setTimeout(sendToProperties, 300);
   };
-
   const handleCardDropAction = (card) => {
-    console.log("Dropping card to action area:", card);
-
+    console.log("Dropping CARD to ACTION:", card);
     if (!isUserTurnRef.current) {
-      setError('It is not your turn yet');
+      setError('Please wait for your turn to play');
       return;
     }
-    
+    if (card.type !== 'action') {
+      setError("Money/properties cannot be played in the action pile");
+      return;
+    } else if (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel') {
+      setError('Only action cards apart from house and hotel can be played in the action area');
+      return;
+    }
+
     const sendToAction = () => {
-      if (card.type !== 'action') {
-        setError("Money/properties cannot be played in the action pile");
-        return;
-      }
-      else if (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel') {
-        setError('Only action cards apart from house and hotel can be played in the action area');
-        return;
-      }
-      else if (card.name.toLowerCase() === 'pass go') {
+      if (card.name.toLowerCase() === 'pass go') {
         setPendingPassGoCard(card);
+      } else if (card.name.toLowerCase() === "it's your birthday") {
+        setPendingItsYourBirthdayCard(card);
+      } else if (card.name.toLowerCase() === "debt collector") {
+        setPendingDebtCollectorCard(card);
+      } else if (card.name.toLowerCase() === "rent" || card.name.toLowerCase() === "multicolor rent") {
+        setPendingRentCard(card);
       }
     };
-
     // Delay the actual card removal to allow for animation
     setTimeout(sendToAction, 300);
   };
@@ -483,27 +527,22 @@ const MainGame = () => {
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         
-        <AnimatePresence>
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, x: 100, scale: 0.8 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 100, scale: 0.8 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 100,
-                damping: 15,
-                mass: 1
-              }}
-              className="fixed bottom-8 right-4 z-50 flex items-center gap-4 text-red-600 bg-red-50 px-6 py-4 rounded-xl shadow-2xl max-w-md border border-red-100"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 flex-shrink-0">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-              </svg>
-              <p className="text-base font-medium">{error}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <ErrorNotification error={error} setError={setError} />
+        <RentCollectionOverlay isVisible={showRentCollectionOverlay} />
+        <ActionAnimation 
+          action={showActionAnimation.action}
+          isVisible={showActionAnimation.visible}
+          onComplete={() => setShowActionAnimation({ visible: false, action: null })}
+        />
+        <CardNotification
+          card={showCardNotification.card}
+          isVisible={showCardNotification.visible}
+          actionType={showCardNotification.actionType}
+          onComplete={() => setShowCardNotification({ visible: false, card: null, actionType: null })}
+        />
+        <PaymentSuccessfulOverlay
+          isVisible={showPaymentSuccessfulOverlay}
+        />
         
         {/* Game Layout */}
         <div className="flex flex-col justify-between h-[calc(100vh-4rem)] py-32 px-8 overflow-hidden bg-gray-200">
@@ -587,6 +626,18 @@ const MainGame = () => {
           </div>
         </div>
       </div>
+      <RentModal
+        isOpen={rentModalOpen}
+        onClose={() => {
+          socket.send(JSON.stringify({
+            'action': 'rent_paid'
+          }));
+        }}
+        amountDue={rentAmount}
+        playerBank={playerBank}
+        playerProperties={playerProperties}
+        onPaymentSubmit={handleRentPayment}
+      />
     </DndProvider>
   );
 };

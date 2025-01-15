@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { BanknotesIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import CardBack from '../cards/CardBack';
@@ -13,6 +13,8 @@ const BankAndCards = ({
   DraggableCard,
   renderCardContent 
 }) => {
+  const [hoveredCardId, setHoveredCardId] = useState(null);
+
   // Bank calculations
   const moneyCards = bank;
   const denominations = [1, 2, 3, 4, 5, 10];
@@ -48,11 +50,11 @@ const BankAndCards = ({
   const fanAngleRange = 20; // Total angle range for the fan effect
 
   return (
-    <div className={`flex items-center ${isOpponent ? 'gap-12' : 'gap-4'} ${isOpponent ? '-mt-48 flex-row-reverse' : '-mb-36'} w-full`}>
+    <div className={`flex items-center ${isOpponent ? 'gap-12' : 'gap-16'} ${isOpponent ? '-mt-48 flex-row-reverse' : '-mb-36'} w-full`}>
       {/* Compact Bank Section with Responsive Design */}
       <div 
         ref={!isOpponent ? drop : null}
-        className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180 mt-14' : 'mt-9'} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-300`}
+        className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180 mt-14' : 'mt-9'} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-100`}
       >
         {!isOpponent && isOver && (
           <div 
@@ -104,11 +106,38 @@ const BankAndCards = ({
       </div>
 
       {/* Cards Section */}
-      <div className="flex flex-shrink">
-        <div className={`flex ${isOpponent ? '-space-x-24' : '-space-x-14'} relative`}>
+      <div 
+        className="flex flex-shrink"
+        onMouseLeave={() => setHoveredCardId(null)}
+      >
+        <div 
+          className={`flex ${isOpponent ? '-space-x-24' : '-space-x-14'} relative`}
+          style={{ 
+            perspective: '1000px',
+            transformStyle: 'preserve-3d'
+          }}
+          onMouseLeave={() => setHoveredCardId(null)}
+        >
+          <style>{`
+            .card-hover-transform {
+              transition: transform 250ms ease-out;
+              pointer-events: none;
+            }
+            .card-container {
+              pointer-events: auto;
+              position: relative;
+            }
+            .card-container::after {
+              content: '';
+              position: absolute;
+              left: 0;
+              right: 0;
+              bottom: -3rem;
+              height: 3rem;
+            }
+          `}</style>
           <AnimatePresence mode="popLayout" initial={false}>
             {hand.map((card, index) => {
-              // Calculate the angle for each card in the fan
               const angle = isOpponent
                 ? -((index - (totalCards - 1) / 2) * (fanAngleRange / Math.max(totalCards - 1, 1)))
                 : 0;
@@ -144,20 +173,16 @@ const BankAndCards = ({
                 >
                   {!isOpponent ? (
                     <DraggableCard card={card}>
-                      <motion.div
-                        whileHover={{ y: -48 }}
-                        initial={{ y: 0 }}
-                        animate={{ y: 0 }}
-                        transition={{ 
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 25,
-                          mass: 0.8
+                      <div
+                        className="transform-gpu card-hover-transform cursor-pointer card-container"
+                        style={{
+                          transform: hoveredCardId === card.id ? 'translateY(-3rem)' : 'none'
                         }}
-                        className="transform-gpu"
+                        onMouseEnter={() => setHoveredCardId(card.id)}
+                        onMouseLeave={() => setHoveredCardId(null)}
                       >
                         {renderCardContent(card)}
-                      </motion.div>
+                      </div>
                     </DraggableCard>
                   ) : (
                     <div className="transform rotate-180">
