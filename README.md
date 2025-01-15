@@ -9,7 +9,7 @@
 - Implemented displaying player cards, bank, and properties (2-player only)
 - Implemented card dragging and dropping onto the bank, properties, and action pile
 - Implemented bank and property area additions
-- Implemented pass go action
+- Implemented pass go, it's your birthday, debt collector, and rent actions
 
 ### Complete:
 
@@ -26,10 +26,18 @@
 - Modify MainGame to allow for multiple players
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 - Fix 'card being cut while dragging' in Safari
-- Fix the the sudden un-hover effect after a card drop and after error message
+- Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
-- Implement Sly Deal, ForcedDeal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
-- ̦Potentially display an animation in the background highlighting the action that's been played
+- Implement Sly Deal, ForcedDeal, Deal Breaker, Double The Rent, and Just Say No
+- Improve the animation displayed in the background highlighting the action that's been played
+- Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
+- Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
+- Block other drop zones when a card is in play (for instance, if I am adding a house to a property, I shouldn't be able to drop a card in bank)
+- Fix the case where a user presses the back button on game screen and is taken to the waiting room - close the connection and take them home instead
+- Implement a feature within rent requests that shows what was given by the player as rent / if a player couldn't pay rent because they didn't have any more to give
+- Fix the "card is null" error that randomly appears and is likely some problem in CardNotification
+- Fix the case where a player has no bank/property cards to pay for rent
+- Fix the issue where if a player pays rent in less than 2 seconds, then the "Collecting Rent..." animation doesn't go away for the rent requesting user
 
 ### Potential issues:
 
