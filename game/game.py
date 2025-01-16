@@ -19,7 +19,7 @@ class Game:
             "deck_count": len(self.deck),
             # "discard_pile_count": len(self.discard_pile),
             "players": [player.to_dict() for player in self.players],
-            "discard_pile": self.discard_pile.to_dict() if self.discard_pile else None,
+            "discard_pile": [card.to_dict() for card in self.discard_pile] if self.discard_pile else None,
             "current_turn": self.players[self.turn_index].id,
             "winner": self.winner.name if self.winner else None,
             "actions_remaining": self.actions_remaining

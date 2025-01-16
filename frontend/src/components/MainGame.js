@@ -12,9 +12,13 @@ import GameCenter from './game/GameCenter';
 import ActionAnimation from './animations/ActionAnimation';
 import CardNotification from './animations/CardNotification';
 import RentModal from './modals/RentModal';
+import SlyDealModal from './modals/SlyDealModal';
+import ForcedDealModal from './modals/ForcedDealModal';
 import ErrorNotification from './notifications/ErrorNotification';
 import RentCollectionOverlay from './overlays/RentCollectionOverlay';
 import PaymentSuccessfulOverlay from './animations/PaymentSuccessfulOverlay';
+import PropertyStealOverlay from './overlays/PropertyStealOverlay';
+import PropertySwapOverlay from './overlays/PropertySwapOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,9 +59,15 @@ const MainGame = () => {
   const [pendingItsYourBirthdayCard, setPendingItsYourBirthdayCard] = useState(null);
   const [pendingDebtCollectorCard, setPendingDebtCollectorCard] = useState(null);
   const [pendingRentCard, setPendingRentCard] = useState(null);
+  const [pendingSlyDealCard, setPendingSlyDealCard] = useState(null);
+  const [pendingForcedDealCard, setPendingForcedDealCard] = useState(null);
+  const [forcedDealModalOpen, setForcedDealModalOpen] = useState(false);
   const [rentAmount, setRentAmount] = useState(0);
   const [rentRecipientId, setRentRecipientId] = useState(null);
   const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState(false);
+  const [slyDealModalOpen, setSlyDealModalOpen] = useState(false);
+  const [propertyStealAnimation, setPropertyStealAnimation] = useState(null);
+  const [propertySwapAnimation, setPropertySwapAnimation] = useState(null);
 
   // State for rent modal
   const [rentModalOpen, setRentModalOpen] = useState(false);
@@ -247,6 +257,25 @@ const MainGame = () => {
 
       }
 
+      // PROPERTY_STOLEN
+      else if (data.type && data.type === 'property_stolen') {
+        setPropertyStealAnimation({
+          property: data.property,
+          stealerId: data.player_id,
+          targetId: data.target_id
+        });
+      }
+
+      // PROPERTY_SWAP
+      else if (data.type && data.type === 'property_swap') {
+        setPropertySwapAnimation({
+          property1: data.property1,
+          property2: data.property2,
+          player1Id: data.player1_id,
+          player2Id: data.player2_id
+        });
+      }
+
       // GAME_UPDATE
       else if (data.type && data.type === 'game_update') {
         const gameState = data.state;
@@ -360,6 +389,44 @@ const MainGame = () => {
     }
   }, [pendingRentCard]);
 
+  useEffect(() => {
+    if (pendingSlyDealCard) {      
+      setSlyDealModalOpen(true);
+    }
+  }, [pendingSlyDealCard]);
+
+  useEffect(() => {
+    if (pendingForcedDealCard) {      
+      setForcedDealModalOpen(true);
+    }
+  }, [pendingForcedDealCard]);
+
+  // Handle sly deal property selection
+  const handleSlyDealPropertySelect = (selectedProperty) => {
+    console.log("Selected property for Sly Deal:", selectedProperty);
+    socket.send(JSON.stringify({
+      action: 'sly_deal',
+      player: user.unique_id,
+      card: pendingSlyDealCard,
+      target_property: selectedProperty.id
+    }));
+    setPendingSlyDealCard(null);
+  };
+
+  // Handle forced deal property selection
+  const handleForcedDealSelect = (opponentProperty, userProperty) => {
+    const message = {
+      action: 'forced_deal',
+      player: user.unique_id,
+      card: pendingForcedDealCard,
+      target_property: opponentProperty.id,
+      user_property: userProperty.id
+    };
+    socket.send(JSON.stringify(message));
+    setForcedDealModalOpen(false);
+    setPendingForcedDealCard(null);
+  };
+
   //////////////////// DROP ZONE HANDLERS
   const handleCardDropBank = (card) => {
     console.log("Dropping CARD to BANK:", card);
@@ -439,6 +506,10 @@ const MainGame = () => {
         setPendingDebtCollectorCard(card);
       } else if (card.name.toLowerCase() === "rent" || card.name.toLowerCase() === "multicolor rent") {
         setPendingRentCard(card);
+      } else if (card.name.toLowerCase() === "sly deal") {
+        setPendingSlyDealCard(card);
+      } else if (card.name.toLowerCase() === "forced deal") {
+        setPendingForcedDealCard(card);
       }
     };
     // Delay the actual card removal to allow for animation
@@ -542,6 +613,54 @@ const MainGame = () => {
         />
         <PaymentSuccessfulOverlay
           isVisible={showPaymentSuccessfulOverlay}
+        />
+        <PropertySwapOverlay
+          animation={propertySwapAnimation}
+          onComplete={() => setPropertySwapAnimation(null)}
+          user={user}
+        />
+        <SlyDealModal
+          isOpen={slyDealModalOpen}
+          onClose={() => {
+            setSlyDealModalOpen(false);
+            setPendingSlyDealCard(null);
+          }}
+          opponentProperties={Object.keys(opponentProperties)[0] ? {
+            [Object.keys(opponentProperties)[0]]: {
+              playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
+              sets: opponentProperties
+            }
+          } : {}}
+          onPropertySelect={handleSlyDealPropertySelect}
+        />
+        <AnimatePresence>
+          {propertyStealAnimation && (
+            <PropertyStealOverlay
+              animation={propertyStealAnimation}
+              onComplete={() => setPropertyStealAnimation(null)}
+              user={user}
+            />
+          )}
+        </AnimatePresence>
+        <ForcedDealModal
+          isOpen={forcedDealModalOpen}
+          onClose={() => {
+            setForcedDealModalOpen(false);
+            setPendingForcedDealCard(null);
+          }}
+          opponentProperties={Object.keys(opponentProperties)[0] ? {
+            [Object.keys(opponentProperties)[0]]: {
+              playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
+              sets: opponentProperties
+            }
+          } : {}}
+          userProperties={Object.keys(playerProperties)[0] ? {
+            [Object.keys(playerProperties)[0]]: {
+              playerName: user.username,
+              sets: playerProperties
+            }
+          } : {}}
+          onPropertySelect={handleForcedDealSelect}
         />
         
         {/* Game Layout */}

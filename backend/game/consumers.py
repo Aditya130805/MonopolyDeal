@@ -192,32 +192,38 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == 'rent':
             await self.play_rent(game_state, player, card, data.get('rentAmount'))
 
+        elif action == 'sly_deal':
+            await self.play_sly_deal(game_state, player, card['id'], data.get('target_property'))
+            
+        elif action == 'forced_deal':
+            await self.play_forced_deal(game_state, player, card['id'], data.get('target_property'), data.get('user_property'))
+            
     def play_to_bank(self, player, card_id):
-        card_to_move = next((c for c in player.hand if c.id == card_id), None)
-        if card_to_move:
-            player.hand.remove(card_to_move)
-            player.bank.append(card_to_move)
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if card_to_play:
+            player.hand.remove(card_to_play)
+            player.bank.append(card_to_play)
 
     def play_to_properties(self, player, card_id, color):
-        card_to_move = next((c for c in player.hand if c.id == card_id), None)
-        if card_to_move:
-            card_to_move.current_color = color
-            player.hand.remove(card_to_move)
-            if not player.properties.get(card_to_move.current_color):
-                player.properties[card_to_move.current_color] = []
-            player.properties[card_to_move.current_color].append(card_to_move) 
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if card_to_play:
+            card_to_play.current_color = color
+            player.hand.remove(card_to_play)
+            if not player.properties.get(card_to_play.current_color):
+                player.properties[card_to_play.current_color] = []
+            player.properties[card_to_play.current_color].append(card_to_play) 
 
     def play_pass_go(self, game_state, player, card_id):
-        card_to_move = next((c for c in player.hand if c.id == card_id), None)
-        if card_to_move:
-            player.hand.remove(card_to_move)
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if card_to_play:
+            player.hand.remove(card_to_play)
             player.draw_cards(game_state.deck, 2)
-            game_state.last_action = {'action': 'pass_go', 'player': player.id}
+            game_state.discard_pile.append(card_to_play)
     
     async def play_its_your_birthday(self, game_state, player, card_id):
-        card_to_move = next((c for c in player.hand if c.id == card_id), None)
-        if card_to_move:
-            player.hand.remove(card_to_move)
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if card_to_play:
+            player.hand.remove(card_to_play)
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
@@ -227,12 +233,12 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'recipient_id': player.id
                 }
             )
-            game_state.last_action = {'action': "it's your birthday", 'player': player.id}
+            game_state.discard_pile.append(card_to_play)
     
     async def play_debt_collector(self, game_state, player, card_id):
-        card_to_move = next((c for c in player.hand if c.id == card_id), None)
-        if card_to_move:
-            player.hand.remove(card_to_move)
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if card_to_play:
+            player.hand.remove(card_to_play)
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
@@ -242,20 +248,15 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'recipient_id': player.id
                 }
             )
-            game_state.last_action = {'action': "debt collector", 'player': player.id}
+            game_state.discard_pile.append(card_to_play)
     
     async def play_rent(self, game_state, player, card, rent_amount):
         """Handle rent card play"""
         card_to_play = next((c for c in player.hand if c.id == card['id']), None)
         if not card_to_play:
             return
-        
-        # Remove card from hand
         player.hand.remove(card_to_play)
-        
-        # Get the opponent
         opponent = next((p for p in game_state.players if p.id != player.id), None)
-        
         # Send rent request
         await self.channel_layer.group_send(
             self.game_group_name,
@@ -267,7 +268,135 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'recipient_id': str(player.id)
             }
         )
-        game_state.last_action = {'action': "rent", 'player': player.id}
+        game_state.discard_pile.append(card_to_play)
+        
+    async def play_forced_deal(self, game_state, player, card_id, target_property_id, user_property_id):
+        """Handle forced deal action"""
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if not card_to_play:
+            return
+
+        # Find target player and their property
+        target_player = None
+        target_property = None
+        target_property_color = None
+        for p in game_state.players:
+            if p.id == player.id:
+                continue
+            for color, props in p.properties.items():
+                for prop in props:
+                    if prop.id == target_property_id:
+                        target_player = p
+                        target_property = prop
+                        target_property_color = color
+                        break
+                if target_property:
+                    break
+            if target_property:
+                break
+
+        if not target_player or not target_property:
+            return
+
+        # Find current player's property
+        current_player = player
+        user_property = None
+        user_property_color = None
+        for color, props in current_player.properties.items():
+            for prop in props:
+                if prop.id == user_property_id:
+                    user_property = prop
+                    user_property_color = color
+                    break
+            if user_property:
+                break
+
+        if not user_property:
+            return
+
+        # Remove properties from their current sets
+        for color, props in target_player.properties.items():
+            if target_property in props:
+                props.remove(target_property)
+                if not props:  # Remove empty color sets
+                    del target_player.properties[color]
+                break
+
+        for color, props in current_player.properties.items():
+            if user_property in props:
+                props.remove(user_property)
+                if not props:  # Remove empty color sets
+                    del current_player.properties[color]
+                break
+
+        # Add properties to their new owners
+        if target_property_color not in current_player.properties:
+            current_player.properties[target_property_color] = []
+        current_player.properties[target_property_color].append(target_property)
+
+        if user_property_color not in target_player.properties:
+            target_player.properties[user_property_color] = []
+        target_player.properties[user_property_color].append(user_property)
+
+        # Remove the forced deal card from player's hand
+        current_player.hand.remove(card_to_play)
+        game_state.discard_pile.append(card_to_play)
+
+        # Broadcast the property swap animation
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_property_swap',
+                'property1': target_property.to_dict(),
+                'property2': user_property.to_dict(),
+                'player1_id': player.id,
+                'player2_id': target_player.id
+            }
+        )
+
+    async def play_sly_deal(self, game_state, player, card_id, target_property_id):
+        """Handle sly deal action"""
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if not card_to_play:
+            return
+        
+        stolen_property = None
+        property_color = None
+        target_player = None
+        for p in game_state.players:
+            if p != player:  # Don't search in the current player's properties
+                for color, properties in p.properties.items():
+                    for prop in properties:
+                        if prop.id == target_property_id:
+                            stolen_property = prop
+                            property_color = color
+                            target_player = p
+                            break
+                    if stolen_property:
+                        break
+                if stolen_property:
+                    break
+
+        if stolen_property and target_player:
+            target_player.properties[property_color].remove(stolen_property)
+            if not target_player.properties[property_color]:
+                del target_player.properties[property_color]
+            if property_color not in player.properties:
+                player.properties[property_color] = []
+            player.properties[property_color].append(stolen_property)
+            player.hand.remove(card_to_play)
+            game_state.discard_pile.append(card_to_play)
+            
+            # Send notification about the sly deal
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_property_stolen',
+                    'player_id': str(player.id),
+                    'target_id': str(target_player.id),
+                    'property': stolen_property.to_dict()
+                }
+            )
 
     def assist_rent_payment(self, game_state, player_id, recipient_id, card):
         # Get the paying player and receiving player
@@ -350,7 +479,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                             break
                     if card_found:
                         break
-        
+    
     def manage_turns(self, game_state):
         if game_state.actions_remaining == 1:
             # Switch to next player's turn
@@ -452,6 +581,25 @@ class GameConsumer(AsyncWebsocketConsumer):
         Send room state update to WebSocket.
         """
         await self.send(text_data=json.dumps(event['data']))
+
+    async def broadcast_property_stolen(self, event):
+        """Notify players that a property has been stolen"""
+        await self.send(text_data=json.dumps({
+            'type': 'property_stolen',
+            'player_id': event['player_id'],
+            'target_id': event['target_id'],
+            'property': event['property']
+        }))
+
+    async def broadcast_property_swap(self, event):
+        """Send property swap animation data to the client"""
+        await self.send(text_data=json.dumps({
+            'type': 'property_swap',
+            'property1': event['property1'],
+            'property2': event['property2'],
+            'player1_id': event['player1_id'],
+            'player2_id': event['player2_id']
+        }))
 
 
     ########## DATABASE FETCHES AND UPDATES ##########
