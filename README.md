@@ -9,7 +9,7 @@
 - Implemented displaying player cards, bank, and properties (2-player only)
 - Implemented card dragging and dropping onto the bank, properties, and action pile
 - Implemented bank and property area additions
-- Implemented pass go, it's your birthday, debt collector, and rent actions
+- Implemented pass go, it's your birthday, debt collector, rent, sly deal, and forced deal actions
 
 ### Complete:
 
@@ -28,7 +28,7 @@
 - Fix 'card being cut while dragging' in Safari
 - Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
-- Implement Sly Deal, ForcedDeal, Deal Breaker, Double The Rent, and Just Say No
+- Implement Deal Breaker, Double The Rent, and Just Say No
 - Improve the animation displayed in the background highlighting the action that's been played
 - Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
@@ -38,6 +38,11 @@
 - Fix the "card is null" error that randomly appears and is likely some problem in CardNotification
 - Fix the case where a player has no bank/property cards to pay for rent
 - Fix the issue where if a player pays rent in less than 2 seconds, then the "Collecting Rent..." animation doesn't go away for the rent requesting user
+- Fix rent amount issues with wild cards, houses, and hotels
+- Check responsiveness of all components, overlays, pages, and animations
+- Implement checks such that a player should not be able to play sly deal if none of the opponents have any properties
+- Fix sly deal and forced deal to not allow players to steal from opponents' full property sets
+- Fix the issue where when a rent card is played into the action pile, the displayed rent card in the action pile does not show rent colors
 
 ### Potential issues:
 
