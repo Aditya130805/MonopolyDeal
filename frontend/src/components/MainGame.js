@@ -19,6 +19,8 @@ import RentCollectionOverlay from './overlays/RentCollectionOverlay';
 import PaymentSuccessfulOverlay from './animations/PaymentSuccessfulOverlay';
 import PropertyStealOverlay from './overlays/PropertyStealOverlay';
 import PropertySwapOverlay from './overlays/PropertySwapOverlay';
+import DealBreakerModal from './modals/DealBreakerModal';
+import DealBreakerOverlay from './overlays/DealBreakerOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,13 +63,22 @@ const MainGame = () => {
   const [pendingRentCard, setPendingRentCard] = useState(null);
   const [pendingSlyDealCard, setPendingSlyDealCard] = useState(null);
   const [pendingForcedDealCard, setPendingForcedDealCard] = useState(null);
+  const [pendingDealBreakerCard, setPendingDealBreakerCard] = useState(null);
   const [forcedDealModalOpen, setForcedDealModalOpen] = useState(false);
   const [rentAmount, setRentAmount] = useState(0);
   const [rentRecipientId, setRentRecipientId] = useState(null);
   const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState(false);
   const [slyDealModalOpen, setSlyDealModalOpen] = useState(false);
+  const [dealBreakerModalOpen, setDealBreakerModalOpen] = useState(false);
   const [propertyStealAnimation, setPropertyStealAnimation] = useState(null);
   const [propertySwapAnimation, setPropertySwapAnimation] = useState(null);
+  const [dealBreakerOverlay, setDealBreakerOverlay] = useState({
+    isVisible: false,
+    playerName: '',
+    targetName: '',
+    color: '',
+    propertySet: []
+  });
 
   // State for rent modal
   const [rentModalOpen, setRentModalOpen] = useState(false);
@@ -276,6 +287,17 @@ const MainGame = () => {
         });
       }
 
+      // DEAL BREAKER OVERLAY
+      else if (data.type === 'deal_breaker_overlay') {
+        setDealBreakerOverlay({
+          isVisible: true,
+          playerName: data.player_name,
+          targetName: data.target_name,
+          color: data.color,
+          propertySet: data.property_set
+        });
+      }
+
       // GAME_UPDATE
       else if (data.type && data.type === 'game_update') {
         const gameState = data.state;
@@ -401,6 +423,12 @@ const MainGame = () => {
     }
   }, [pendingForcedDealCard]);
 
+  useEffect(() => {
+    if (pendingDealBreakerCard) {      
+      setDealBreakerModalOpen(true);
+    }
+  }, [pendingDealBreakerCard]);
+
   // Handle sly deal property selection
   const handleSlyDealPropertySelect = (selectedProperty) => {
     console.log("Selected property for Sly Deal:", selectedProperty);
@@ -425,6 +453,21 @@ const MainGame = () => {
     socket.send(JSON.stringify(message));
     setForcedDealModalOpen(false);
     setPendingForcedDealCard(null);
+  };
+
+  // Handle deal breaker set selection
+  const handleDealBreakerSetSelect = (selectedSet) => {
+    console.log("Selected Set:", selectedSet);
+    const message = {
+      action: 'deal_breaker',
+      player: user.unique_id,
+      card: pendingDealBreakerCard,
+      target_set: selectedSet.cards,
+      target_color: selectedSet.color
+    };
+    socket.send(JSON.stringify(message));
+    setDealBreakerModalOpen(false);
+    setPendingDealBreakerCard(null);
   };
 
   //////////////////// DROP ZONE HANDLERS
@@ -510,6 +553,8 @@ const MainGame = () => {
         setPendingSlyDealCard(card);
       } else if (card.name.toLowerCase() === "forced deal") {
         setPendingForcedDealCard(card);
+      } else if (card.name.toLowerCase() === "deal breaker") {
+        setPendingDealBreakerCard(card);
       }
     };
     // Delay the actual card removal to allow for animation
@@ -661,6 +706,28 @@ const MainGame = () => {
             }
           } : {}}
           onPropertySelect={handleForcedDealSelect}
+        />
+        <AnimatePresence>
+          {dealBreakerModalOpen && (
+            <DealBreakerModal
+              isOpen={dealBreakerModalOpen}
+              onClose={() => {
+                setDealBreakerModalOpen(false);
+                setPendingDealBreakerCard(null);
+              }}
+              opponentProperties={Object.keys(opponentProperties)[0] ? {
+                [currentTurnPlayerId === user.unique_id ? Object.keys(opponentProperties)[0] : currentTurnPlayerId]: {
+                  playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
+                  sets: opponentProperties
+                }
+              } : {}}
+              onPropertySetSelect={handleDealBreakerSetSelect}
+            />
+          )}
+        </AnimatePresence>
+        <DealBreakerOverlay
+          {...dealBreakerOverlay}
+          onClose={() => setDealBreakerOverlay(prev => ({ ...prev, isVisible: false }))}
         />
         
         {/* Game Layout */}

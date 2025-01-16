@@ -198,6 +198,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == 'forced_deal':
             await self.play_forced_deal(game_state, player, card['id'], data.get('target_property'), data.get('user_property'))
             
+        elif action == 'deal_breaker':
+            await self.play_deal_breaker(game_state, player, card['id'], data.get('target_set'), data.get('target_color'))
+            
     def play_to_bank(self, player, card_id):
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
         if card_to_play:
@@ -353,6 +356,61 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'player2_id': target_player.id
             }
         )
+
+    async def play_deal_breaker(self, game_state, player, card_id, target_set, target_color):
+        """Handle deal breaker action"""
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if not card_to_play:
+            return
+        
+        # Find the target player who owns the set
+        target_player = None
+        for p in game_state.players:
+            if p != player and target_color in p.properties:
+                # Check if the target set matches the player's properties
+                target_card_ids = {card['id'] for card in target_set}
+                player_card_ids = {card.id for card in p.properties[target_color]}
+                if target_card_ids.issubset(player_card_ids):
+                    target_player = p
+                    break
+        
+        if target_player:
+            # First, get all the cards we want to transfer
+            cards_to_transfer = [
+                card for card in target_player.properties[target_color]
+                if card.id in {c['id'] for c in target_set}
+            ]
+            
+            # Add the cards to the current player's properties
+            if target_color not in player.properties:
+                player.properties[target_color] = []
+            player.properties[target_color].extend(cards_to_transfer)
+            
+            # Remove the cards from the target player
+            target_player.properties[target_color] = [
+                card for card in target_player.properties[target_color]
+                if card.id not in {c['id'] for c in target_set}
+            ]
+            
+            # If no cards left in that color, remove the color entry
+            if not target_player.properties[target_color]:
+                del target_player.properties[target_color]
+            
+            # Remove the deal breaker card from hand and add to discard pile
+            player.hand.remove(card_to_play)
+            game_state.discard_pile.append(card_to_play)
+            
+            # Send deal breaker overlay
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_deal_breaker_overlay',
+                    'player_name': player.name,
+                    'target_name': target_player.name,
+                    'color': target_color,
+                    'property_set': [card.to_dict() for card in cards_to_transfer]
+                }
+            )
 
     async def play_sly_deal(self, game_state, player, card_id, target_property_id):
         """Handle sly deal action"""
@@ -599,6 +657,16 @@ class GameConsumer(AsyncWebsocketConsumer):
             'property2': event['property2'],
             'player1_id': event['player1_id'],
             'player2_id': event['player2_id']
+        }))
+
+    async def broadcast_deal_breaker_overlay(self, event):
+        """Send deal breaker overlay data to the client"""
+        await self.send(text_data=json.dumps({
+            'type': 'deal_breaker_overlay',
+            'player_name': event['player_name'],
+            'target_name': event['target_name'],
+            'color': event['color'],
+            'property_set': event['property_set']
         }))
 
 

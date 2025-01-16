@@ -32,7 +32,7 @@ const PropertyCard = ({
   name = 'Wild',
   color, // string for regular cards, array for wild cards
   value,
-  rent,
+  rent = [], // Add default empty array for rent for wild cards
   isWild = false,
   isUtility = false,
   isRailroad = false,
@@ -152,7 +152,7 @@ const PropertyCard = ({
           {colors.isMultiWild ? (
             <>
               {/* Wild Card Badge */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
                 {/* Horizontal Bar */}
                 <div className="absolute h-1 bg-gradient-to-r from-gray-300 via-white to-gray-300 w-full shadow-sm"></div>
                 {/* Center Circle */}
