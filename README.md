@@ -9,7 +9,7 @@
 - Implemented displaying player cards, bank, and properties (2-player only)
 - Implemented card dragging and dropping onto the bank, properties, and action pile
 - Implemented bank and property area additions
-- Implemented pass go, it's your birthday, debt collector, rent, sly deal, and forced deal actions
+- Implemented pass go, it's your birthday, debt collector, rent, sly deal, forced deal, and deal breaker actions
 
 ### Complete:
 
@@ -20,7 +20,7 @@
 - 11 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
 - Implemented test cases for all actions created
 
-### Next steps:
+### Next steps / Issues to resolve:
 
 - Continue game - connect frontend to backend as you go along
 - Modify MainGame to allow for multiple players
@@ -28,7 +28,7 @@
 - Fix 'card being cut while dragging' in Safari
 - Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
-- Implement Deal Breaker, Double The Rent, and Just Say No
+- Implement Double The Rent, and Just Say No
 - Improve the animation displayed in the background highlighting the action that's been played
 - Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
@@ -40,12 +40,13 @@
 - Fix the issue where if a player pays rent in less than 2 seconds, then the "Collecting Rent..." animation doesn't go away for the rent requesting user
 - Fix rent amount issues with wild cards, houses, and hotels
 - Check responsiveness of all components, overlays, pages, and animations
-- Implement checks such that a player should not be able to play sly deal if none of the opponents have any properties
+- Implement checks such that a player should not be able to play sly deal or forced deal if none of the opponents have any properties and if the player has none as well, respectively
 - Fix sly deal and forced deal to not allow players to steal from opponents' full property sets
-- Fix the issue where when a rent card is played into the action pile, the displayed rent card in the action pile does not show rent colors
-
-### Potential issues:
-
+- Fix the issue where when a rent card is played into the action pile, the displayed rent card in the discard pile does not show rent colors
+- Improve the sly deal and forced deal animations
+- Fix DealBreakerModal to only show the property set (including house and hotel), not the additional cards if there are any. These additional cards should not be transferred either
+- Fix deal breaker to show an error if no player has a complete property set
+- Improve the deal breaker animation
 - Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 
