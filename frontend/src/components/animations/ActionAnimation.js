@@ -5,6 +5,7 @@ const ActionAnimation = ({ action, isVisible, onComplete }) => {
   const getAnimationContent = (action) => {
     switch (action) {
       
+      case 'Double Rent Request':
       case 'Rent Request':
         return (
           <div style={{ position: 'relative' }}>
@@ -127,7 +128,7 @@ const ActionAnimation = ({ action, isVisible, onComplete }) => {
                   zIndex: 1
                 }}
               >
-                Collect Rent!
+                {action === 'Double Rent Request' ? 'Double Rent!' : 'Collect Rent!'}
               </motion.div>
 
               {/* Subtitle */}
@@ -153,8 +154,44 @@ const ActionAnimation = ({ action, isVisible, onComplete }) => {
                   zIndex: 1
                 }}
               >
-                Time to stack up! 🎯
+                {action === 'Double Rent Request' ? 'Double the money, double the fun! 💰💰' : 'Time to stack up! 🎯'}
               </motion.div>
+
+              {/* Double indicator for double rent */}
+              {action === 'Double Rent Request' && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ 
+                    scale: 1,
+                    opacity: 1,
+                    rotate: [0, 10, -10, 0]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.34, 1.56, 0.64, 1],
+                    rotate: {
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: '#FFD700',
+                    color: '#4CAF50',
+                    padding: '8px 12px',
+                    borderRadius: '15px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 3px 6px rgba(0,0,0,0.2)',
+                    zIndex: 2
+                  }}
+                >
+                  2x
+                </motion.div>
+              )}
             </motion.div>
           </div>
         );

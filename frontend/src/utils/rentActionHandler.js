@@ -11,7 +11,13 @@ const colorStyles = {
     'mint': '#A7F3D0'
 };
 
-const handleRentColorSelection = (card, playerProperties, socket, user, setShowActionAnimation, setPendingRentCard) => {
+const rents = {
+    'brown': [1, 2], 'mint': [1, 2], 'blue': [3, 8],
+    'light blue': [1, 2, 3], 'pink': [1, 2, 4], 'orange': [1, 3, 5], 'red': [2, 3, 6], 'yellow': [2, 4, 6], 'green': [2, 4, 7],
+    'black': [1, 2, 3, 4]
+}
+
+const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay) => {
     const colorButtons = document.createElement('div');
     
     // Function to update position
@@ -86,17 +92,12 @@ const handleRentColorSelection = (card, playerProperties, socket, user, setShowA
         // Check for house and hotel
         const hasHouse = properties.some(c => c.type === 'house');
         const hasHotel = properties.some(c => c.type === 'hotel');
+        totalRent = rents[rentColor][Math.min(propertyCount - 1, rents[rentColor].length - 1)];
         
-        // Base rent is the highest rent value for the number of properties
-        const baseProperty = properties.find(c => c.type === 'property');
-        if (baseProperty && baseProperty.rent) {
-            totalRent = baseProperty.rent[Math.min(propertyCount - 1, baseProperty.rent.length - 1)];
-            
-            // Add house and hotel bonuses if it's a full set
-            if (hasFullSet) {
-                if (hasHouse) totalRent += 3;
-                if (hasHotel) totalRent += 4;
-            }
+        // Add house and hotel bonuses if it's a full set
+        if (hasFullSet) {
+            if (hasHouse) totalRent += 3;
+            if (hasHotel) totalRent += 4;
         }
         
         rentAmounts[rentColor] = totalRent;
@@ -130,29 +131,40 @@ const handleRentColorSelection = (card, playerProperties, socket, user, setShowA
         section.appendChild(label);
         
         section.onmouseover = () => {
-            section.style.opacity = '0.9';
+            section.style.opacity = '0.95';
         };
         
         section.onmouseout = () => {
-            section.style.opacity = '0.8';
+            section.style.opacity = '0.85';
         };
         
         section.onclick = () => {
             section.style.opacity = '1';
-            setTimeout(() => {
-                setShowActionAnimation({ visible: true, action: "Rent Request" });
-                socket.send(JSON.stringify({
-                    'action': 'rent',
-                    'player': user.unique_id,
-                    'card': card,
-                    'rentColor': color,
-                    'rentAmount': rentAmounts[color]
-                }));
-                setPendingRentCard(null);
-                resizeObserver.disconnect();
-                window.removeEventListener('resize', updatePosition);
-                document.body.removeChild(colorButtons);
-            }, 50);
+            setRentAmount(rentAmounts[color])
+             // Check for double rent card in player's hand
+            const hasDoubleRentCard = playerHand.some(card => 
+                card.type === 'action' && card.name.toLowerCase() === 'double the rent'
+            );
+            if (hasDoubleRentCard && actionsRemaining > 1) {
+                setDoubleRentAmount(rentAmounts[color] * 2);
+                setShowDoubleRentOverlay(true);
+            }
+            else {
+                setTimeout(() => {
+                    setShowActionAnimation({ visible: true, action: "Rent Request" });
+                    socket.send(JSON.stringify({
+                        'action': 'rent',
+                        'player': user.unique_id,
+                        'card': card,
+                        'rentColor': color,
+                        'rentAmount': rentAmounts[color]
+                    }));
+                    setPendingRentCard(null);
+                }, 50);
+            }
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', updatePosition);
+            document.body.removeChild(colorButtons);
         };
         
         colorButtons.appendChild(section);

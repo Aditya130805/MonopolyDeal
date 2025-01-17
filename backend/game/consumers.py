@@ -200,6 +200,20 @@ class GameConsumer(AsyncWebsocketConsumer):
             
         elif action == 'deal_breaker':
             await self.play_deal_breaker(game_state, player, card['id'], data.get('target_set'), data.get('target_color'))
+        
+        elif action == 'double_the_rent':
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_card_played',
+                    'player_id': player_id,
+                    'action': action,
+                    'action_type': 'to_bank' if action == 'to_bank' else 'to_properties' if action == 'to_properties' else 'action',
+                    'card': data.get('double_the_rent_card')
+                }
+            )
+            await self.play_double_the_rent(game_state, player, card['id'], data.get('double_the_rent_card')['id'], data.get('rentAmount'))
+            self.manage_turns(game_state)  # The additional turn is handled here
             
     def play_to_bank(self, player, card_id):
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
@@ -252,6 +266,29 @@ class GameConsumer(AsyncWebsocketConsumer):
                 }
             )
             game_state.discard_pile.append(card_to_play)
+    
+    async def play_double_the_rent(self, game_state, player, rent_card_id, double_the_rent_card_id, rent_amount):
+        """Handle double the rent card play"""
+        rent_card_to_play = next((c for c in player.hand if c.id == rent_card_id), None)
+        double_the_rent_card_to_play = next((c for c in player.hand if c.id == double_the_rent_card_id), None)
+        if not rent_card_to_play or not double_the_rent_card_to_play:
+            return
+        player.hand.remove(rent_card_to_play)
+        player.hand.remove(double_the_rent_card_to_play)
+        opponent = next((p for p in game_state.players if p.id != player.id), None)
+        # Send rent request
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_rent_request',
+                'player_id': str(opponent.id),
+                'amount': rent_amount,
+                'rent_type': "double_the_rent",
+                'recipient_id': str(player.id)
+            }
+        )
+        game_state.discard_pile.append(rent_card_to_play)
+        game_state.discard_pile.append(double_the_rent_card_to_play)
     
     async def play_rent(self, game_state, player, card, rent_amount):
         """Handle rent card play"""

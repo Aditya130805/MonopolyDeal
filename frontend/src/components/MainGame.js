@@ -21,6 +21,7 @@ import PropertyStealOverlay from './overlays/PropertyStealOverlay';
 import PropertySwapOverlay from './overlays/PropertySwapOverlay';
 import DealBreakerModal from './modals/DealBreakerModal';
 import DealBreakerOverlay from './overlays/DealBreakerOverlay';
+import DoubleRentOverlay from './overlays/DoubleRentOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,6 +80,8 @@ const MainGame = () => {
     color: '',
     propertySet: []
   });
+  const [showDoubleRentOverlay, setShowDoubleRentOverlay] = useState(false);
+  const [doubleRentAmount, setDoubleRentAmount] = useState(0);
 
   // State for rent modal
   const [rentModalOpen, setRentModalOpen] = useState(false);
@@ -121,6 +124,11 @@ const MainGame = () => {
   const ItemTypes = {
     CARD: 'card'
   };
+  const rents = {
+    'brown': [1, 2], 'mint': [1, 2], 'blue': [3, 8],
+    'light blue': [1, 2, 3], 'pink': [1, 2, 4], 'orange': [1, 3, 5], 'red': [2, 3, 6], 'yellow': [2, 4, 6], 'green': [2, 4, 7],
+    'black': [1, 2, 3, 4]
+  }
 
   //////////////////// PROPERTIES INTO MAIN SETS AND OVERFLOW SETS
   const splitProperties = (properties) => {
@@ -239,7 +247,7 @@ const MainGame = () => {
           // Show rent animation first for the player who played the rent card
           setShowActionAnimation({
             visible: true,
-            action: data.rent_type === "it's your birthday" ? 'Birthday Request' : data.rent_type === "debt collector" ? 'Debt Request' : 'Rent Request'
+            action: data.rent_type === "it's your birthday" ? 'Birthday Request' : data.rent_type === "debt collector" ? 'Debt Request' : data.rent_type === "double_the_rent" ? 'Double Rent Request' : 'Rent Request'
           });
           // Wait 2 seconds then start transitioning
           setTimeout(() => {
@@ -407,7 +415,8 @@ const MainGame = () => {
         setPendingRentCard(null);
         return;
       }
-      handleRentColorSelection(pendingRentCard, playerProperties, socket, user, setShowActionAnimation, setPendingRentCard);
+
+      handleRentColorSelection(pendingRentCard, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay);
     }
   }, [pendingRentCard]);
 
@@ -468,6 +477,38 @@ const MainGame = () => {
     socket.send(JSON.stringify(message));
     setDealBreakerModalOpen(false);
     setPendingDealBreakerCard(null);
+  };
+
+  // Handle double rent response
+  const handleDoubleRentResponse = (useDoubleRent) => {
+    setShowDoubleRentOverlay(false);
+    setPendingRentCard(null);
+    if (useDoubleRent) {
+      // Find the double rent card from hand
+      const doubleTheRentCard = playerHand.find(card => 
+        card.type === 'action' && card.name.toLowerCase() === 'double the rent'
+      );
+      
+      socket.send(JSON.stringify({
+        'action': 'double_the_rent',
+        'player': user.unique_id,
+        'card': pendingRentCard,
+        'double_the_rent_card': doubleTheRentCard,
+        'rentAmount': doubleRentAmount
+      }));
+    } else {
+      // Proceed with normal rent
+      setTimeout(() => {
+        setShowActionAnimation({ visible: true, action: "Rent Request" });
+        socket.send(JSON.stringify({
+            'action': 'rent',
+            'player': user.unique_id,
+            'card': pendingRentCard,
+            'rentAmount': rentAmount
+        }));
+        setPendingRentCard(null);
+      }, 50);
+    }
   };
 
   //////////////////// DROP ZONE HANDLERS
@@ -728,6 +769,11 @@ const MainGame = () => {
         <DealBreakerOverlay
           {...dealBreakerOverlay}
           onClose={() => setDealBreakerOverlay(prev => ({ ...prev, isVisible: false }))}
+        />
+        <DoubleRentOverlay
+          isVisible={showDoubleRentOverlay}
+          amount={doubleRentAmount}
+          onResponse={handleDoubleRentResponse}
         />
         
         {/* Game Layout */}
