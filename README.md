@@ -22,14 +22,12 @@
 
 ### Next steps / Issues to resolve:
 
-- Continue game - connect frontend to backend as you go along
 - Modify MainGame to allow for multiple players
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 - Fix 'card being cut while dragging' in Safari
 - Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
 - Implement Just Say No
-- Improve the animation displayed in the background highlighting the action that's been played
 - Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
 - Block other drop zones when a card is in play (for instance, if I am adding a house to a property, I shouldn't be able to drop a card in bank)
@@ -51,7 +49,7 @@
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 - Fix the problem where a property made up of only wild property cards is not being considered in marking a set as complete in the deal breaker modal
 - Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
-- For Forced Deal, do not allow players to select houses and hotels for swapping (gray them out); also, display them as action cards and not property cards
+- For Forced Deal and Sly Deal, gray the houses and hotels out; also, display them as action cards and not property cards
 - Clean the code, avoid repetition, make it more readable, and optimize it if possible
 
 ### Deviations from official Monopoly Deal rules:
