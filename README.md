@@ -9,7 +9,7 @@
 - Implemented displaying player cards, bank, and properties (2-player only)
 - Implemented card dragging and dropping onto the bank, properties, and action pile
 - Implemented bank and property area additions
-- Implemented pass go, it's your birthday, debt collector, rent, sly deal, forced deal, and deal breaker actions
+- Implemented pass go, it's your birthday, debt collector, rent, sly deal, forced deal, deal breaker, and double the rent actions
 
 ### Complete:
 
@@ -28,7 +28,7 @@
 - Fix 'card being cut while dragging' in Safari
 - Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
-- Implement Double The Rent, and Just Say No
+- Implement Just Say No
 - Improve the animation displayed in the background highlighting the action that's been played
 - Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
@@ -38,7 +38,7 @@
 - Fix the "card is null" error that randomly appears and is likely some problem in CardNotification
 - Fix the case where a player has no bank/property cards to pay for rent
 - Fix the issue where if a player pays rent in less than 2 seconds, then the "Collecting Rent..." animation doesn't go away for the rent requesting user
-- Fix rent amount issues with wild cards, houses, and hotels
+- Fix rent amount issues with houses and hotels
 - Check responsiveness of all components, overlays, pages, and animations
 - Implement checks such that a player should not be able to play sly deal or forced deal if none of the opponents have any properties and if the player has none as well, respectively
 - Fix sly deal and forced deal to not allow players to steal from opponents' full property sets
@@ -49,6 +49,10 @@
 - Improve the deal breaker animation
 - Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
+- Fix the problem where a property made up of only wild property cards is not being considered in marking a set as complete in the deal breaker modal
+- Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
+- For Forced Deal, do not allow players to select houses and hotels for swapping (gray them out); also, display them as action cards and not property cards
+- Clean the code, avoid repetition, make it more readable, and optimize it if possible
 
 ### Deviations from official Monopoly Deal rules:
 
