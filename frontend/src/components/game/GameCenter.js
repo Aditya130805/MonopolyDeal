@@ -30,9 +30,9 @@ const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, ItemTyp
           <ActionCard
             key={lastAction.type}
             name={lastAction.name}
+            rentColors={lastAction.rentColors || []}
             width={140}
             height={190}
-            rentColors={lastAction.colors}
           />
         ) : (
           <div className="text-gray-600 text-center">

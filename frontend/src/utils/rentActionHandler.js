@@ -19,6 +19,8 @@ const rents = {
 
 const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay) => {
     const colorButtons = document.createElement('div');
+
+    console.log("Player properties:", playerProperties);
     
     // Function to update position
     const updatePosition = () => {
@@ -86,19 +88,14 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
         // Count number of properties
         const propertyCount = properties.filter(c => c.type === 'property').length;
         
-        // Check if there's a full set
-        const hasFullSet = propertyCount >= set_requirements[rentColor];
-        
         // Check for house and hotel
-        const hasHouse = properties.some(c => c.type === 'house');
-        const hasHotel = properties.some(c => c.type === 'hotel');
+        const hasHouse = properties.some(c => c.type === 'action' && c.name.toLowerCase() === 'house');
+        const hasHotel = properties.some(c => c.type === 'action' && c.name.toLowerCase() === 'hotel');
         totalRent = rents[rentColor][Math.min(propertyCount - 1, rents[rentColor].length - 1)];
         
         // Add house and hotel bonuses if it's a full set
-        if (hasFullSet) {
-            if (hasHouse) totalRent += 3;
-            if (hasHotel) totalRent += 4;
-        }
+        if (hasHouse) totalRent += 3;
+        if (hasHotel) totalRent += 4;
         
         rentAmounts[rentColor] = totalRent;
     });

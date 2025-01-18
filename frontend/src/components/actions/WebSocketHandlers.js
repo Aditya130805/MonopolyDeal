@@ -26,7 +26,8 @@ export const handleWebSocketMessage = (
   setCurrentTurnPlayerName,
   setActionsRemaining,
   setOpponentId,
-  setOpponentName
+  setOpponentName,
+  rentCollectionTimeoutRef
 ) => {
   try {
     const data = JSON.parse(event.data);
@@ -38,11 +39,11 @@ export const handleWebSocketMessage = (
         break;
 
       case 'rent_request':
-        handleRentRequest(data, user, setRentAmount, setRentRecipientId, setRentModalOpen, setShowActionAnimation, setShowRentCollectionOverlay, setRentType);
+        handleRentRequest(data, user, setRentAmount, setRentRecipientId, setRentModalOpen, setShowActionAnimation, setShowRentCollectionOverlay, setRentType, rentCollectionTimeoutRef);
         break;
 
       case 'rent_paid':
-        handleRentPaid(setShowRentCollectionOverlay, setRentModalOpen, setRentAmount, setRentRecipientId, setShowPaymentSuccessfulOverlay, setRentType);
+        handleRentPaid(setShowRentCollectionOverlay, setRentModalOpen, setRentAmount, setRentRecipientId, setShowPaymentSuccessfulOverlay, setRentType, rentCollectionTimeoutRef);
         break;
 
       case 'property_stolen':
@@ -136,7 +137,8 @@ const handleRentRequest = (
   setRentModalOpen,
   setShowActionAnimation,
   setShowRentCollectionOverlay,
-  setRentType
+  setRentType,
+  rentCollectionTimeoutRef
 ) => {
   console.log("RENT REQUEST DATA:", data);
   setRentAmount(data.amount);
@@ -155,7 +157,7 @@ const handleRentRequest = (
               'Rent Request'
     });
     // Wait 2 seconds then start transitioning
-    setTimeout(() => {
+    rentCollectionTimeoutRef.current = setTimeout(() => {
       // Hide action animation (will trigger fade out)
       setShowActionAnimation(prev => ({ ...prev, visible: false }));
       // Show rent collection overlay
@@ -170,8 +172,15 @@ const handleRentPaid = (
   setRentAmount,
   setRentRecipientId,
   setShowPaymentSuccessfulOverlay,
-  setRentType
+  setRentType,
+  rentCollectionTimeoutRef
 ) => {
+  // Clear any pending timeout for rent collection overlay
+  if (rentCollectionTimeoutRef.current) {
+    clearTimeout(rentCollectionTimeoutRef.current);
+    rentCollectionTimeoutRef.current = null;
+  }
+  
   // Hide overlay for the player who requested rent
   setShowRentCollectionOverlay(false);
   // Clear states since rent collection is complete

@@ -96,6 +96,9 @@ export const handleCardDropAction = (
   } else if (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel') {
     setError('Only action cards apart from house and hotel can be played in the action area');
     return;
+  } else if (card.name.toLowerCase() === 'double the rent') {
+    setError('Double the rent action card must be preceded by a Rent action card');
+    return;
   }
 
   const sendToAction = () => {

@@ -60,6 +60,7 @@ const MainGame = () => {
   const [showActionAnimation, setShowActionAnimation] = useState({ visible: false, action: null, onComplete: null });
   const [showCardNotification, setShowCardNotification] = useState({ visible: false, card: null, actionType: null });
   const cardNotificationTimeoutRef = useRef(null);
+  const rentCollectionTimeoutRef = useRef(null);
   const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
   const isUserTurnRef = useRef(false);
   const [pendingHouseCard, setPendingHouseCard] = useState(null);
@@ -178,7 +179,7 @@ const MainGame = () => {
       return;
     }
     console.log("(Socket 2) Connected:", socket);
-    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName);
+    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, rentCollectionTimeoutRef);
     setTimeout(() => setIsSocketReady(true), 0);
   }, [socket]);
   useEffect(() => {
