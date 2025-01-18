@@ -354,6 +354,38 @@ class GameConsumer(AsyncWebsocketConsumer):
         if not user_property:
             return
 
+        # Define set requirements
+        set_requirements = {
+            'brown': 2, 'mint': 2, 'blue': 2,
+            'light blue': 3, 'pink': 3, 'orange': 3, 
+            'red': 3, 'yellow': 3, 'green': 3,
+            'black': 4
+        }
+
+        # Handle houses and hotels for current player's property
+        user_color_cards = current_player.properties.get(user_property_color, [])
+        if user_color_cards:
+            # Separate cards by type
+            property_cards = [card for card in user_color_cards if card.card_type.lower() == 'property']
+            house_cards = [card for card in user_color_cards if card.card_type.lower() == 'action' and card.name.lower() == 'house']
+            hotel_cards = [card for card in user_color_cards if card.card_type.lower() == 'action' and card.name.lower() == 'hotel']
+            
+            required_cards = set_requirements.get(user_property_color, 0)
+            if len(property_cards) == 2 * required_cards:
+                if len(house_cards) > 1:
+                    current_player.properties[user_property_color].remove(house_cards[0])
+                    current_player.bank.append(house_cards[0])
+                if len(hotel_cards) > 1:
+                    current_player.properties[user_property_color].remove(hotel_cards[0])
+                    current_player.bank.append(hotel_cards[0])
+            elif len(property_cards) == required_cards:
+                if house_cards:
+                    current_player.properties[user_property_color].remove(house_cards[0])
+                    current_player.bank.append(house_cards[0])
+                if hotel_cards:
+                    current_player.properties[user_property_color].remove(hotel_cards[0])
+                    current_player.bank.append(hotel_cards[0])
+
         # Remove properties from their current sets
         for color, props in target_player.properties.items():
             if target_property in props:
@@ -390,7 +422,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'property1': target_property.to_dict(),
                 'property2': user_property.to_dict(),
                 'player1_id': player.id,
-                'player2_id': target_player.id
+                'player2_id': target_player.id,
+                'player1_name': player.name,
+                'player2_name': target_player.name
             }
         )
 
@@ -481,7 +515,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             player.properties[property_color].append(stolen_property)
             player.hand.remove(card_to_play)
             game_state.discard_pile.append(card_to_play)
-            
             # Send notification about the sly deal
             await self.channel_layer.group_send(
                 self.game_group_name,
@@ -489,6 +522,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'type': 'broadcast_property_stolen',
                     'player_id': str(player.id),
                     'target_id': str(target_player.id),
+                    'player_name': player.name,
+                    'target_name': target_player.name,
                     'property': stolen_property.to_dict()
                 }
             )
@@ -683,6 +718,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             'type': 'property_stolen',
             'player_id': event['player_id'],
             'target_id': event['target_id'],
+            'player_name': event['player_name'],
+            'target_name': event['target_name'],
             'property': event['property']
         }))
 
@@ -693,7 +730,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             'property1': event['property1'],
             'property2': event['property2'],
             'player1_id': event['player1_id'],
-            'player2_id': event['player2_id']
+            'player2_id': event['player2_id'],
+            'player1_name': event['player1_name'],
+            'player2_name': event['player2_name']
         }))
 
     async def broadcast_deal_breaker_overlay(self, event):

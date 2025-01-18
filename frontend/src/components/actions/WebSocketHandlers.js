@@ -49,7 +49,9 @@ export const handleWebSocketMessage = (
         setPropertyStealAnimation({
           property: data.property,
           stealerId: data.player_id,
-          targetId: data.target_id
+          targetId: data.target_id,
+          stealerName: data.player_name,
+          targetName: data.target_name
         });
         break;
 
@@ -58,7 +60,9 @@ export const handleWebSocketMessage = (
           property1: data.property1,
           property2: data.property2,
           player1Id: data.player1_id,
-          player2Id: data.player2_id
+          player2Id: data.player2_id,
+          player1Name: data.player1_name,
+          player2Name: data.player2_name
         });
         break;
 

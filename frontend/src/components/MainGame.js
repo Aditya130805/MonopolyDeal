@@ -272,11 +272,106 @@ const MainGame = () => {
   }, [pendingRentCard]);
   useEffect(() => {
     if (pendingSlyDealCard) {
+      // Check if opponents have any properties at all
+      if (Object.keys(opponentProperties).length === 0) {
+        setError("Opponent doesn't have any properties!");
+        setPendingSlyDealCard(null);
+        return;
+      }
+
+      // Split opponent's properties into main and overflow sets
+      const { mainSets, overflowSets } = splitProperties(opponentProperties);
+
+      // Check if there are any stealable properties
+      let hasStealableProperties = false;
+
+      // Check main sets for incomplete sets
+      for (const [color, cards] of Object.entries(mainSets)) {
+        const propertyCards = cards.filter(card => card.type === 'property');
+        if (propertyCards.length < setRequirements[color]) {
+          // If main set is incomplete, we can steal from it
+          hasStealableProperties = true;
+          break;
+        }
+      }
+
+      // If no stealable properties in main sets, check overflow sets
+      if (!hasStealableProperties) {
+        for (const [color, cards] of Object.entries(overflowSets)) {
+          if (cards && cards.length > 0) {
+            const propertyCards = cards.filter(card => card.type === 'property');
+            
+            // Check if this overflow set is complete
+            if (propertyCards.length < setRequirements[color]) {
+              hasStealableProperties = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!hasStealableProperties) {
+        setError("Opponent has no properties that can be stolen!");
+        setPendingSlyDealCard(null);
+        return;
+      }
+
       setSlyDealModalOpen(true);
     }
   }, [pendingSlyDealCard]);
   useEffect(() => {
-    if (pendingForcedDealCard) {      
+    if (pendingForcedDealCard) {
+      // Check if player has any properties to swap
+      if (Object.keys(playerProperties).length === 0) {
+        setError("You don't have any properties to swap!");
+        setPendingForcedDealCard(null);
+        return;
+      }
+
+      // Check if opponents have any properties at all
+      if (Object.keys(opponentProperties).length === 0) {
+        setError("Opponent doesn't have any properties!");
+        setPendingForcedDealCard(null);
+        return;
+      }
+
+      // Split opponent's properties into main and overflow sets
+      const { mainSets, overflowSets } = splitProperties(opponentProperties);
+
+      // Check if there are any stealable properties
+      let hasStealableProperties = false;
+
+      // Check main sets for incomplete sets
+      for (const [color, cards] of Object.entries(mainSets)) {
+        const propertyCards = cards.filter(card => card.type === 'property');
+        if (propertyCards.length < setRequirements[color]) {
+          // If main set is incomplete, we can steal from it
+          hasStealableProperties = true;
+          break;
+        }
+      }
+
+      // If no stealable properties in main sets, check overflow sets
+      if (!hasStealableProperties) {
+        for (const [color, cards] of Object.entries(overflowSets)) {
+          if (cards && cards.length > 0) {
+            const propertyCards = cards.filter(card => card.type === 'property');
+            
+            // Check if this overflow set is complete
+            if (propertyCards.length < setRequirements[color]) {
+              hasStealableProperties = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!hasStealableProperties) {
+        setError("Opponent has no properties that can be stolen!");
+        setPendingForcedDealCard(null);
+        return;
+      }
+
       setForcedDealModalOpen(true);
     }
   }, [pendingForcedDealCard]);

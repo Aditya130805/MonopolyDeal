@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
+import ActionCard from '../cards/ActionCard';
+
+const setRequirements = {
+  'brown': 2,
+  'mint': 2,
+  'blue': 2,
+  'light blue': 3,
+  'pink': 3,
+  'orange': 3,
+  'red': 3,
+  'yellow': 3,
+  'green': 3,
+  'black': 4,
+};
 
 const SlyDealModal = ({ 
   isOpen, 
@@ -48,6 +62,130 @@ const SlyDealModal = ({
     }
   };
 
+  const splitProperties = (properties) => {
+    const mainSets = {};
+    const overflowSets = {};
+
+    Object.entries(properties).forEach(([color, cards]) => {
+      if (!Array.isArray(cards)) {
+        mainSets[color] = [];
+        return;
+      }
+
+      const propertyCards = cards.filter(card => card && card.type === 'property');
+      const requiredCards = setRequirements[color] || 0;
+      const houseCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'house');
+      const hotelCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'hotel');
+
+      // Add property cards to mainSets up to requiredCards
+      mainSets[color] = propertyCards.slice(0, requiredCards);
+
+      // Place house and hotel cards in mainSets
+      if (houseCards.length > 0) {
+        mainSets[color].push(houseCards[0]);
+      }
+      if (hotelCards.length > 0) {
+        mainSets[color].push(hotelCards[0]);
+      }
+
+      // Add excess property cards to overflowSets
+      if (propertyCards.length > requiredCards) {
+        overflowSets[color] = propertyCards.slice(requiredCards);
+      }
+
+      // Add remaining house and hotel cards to overflowSets
+      if (houseCards.length > 1) {
+        overflowSets[color] = (overflowSets[color] || []).concat(houseCards.slice(1));
+      }
+      if (hotelCards.length > 1) {
+        overflowSets[color] = (overflowSets[color] || []).concat(hotelCards.slice(1));
+      }
+    });
+
+    return { mainSets, overflowSets };
+  };
+
+  const isInMainSet = (card, color, mainSets) => {
+    if (!mainSets[color]) return false;
+    return mainSets[color].some(mainCard => mainCard.id === card.id);
+  };
+
+  const isInOverflowSet = (card, color, overflowSets) => {
+    if (!overflowSets[color]) return false;
+    return overflowSets[color].some(overflowCard => overflowCard.id === card.id);
+  };
+
+  const isMainSetComplete = (color, mainSets) => {
+    if (!mainSets[color]) return false;
+    const propertyCards = mainSets[color].filter(card => card && card.type === 'property');
+    const requiredCards = setRequirements[color] || 0;
+    return propertyCards.length >= requiredCards;
+  };
+
+  const isOverflowSetComplete = (color, overflowSets) => {
+    if (!overflowSets[color]) return false;
+    const propertyCards = overflowSets[color].filter(card => card && card.type === 'property');
+    const requiredCards = setRequirements[color] || 0;
+    return propertyCards.length >= requiredCards;
+  };
+
+  const renderPropertyCard = (card, color, allCards) => {
+    // Handle house and hotel cards
+    if (card.type === 'action' && (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel')) {
+      return (
+        <motion.div
+          key={`${card.id}`}
+          className="cursor-not-allowed transition-all transform-gpu opacity-40 grayscale"
+        >
+          <ActionCard {...card} />
+        </motion.div>
+      );
+    }
+
+    // Split properties into main and overflow sets
+    const { mainSets, overflowSets } = splitProperties({ [color]: allCards });
+    
+    // Check if card is in main set and if main set is complete
+    const cardInMainSet = isInMainSet(card, color, mainSets);
+    const mainSetComplete = isMainSetComplete(color, mainSets);
+
+    // Check if card is in overflow set and if overflow set is complete
+    const cardInOverflowSet = isInOverflowSet(card, color, overflowSets);
+    const overflowSetComplete = isOverflowSetComplete(color, overflowSets);
+
+    // If card is in a complete main set or complete overflow set, make it unselectable
+    if ((cardInMainSet && mainSetComplete) || (cardInOverflowSet && overflowSetComplete)) {
+      return (
+        <motion.div
+          key={`${card.id}`}
+          className="cursor-not-allowed transition-all transform-gpu opacity-40 grayscale"
+        >
+          <PropertyCard {...card} />
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div
+        key={`${card.id}`}
+        variants={cardVariants}
+        initial="unselected"
+        animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
+        whileHover={{ scale: 1.01 }}
+        onClick={() => handlePropertySelect(card)}
+        className={`cursor-pointer transition-all transform-gpu ${
+          selectedProperty?.id === card.id 
+            ? '' 
+            : selectedProperty
+              ? 'opacity-40 grayscale'
+              : 'hover:-translate-y-1'
+        }`}
+      >
+        <PropertyCard {...card} />
+      </motion.div>
+    );
+  };
+
   return (
     <motion.div 
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]"
@@ -91,29 +229,7 @@ const SlyDealModal = ({
               {Object.keys(opponentProperties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
                   {Object.entries(opponentProperties).map(([color, cards]) => (
-                    cards.map((card, index) => (
-                      <motion.div
-                        key={`${card.id}-${index}`}
-                        variants={cardVariants}
-                        initial="unselected"
-                        animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
-                        whileHover={{ scale: 1.01 }}
-                        onClick={() => handlePropertySelect(card)}
-                        className={`cursor-pointer transition-all transform-gpu ${
-                          selectedProperty?.id === card.id 
-                            ? '' 
-                            : selectedProperty
-                              ? 'opacity-40 grayscale'
-                              : 'hover:-translate-y-1'
-                        }`}
-                      >
-                        <PropertyCard
-                          {...card}
-                          width={160}
-                          height={220}
-                        />
-                      </motion.div>
-                    ))
+                    cards.map((card, index) => renderPropertyCard(card, color, cards))
                   ))}
                 </div>
               ) : (
