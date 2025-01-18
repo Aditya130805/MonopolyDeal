@@ -142,16 +142,23 @@ class GameConsumer(AsyncWebsocketConsumer):
             game_state = GameConsumer.game_instances[self.room_id]
             if action == 'rent_payment':
                 recipient_id = data.get('recipient_id')
-                self.assist_rent_payment(game_state, player_id, recipient_id, card)
-                # self.manage_turns(game_state)
-                await self.send_game_state()
-            elif action == 'rent_paid':
+                transferred_cards = self.assist_rent_payment(game_state, player_id, recipient_id, card)
+                paying_player = next((p for p in game_state.players if str(p.id) == player_id), None)
+                receiving_player = next((p for p in game_state.players if str(p.id) == recipient_id), None)
+                
                 await self.channel_layer.group_send(
                     self.game_group_name,
                     {
-                        'type': 'broadcast_rent_paid'
+                        'type': 'broadcast_rent_paid',
+                        'recipient_id': recipient_id,
+                        'player_id': player_id,
+                        'selected_cards': transferred_cards,  
+                        'player_name': paying_player.name,
+                        'recipient_name': receiving_player.name
                     }
                 )
+                # self.manage_turns(game_state)
+                await self.send_game_state()
             else:
                 await self.handle_action_with_notification(data, action, card, player_id)
                 self.manage_turns(game_state)
@@ -534,6 +541,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         receiving_player = next(p for p in game_state.players if str(p.id) == recipient_id)
         selected_cards = card.get('selected_cards', [])
         
+        # Keep track of transferred cards with full info
+        transferred_cards = []
+        
         # Find and transfer each selected card
         for card_id in selected_cards:
             # First try to find in bank
@@ -543,6 +553,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     card_found = bank_card
                     paying_player.bank.remove(card_found)
                     receiving_player.bank.append(card_found)
+                    transferred_cards.append(card_found.to_dict())  # Add full card info
                     break
             
             # If not in bank, search in properties
@@ -561,8 +572,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                                         paying_player.bank.append(card)
                                         break
                                 receiving_player.bank.append(card_found)
+                                transferred_cards.append(card_found.to_dict())  # Add full card info
                             elif card_found.name.lower() == 'hotel':
                                 receiving_player.bank.append(card_found)
+                                transferred_cards.append(card_found.to_dict())  # Add full card info
                             else:
                                 # Regular property card
                                 if card_found.current_color not in receiving_player.properties:
@@ -603,13 +616,16 @@ class GameConsumer(AsyncWebsocketConsumer):
                                         paying_player.bank.append(hotel_cards[0])
                                 
                                 receiving_player.properties[card_found.current_color].append(card_found)
+                                transferred_cards.append(card_found.to_dict())  # Add full card info
                             # Remove color key if no properties left
                             if not paying_player.properties[color]:
                                 del paying_player.properties[color]
                             break
                     if card_found:
                         break
-    
+        
+        return transferred_cards  # Return the list of transferred cards with full info
+
     def manage_turns(self, game_state):
         if game_state.actions_remaining == 1:
             # Switch to next player's turn
@@ -703,7 +719,12 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def broadcast_rent_paid(self, event):
         """Notify players that rent has been paid"""
         await self.send(text_data=json.dumps({
-            'type': 'rent_paid'
+            'type': 'rent_paid',
+            'recipient_id': event['recipient_id'],
+            'player_id': event['player_id'],
+            'selected_cards': event['selected_cards'],
+            'player_name': event['player_name'],
+            'recipient_name': event['recipient_name']
         }))
 
     async def broadcast_room_update(self, event):

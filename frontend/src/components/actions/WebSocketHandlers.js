@@ -43,7 +43,7 @@ export const handleWebSocketMessage = (
         break;
 
       case 'rent_paid':
-        handleRentPaid(setShowRentCollectionOverlay, setRentModalOpen, setRentAmount, setRentRecipientId, setShowPaymentSuccessfulOverlay, setRentType, rentCollectionTimeoutRef);
+        handleRentPaid(data, user, setShowRentCollectionOverlay, setRentModalOpen, setRentAmount, setRentRecipientId, setShowPaymentSuccessfulOverlay, setRentType, rentCollectionTimeoutRef);
         break;
 
       case 'property_stolen':
@@ -167,6 +167,8 @@ const handleRentRequest = (
 };
 
 const handleRentPaid = (
+  data,
+  user,
   setShowRentCollectionOverlay,
   setRentModalOpen,
   setRentAmount,
@@ -188,10 +190,20 @@ const handleRentPaid = (
   setRentAmount(0);
   setRentRecipientId(null);
   setRentType(null);
-  setShowPaymentSuccessfulOverlay(true);
+  setShowPaymentSuccessfulOverlay({
+    isVisible: true,
+    playerName: data.player_name,
+    targetName: data.recipient_name,
+    selectedCards: data.selected_cards
+  });
   // Hide overlay after 2 seconds
   setTimeout(() => {
-    setShowPaymentSuccessfulOverlay(false);
+    setShowPaymentSuccessfulOverlay({
+      isVisible: false,
+      playerName: '',
+      targetName: '',
+      selectedCards: []
+    });
   }, 2000);
 };
 

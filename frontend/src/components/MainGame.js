@@ -76,7 +76,12 @@ const MainGame = () => {
   const [rentAmount, setRentAmount] = useState(0);
   const [rentRecipientId, setRentRecipientId] = useState(null);
   const [rentType, setRentType] = useState(null);
-  const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState(false);
+  const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState({
+    isVisible: false,
+    playerName: '',
+    targetName: '',
+    selectedCards: []
+  });
   const [slyDealModalOpen, setSlyDealModalOpen] = useState(false);
   const [dealBreakerModalOpen, setDealBreakerModalOpen] = useState(false);
   const [propertyStealAnimation, setPropertyStealAnimation] = useState(null);
@@ -529,7 +534,10 @@ const MainGame = () => {
           onComplete={() => setShowCardNotification({ visible: false, card: null, actionType: null })}
         />
         <PaymentSuccessfulOverlay
-          isVisible={showPaymentSuccessfulOverlay}
+          isVisible={showPaymentSuccessfulOverlay.isVisible}
+          playerName={showPaymentSuccessfulOverlay.playerName}
+          targetName={showPaymentSuccessfulOverlay.targetName}
+          selectedCards={showPaymentSuccessfulOverlay.selectedCards}
         />
         <PropertySwapOverlay
           animation={propertySwapAnimation}
