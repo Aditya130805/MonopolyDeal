@@ -51,6 +51,8 @@
 - Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
 - For Forced Deal and Sly Deal, gray the houses and hotels out; also, display them as action cards and not property cards
 - Clean the code, avoid repetition, make it more readable, and optimize it if possible
+- Add an animation when loading the game page after clicking "Start Game"
+- Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
 
 ### Deviations from official Monopoly Deal rules:
 
