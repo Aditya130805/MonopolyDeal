@@ -191,39 +191,9 @@ const PaymentSuccessfulOverlay = ({
                 >
                   <div className="flex -space-x-20 relative">
                     {selectedCards && selectedCards.map((card, index) => {
-                      let CardComponent;
-                      let cardProps = {};  
-
-                      // Convert snake_case to camelCase for consistency
-                      const {
-                        is_wild: isWild,
-                        is_utility: isUtility,
-                        is_railroad: isRailroad,
-                        rent_colors: rentColors,
-                        ...restCard
-                      } = card;
-
-                      if (card.type === 'money') {
-                        CardComponent = MoneyCard;
-                        cardProps = { value: card.value };
-                      } else if (card.type === 'property') {
-                        CardComponent = PropertyCard;
-                        cardProps = {
-                          name: restCard.name,
-                          color: restCard.color,
-                          value: restCard.value,
-                          rent: restCard.rent,
-                          isWild,
-                          isUtility,
-                          isRailroad
-                        };
-                      } else {
-                        CardComponent = ActionCard;
-                        cardProps = {
-                          name: restCard.name,
-                          rentColors: rentColors || []
-                        };
-                      }
+                      let CardComponent = card.type === 'money' ? MoneyCard 
+                                      : card.type === 'property' ? PropertyCard 
+                                      : ActionCard;
 
                       return (
                         <motion.div
@@ -246,7 +216,7 @@ const PaymentSuccessfulOverlay = ({
                             ease: [0.34, 1.56, 0.64, 1],
                           }}
                         >
-                          <CardComponent {...cardProps} />
+                          <CardComponent {...card} />
                         </motion.div>
                       );
                     })}

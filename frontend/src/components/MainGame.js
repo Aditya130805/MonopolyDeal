@@ -686,9 +686,8 @@ const MainGame = () => {
       <RentModal
         isOpen={rentModalOpen}
         onClose={() => {
-          socket.send(JSON.stringify({
-            'action': 'rent_paid'
-          }));
+          setRentModalOpen(false);
+          setPendingRentCard(null);
         }}
         amountDue={rentAmount}
         recipientName={rentRecipientId === user.unique_id ? 'You' : opponentName}
