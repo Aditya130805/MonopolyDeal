@@ -5,8 +5,10 @@ import PropertyCard from '../cards/PropertyCard';
 const SlyDealModal = ({ 
   isOpen, 
   onClose, 
+  opponentId,
+  opponentName,
   opponentProperties,
-  onPropertySelect 
+  onPropertySelect,
 }) => {
   const [selectedProperty, setSelectedProperty] = useState(null);
 
@@ -16,11 +18,11 @@ const SlyDealModal = ({
     }
   }, [isOpen]);
 
-  const handlePropertySelect = (property, owner) => {
+  const handlePropertySelect = (property) => {
     if (selectedProperty?.id === property.id) {
       setSelectedProperty(null);
     } else {
-      setSelectedProperty({ ...property, owner });
+      setSelectedProperty({ ...property, owner: { id: opponentId, name: opponentName } });
     }
   };
 
@@ -79,55 +81,47 @@ const SlyDealModal = ({
         {/* Content Area */}
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
-            {Object.entries(opponentProperties).length > 0 ? (
-              Object.entries(opponentProperties).map(([playerId, properties]) => (
-                <div key={playerId} className="mb-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                      {properties.playerName}'s Properties
-                    </h3>
-                    <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
-                  </div>
-                  {Object.keys(properties.sets).length > 0 ? (
-                    <div className="flex flex-wrap items-start gap-4">
-                      {Object.entries(properties.sets).map(([color, cards]) => (
-                        cards.map((card, index) => (
-                          <motion.div
-                            key={`${card.id}-${index}`}
-                            variants={cardVariants}
-                            initial="unselected"
-                            animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
-                            whileHover={{ scale: 1.01 }}
-                            onClick={() => handlePropertySelect(card, { id: playerId, name: properties.playerName })}
-                            className={`cursor-pointer transition-all transform-gpu ${
-                              selectedProperty?.id === card.id 
-                                ? '' 
-                                : selectedProperty
-                                  ? 'opacity-40 grayscale'
-                                  : 'hover:-translate-y-1'
-                            }`}
-                          >
-                            <PropertyCard
-                              {...card}
-                              width={160}
-                              height={220}
-                            />
-                          </motion.div>
-                        ))
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
-                      No properties to steal
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 italic py-12 bg-gray-50 rounded-lg">
-                No players have properties to steal
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                  {opponentName}'s Properties
+                </h3>
+                <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
               </div>
-            )}
+              {Object.keys(opponentProperties).length > 0 ? (
+                <div className="flex flex-wrap items-start gap-4">
+                  {Object.entries(opponentProperties).map(([color, cards]) => (
+                    cards.map((card, index) => (
+                      <motion.div
+                        key={`${card.id}-${index}`}
+                        variants={cardVariants}
+                        initial="unselected"
+                        animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => handlePropertySelect(card)}
+                        className={`cursor-pointer transition-all transform-gpu ${
+                          selectedProperty?.id === card.id 
+                            ? '' 
+                            : selectedProperty
+                              ? 'opacity-40 grayscale'
+                              : 'hover:-translate-y-1'
+                        }`}
+                      >
+                        <PropertyCard
+                          {...card}
+                          width={160}
+                          height={220}
+                        />
+                      </motion.div>
+                    ))
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                  No properties to steal
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

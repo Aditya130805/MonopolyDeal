@@ -7,7 +7,9 @@ import ActionCard from '../cards/ActionCard';
 const RentModal = ({ 
   isOpen, 
   onClose, 
-  amountDue, 
+  amountDue,
+  recipientName,
+  rentType,
   playerBank, 
   playerProperties,
   onPaymentSubmit 
@@ -94,12 +96,12 @@ const RentModal = ({
         <div className="relative flex items-center justify-between mb-4 shrink-0">
           <div className="flex items-center gap-6">
             <div>
-              <div className="text-sm font-medium text-gray-500">Required</div>
+              <div className="text-sm font-medium text-gray-500">Pay {recipientName}</div>
               <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
                 {amountDue}M
               </div>
             </div>
-            <div className="h-10 w-px bg-transparent"></div>
+            <div className="h-10 w-px bg-gray-200"></div>
             <div>
               <div className="text-sm font-medium text-gray-500">Selected</div>
               <div className={`text-2xl font-bold bg-clip-text text-transparent ${
@@ -108,6 +110,17 @@ const RentModal = ({
                   : 'bg-gradient-to-r from-gray-600 to-gray-400'
               }`}>
                 {totalSelected}M
+              </div>
+            </div>
+            <div className="h-10 w-px bg-gray-200"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">Reason</div>
+              <div className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400">
+                {rentType === 'rent' ? 'Rent' :
+                 rentType === 'multicolor_rent' ? 'Multi-Color Rent' :
+                 rentType === 'birthday' ? 'It\'s Your Birthday!' :
+                 rentType === 'debt_collector' ? 'Debt Collector' :
+                 rentType === 'double_rent' ? 'Double the Rent!' : ''}
               </div>
             </div>
           </div>

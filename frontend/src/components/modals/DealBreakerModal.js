@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 
 const DealBreakerModal = ({ 
   isOpen, 
   onClose, 
+  opponentId,
+  opponentName,
   opponentProperties,
   onPropertySetSelect 
 }) => {
@@ -16,11 +18,11 @@ const DealBreakerModal = ({
     }
   }, [isOpen]);
 
-  const handleSetSelect = (color, cards, owner) => {
-    if (selectedSet?.color === color && selectedSet?.owner.id === owner.id) {
+  const handleSetSelect = (color, cards) => {
+    if (selectedSet?.color === color) {
       setSelectedSet(null);
     } else {
-      setSelectedSet({ color, cards, owner });
+      setSelectedSet({ color, cards, owner: { id: opponentId, name: opponentName } });
     }
   };
 
@@ -65,6 +67,9 @@ const DealBreakerModal = ({
     return cards.length >= requiredCards;
   };
 
+  // Check if there are any complete sets
+  const hasCompleteSets = Object.values(opponentProperties).some(isCompleteSet);
+
   return (
     <motion.div 
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]"
@@ -98,63 +103,52 @@ const DealBreakerModal = ({
         {/* Content Area */}
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
-            {Object.entries(opponentProperties).length > 0 ? (
-              Object.entries(opponentProperties).map(([playerId, properties]) => {
-                // Check if there are any complete sets
-                const hasCompleteSets = Object.values(properties.sets).some(isCompleteSet);
-                
-                return (
-                  <div key={playerId} className="mb-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                        {properties.playerName}'s Complete Property Sets
-                      </h3>
-                      <div className="h-0.5 flex-1 bg-gradient-to-r from-red-200 to-transparent"></div>
-                    </div>
-                    {hasCompleteSets ? (
-                      <div className="flex flex-wrap items-start gap-4">
-                        {Object.entries(properties.sets).map(([color, cards]) => (
-                          isCompleteSet(cards) && (
-                            <motion.div
-                              key={color}
-                              className="relative group"
-                              variants={setVariants}
-                              initial="unselected"
-                              animate={selectedSet?.color === color && selectedSet?.owner.id === playerId ? "selected" : "unselected"}
-                              whileHover={{ scale: 1.01 }}
-                              onClick={() => handleSetSelect(color, cards, { id: playerId, name: properties.playerName })}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
+                  {opponentName}'s Complete Property Sets
+                </h3>
+                <div className="h-0.5 flex-1 bg-gradient-to-r from-red-200 to-transparent"></div>
+              </div>
+              {hasCompleteSets ? (
+                <div className="flex flex-wrap items-start gap-4">
+                  {Object.entries(opponentProperties).map(([color, cards]) => (
+                    isCompleteSet(cards) && (
+                      <motion.div
+                        key={color}
+                        className="relative group"
+                        variants={setVariants}
+                        initial="unselected"
+                        animate={selectedSet?.color === color ? "selected" : "unselected"}
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => handleSetSelect(color, cards)}
+                      >
+                        <div className="flex -space-x-20">
+                          {cards.map((card, index) => (
+                            <div 
+                              key={`${card.id}-${index}`}
+                              className="relative"
+                              style={{ zIndex: cards.length - index }}
                             >
-                              <div className="flex -space-x-20">
-                                {cards.map((card, index) => (
-                                  <div 
-                                    key={`${card.id}-${index}`}
-                                    className="relative"
-                                    style={{ zIndex: cards.length - index }}
-                                  >
-                                    <PropertyCard
-                                      {...card}
-                                      className={`transition-all ${
-                                        selectedSet?.color === color && selectedSet?.owner.id === playerId
-                                          ? 'ring-2 ring-red-500'
-                                          : ''
-                                      }`}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 italic">No complete property sets available</p>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-gray-500 italic">No properties available to steal</p>
-            )}
+                              <PropertyCard
+                                {...card}
+                                className={`transition-all ${
+                                  selectedSet?.color === color
+                                    ? 'ring-2 ring-red-500'
+                                    : ''
+                                }`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No complete property sets available</p>
+              )}
+            </div>
           </div>
         </div>
 

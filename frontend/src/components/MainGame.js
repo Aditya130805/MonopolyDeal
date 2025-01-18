@@ -29,6 +29,10 @@ import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
 import { handleWildPropertySelection } from '../utils/wildPropertyHandler';
 import { handleRentColorSelection } from '../utils/rentActionHandler';
+import { handleRentPayment, handleDoubleRentResponse } from './actions/RentActions';
+import { handleSlyDealPropertySelect, handleForcedDealSelect, handleDealBreakerSetSelect } from './actions/PropertyActions';
+import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
+import { handleWebSocketMessage } from './actions/WebSocketHandlers';
 
 const MainGame = () => {  
   const { roomId } = useParams();
@@ -41,6 +45,8 @@ const MainGame = () => {
   const [playerProperties, setPlayerProperties] = useState({});
   const [mainSets, setMainSets] = useState({});
   const [overflowSets, setOverflowSets] = useState({});
+  const [opponentId, setOpponentId] = useState('');
+  const [opponentName, setOpponentName] = useState('');
   const [opponentHand, setOpponentHand] = useState([]);
   const [opponentBank, setOpponentBank] = useState([]);
   const [opponentProperties, setOpponentProperties] = useState({});
@@ -68,6 +74,7 @@ const MainGame = () => {
   const [forcedDealModalOpen, setForcedDealModalOpen] = useState(false);
   const [rentAmount, setRentAmount] = useState(0);
   const [rentRecipientId, setRentRecipientId] = useState(null);
+  const [rentType, setRentType] = useState(null);
   const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState(false);
   const [slyDealModalOpen, setSlyDealModalOpen] = useState(false);
   const [dealBreakerModalOpen, setDealBreakerModalOpen] = useState(false);
@@ -93,21 +100,6 @@ const MainGame = () => {
       }
     };
   }, []);
-
-  const handleRentPayment = (selectedCards) => {
-    // Send the payment to the server
-    console.log("Sending rent payment for selected cards:", selectedCards);
-    const message = {
-      action: 'rent_payment',
-      player: user.unique_id,
-      recipient_id: rentRecipientId,
-      card: {
-        selected_cards: selectedCards.map(card => card.id),
-      }
-    };
-    console.log("Sending rent payment message:", message);
-    socket.send(JSON.stringify(message));
-  };
 
   //////////////////// CHECK IF IT'S USER'S TURN
   useEffect(() => {
@@ -186,7 +178,7 @@ const MainGame = () => {
       return;
     }
     console.log("(Socket 2) Connected:", socket);
-    socket.onmessage = handleMessage;
+    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName);
     setTimeout(() => setIsSocketReady(true), 0);
   }, [socket]);
   useEffect(() => {
@@ -197,147 +189,6 @@ const MainGame = () => {
       }));
     }
   }, [isSocketReady]);
-
-  //////////////////// HANDLE WEBSOCKET MESSAGES
-  const handleMessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log(`(Handler 2) WebSocket message in room ${roomId}:`, data);
-
-      // CARD_PLAYED
-      if (data.type && data.type === 'card_played') {
-        // Clear any existing timeout
-        if (cardNotificationTimeoutRef.current) {
-          clearTimeout(cardNotificationTimeoutRef.current);
-        }
-        
-        // Show notification to all players
-        setShowCardNotification({ 
-          visible: true, 
-          card: data.card,
-          actionType: data.action_type 
-        });
-        
-        // Set new timeout to hide notification
-        cardNotificationTimeoutRef.current = setTimeout(() => {
-          setShowCardNotification(prev => ({ ...prev, visible: false }));
-          cardNotificationTimeoutRef.current = null;
-        }, 2000);
-        
-        // Additionally show action animation for specific cases
-        if (data.player_id === user.unique_id && data.card.type === 'action' && data.card.name.toLowerCase() !== 'house' && data.card.name.toLowerCase() !== 'hotel' && data.action_type !== 'to_bank' && data.action_type !== 'to_properties') {
-          setShowActionAnimation({ visible: true, action: data.action });
-          // Hide animation after 2 seconds
-          setTimeout(() => {
-            setShowActionAnimation(prev => ({ ...prev, visible: false }));
-          }, 2000);
-        }
-        return;
-      }
-
-      // RENT_REQUEST
-      else if (data.type && data.type === 'rent_request') {
-        console.log("RENT REQUEST DATA:", data)
-        setRentAmount(data.amount);
-        setRentRecipientId(data.recipient_id);
-        if (data.recipient_id !== user.unique_id) {
-          setRentModalOpen(true);
-        }
-        else {
-          // Show rent animation first for the player who played the rent card
-          setShowActionAnimation({
-            visible: true,
-            action: data.rent_type === "it's your birthday" ? 'Birthday Request' : data.rent_type === "debt collector" ? 'Debt Request' : data.rent_type === "double_the_rent" ? 'Double Rent Request' : 'Rent Request'
-          });
-          // Wait 2 seconds then start transitioning
-          setTimeout(() => {
-            // Hide action animation (will trigger fade out)
-            setShowActionAnimation(prev => ({ ...prev, visible: false }));
-            // Show rent collection overlay
-            setShowRentCollectionOverlay(true);
-          }, 2000);
-        }
-      }
-
-      // RENT_PAID
-      else if (data.type === 'rent_paid') {
-        console.log("RENT PAID RECEIVED!", data)
-        // Hide overlay for the player who requested rent
-        setShowRentCollectionOverlay(false);
-        // Clear states since rent collection is complete
-        setRentModalOpen(false);
-        setRentAmount(0);
-        setRentRecipientId(null);
-        setShowPaymentSuccessfulOverlay(true);
-        // Hide overlay after 2 seconds
-        setTimeout(() => {
-          setShowPaymentSuccessfulOverlay(false);
-        }, 2000);
-
-      }
-
-      // PROPERTY_STOLEN
-      else if (data.type && data.type === 'property_stolen') {
-        setPropertyStealAnimation({
-          property: data.property,
-          stealerId: data.player_id,
-          targetId: data.target_id
-        });
-      }
-
-      // PROPERTY_SWAP
-      else if (data.type && data.type === 'property_swap') {
-        setPropertySwapAnimation({
-          property1: data.property1,
-          property2: data.property2,
-          player1Id: data.player1_id,
-          player2Id: data.player2_id
-        });
-      }
-
-      // DEAL BREAKER OVERLAY
-      else if (data.type === 'deal_breaker_overlay') {
-        setDealBreakerOverlay({
-          isVisible: true,
-          playerName: data.player_name,
-          targetName: data.target_name,
-          color: data.color,
-          propertySet: data.property_set
-        });
-      }
-
-      // GAME_UPDATE
-      else if (data.type && data.type === 'game_update') {
-        const gameState = data.state;
-        
-        // Find current player and update their hand
-        const currentPlayer = gameState.players.find(p => p.id === user.unique_id);
-        if (currentPlayer) {
-          setPlayerHand(currentPlayer.hand);
-          setPlayerBank(currentPlayer.bank);
-          setPlayerProperties(currentPlayer.properties);
-        }
-        // Find opponents and update their hands
-        const opponents = gameState.players.filter(p => p.id !== user.unique_id);
-        const opponentCards = opponents.flatMap(opponent => opponent.hand);
-        const opponentBanks = opponents.flatMap(opponent => opponent.bank);
-        // Get the first opponent's properties (since it's a 2-player game)
-        const opponent = opponents[0];
-        setOpponentHand(opponentCards);
-        setOpponentBank(opponentBanks);
-        setOpponentProperties(opponent ? opponent.properties : {});
-        setNumCardsInDrawPile(gameState.deck_count);
-        setLastAction(gameState.discard_pile ? gameState.discard_pile[gameState.discard_pile.length - 1] : null);
-        // Convert current turn ID to username  
-        setCurrentTurnPlayerId(gameState.current_turn);
-        const currentTurnPlayer = gameState.players.find(p => p.id === gameState.current_turn);
-        setCurrentTurnPlayerName(currentTurnPlayer ? currentTurnPlayer.name : '');
-        setActionsRemaining(gameState.actions_remaining || 0);
-      }
-    } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
-    }
-  };
 
   //////////////////// ACTION USE EFFECTS
   useEffect(() => {
@@ -419,19 +270,16 @@ const MainGame = () => {
       handleRentColorSelection(pendingRentCard, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay);
     }
   }, [pendingRentCard]);
-
   useEffect(() => {
-    if (pendingSlyDealCard) {      
+    if (pendingSlyDealCard) {
       setSlyDealModalOpen(true);
     }
   }, [pendingSlyDealCard]);
-
   useEffect(() => {
     if (pendingForcedDealCard) {      
       setForcedDealModalOpen(true);
     }
   }, [pendingForcedDealCard]);
-
   useEffect(() => {
     if (pendingDealBreakerCard) {      
       setDealBreakerModalOpen(true);
@@ -439,167 +287,39 @@ const MainGame = () => {
   }, [pendingDealBreakerCard]);
 
   // Handle sly deal property selection
-  const handleSlyDealPropertySelect = (selectedProperty) => {
-    console.log("Selected property for Sly Deal:", selectedProperty);
-    socket.send(JSON.stringify({
-      action: 'sly_deal',
-      player: user.unique_id,
-      card: pendingSlyDealCard,
-      target_property: selectedProperty.id
-    }));
-    setPendingSlyDealCard(null);
+  const handleSlyDealPropertySelectWrapper = (selectedProperty) => {
+    handleSlyDealPropertySelect(selectedProperty, socket, user, pendingSlyDealCard, setPendingSlyDealCard);
   };
 
   // Handle forced deal property selection
-  const handleForcedDealSelect = (opponentProperty, userProperty) => {
-    const message = {
-      action: 'forced_deal',
-      player: user.unique_id,
-      card: pendingForcedDealCard,
-      target_property: opponentProperty.id,
-      user_property: userProperty.id
-    };
-    socket.send(JSON.stringify(message));
-    setForcedDealModalOpen(false);
-    setPendingForcedDealCard(null);
+  const handleForcedDealSelectWrapper = (opponentProperty, userProperty) => {
+    handleForcedDealSelect(opponentProperty, userProperty, socket, user, pendingForcedDealCard, setForcedDealModalOpen, setPendingForcedDealCard);
   };
 
   // Handle deal breaker set selection
-  const handleDealBreakerSetSelect = (selectedSet) => {
-    console.log("Selected Set:", selectedSet);
-    const message = {
-      action: 'deal_breaker',
-      player: user.unique_id,
-      card: pendingDealBreakerCard,
-      target_set: selectedSet.cards,
-      target_color: selectedSet.color
-    };
-    socket.send(JSON.stringify(message));
-    setDealBreakerModalOpen(false);
-    setPendingDealBreakerCard(null);
+  const handleDealBreakerSetSelectWrapper = (selectedSet) => {
+    handleDealBreakerSetSelect(selectedSet, socket, user, pendingDealBreakerCard, setDealBreakerModalOpen, setPendingDealBreakerCard);
   };
 
   // Handle double rent response
-  const handleDoubleRentResponse = (useDoubleRent) => {
-    setShowDoubleRentOverlay(false);
-    setPendingRentCard(null);
-    if (useDoubleRent) {
-      // Find the double rent card from hand
-      const doubleTheRentCard = playerHand.find(card => 
-        card.type === 'action' && card.name.toLowerCase() === 'double the rent'
-      );
-      
-      socket.send(JSON.stringify({
-        'action': 'double_the_rent',
-        'player': user.unique_id,
-        'card': pendingRentCard,
-        'double_the_rent_card': doubleTheRentCard,
-        'rentAmount': doubleRentAmount
-      }));
-    } else {
-      // Proceed with normal rent
-      setTimeout(() => {
-        setShowActionAnimation({ visible: true, action: "Rent Request" });
-        socket.send(JSON.stringify({
-            'action': 'rent',
-            'player': user.unique_id,
-            'card': pendingRentCard,
-            'rentAmount': rentAmount
-        }));
-        setPendingRentCard(null);
-      }, 50);
-    }
+  const handleDoubleRentResponseWrapper = (useDoubleRent) => {
+    handleDoubleRentResponse(useDoubleRent, socket, user, pendingRentCard, playerHand, doubleRentAmount, rentAmount, setShowDoubleRentOverlay, setPendingRentCard, setShowActionAnimation);
+  };
+
+  // Handle rent payment
+  const handleRentPaymentWrapper = (selectedCards) => {
+    handleRentPayment(selectedCards, socket, user, rentRecipientId);
   };
 
   //////////////////// DROP ZONE HANDLERS
-  const handleCardDropBank = (card) => {
-    console.log("Dropping CARD to BANK:", card);
-    if (!isUserTurnRef.current) {
-      setError('Please wait for your turn to play');
-      return;
-    }
-    if (card.type === 'property') {
-      setError('Properties cannot be placed in the bank');
-      return;
-    }
-    const sendToBank = () => {
-      socket.send(JSON.stringify({
-        'action': 'to_bank',
-        'player': user.unique_id,
-        'card': card
-      }))
-    };
-    // Delay the actual card removal to allow for animation
-    setTimeout(sendToBank, 300);
+  const handleCardDropBankWrapper = (card) => {
+    handleCardDropBank(card, isUserTurnRef, socket, user, setError);
   };
-  const handleCardDropProperty = (card) => {
-    console.log("Dropping CARD to PROPERTY:", card);
-    if (!isUserTurnRef.current) {
-      setError('Please wait for your turn to play');
-      return; 
-    }
-    if (card.type === 'money') {
-      setError('Money cards cannot be placed in properties');
-      return;
-    } else if (card.type === 'action' && card.name.toLowerCase() !== 'house' && card.name.toLowerCase() !== 'hotel') {
-      setError('Only house and hotel action cards can be placed in properties');
-      return;
-    }
-    const sendToProperties = () => {
-      if (card.type === 'action') {
-        if (card.name.toLowerCase() === 'house') {
-          setPendingHouseCard(card);
-        } else if (card.name.toLowerCase() === 'hotel') {
-          setPendingHotelCard(card);
-        }
-        return;
-      }
-      else if (card.type === 'property' && card.isWild) {
-        handleWildPropertySelection(card, socket, user);
-        return;
-      }
-      socket.send(JSON.stringify({
-        'action': 'to_properties',
-        'player': user.unique_id,
-        'card': card
-      }));
-    };
-    // Delay the actual card removal to allow for animation
-    setTimeout(sendToProperties, 300);
+  const handleCardDropPropertyWrapper = (card) => {
+    handleCardDropProperty(card, isUserTurnRef, socket, user, setPendingHouseCard, setPendingHotelCard, setError);
   };
-  const handleCardDropAction = (card) => {
-    console.log("Dropping CARD to ACTION:", card);
-    if (!isUserTurnRef.current) {
-      setError('Please wait for your turn to play');
-      return;
-    }
-    if (card.type !== 'action') {
-      setError("Money/properties cannot be played in the action pile");
-      return;
-    } else if (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel') {
-      setError('Only action cards apart from house and hotel can be played in the action area');
-      return;
-    }
-
-    const sendToAction = () => {
-      if (card.name.toLowerCase() === 'pass go') {
-        setPendingPassGoCard(card);
-      } else if (card.name.toLowerCase() === "it's your birthday") {
-        setPendingItsYourBirthdayCard(card);
-      } else if (card.name.toLowerCase() === "debt collector") {
-        setPendingDebtCollectorCard(card);
-      } else if (card.name.toLowerCase() === "rent" || card.name.toLowerCase() === "multicolor rent") {
-        setPendingRentCard(card);
-      } else if (card.name.toLowerCase() === "sly deal") {
-        setPendingSlyDealCard(card);
-      } else if (card.name.toLowerCase() === "forced deal") {
-        setPendingForcedDealCard(card);
-      } else if (card.name.toLowerCase() === "deal breaker") {
-        setPendingDealBreakerCard(card);
-      }
-    };
-    // Delay the actual card removal to allow for animation
-    setTimeout(sendToAction, 300);
+  const handleCardDropActionWrapper = (card) => {
+    handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError);
   };
 
   const DraggableCard = ({ card, children }) => {
@@ -707,17 +427,14 @@ const MainGame = () => {
         />
         <SlyDealModal
           isOpen={slyDealModalOpen}
-          onClose={() => {
+          onClose={() => setSlyDealModalOpen(false)}
+          opponentId={opponentId}
+          opponentName={opponentName}
+          opponentProperties={opponentProperties}
+          onPropertySelect={(selectedProperty) => {
+            handleSlyDealPropertySelect(selectedProperty, socket, user, pendingSlyDealCard, setPendingSlyDealCard);
             setSlyDealModalOpen(false);
-            setPendingSlyDealCard(null);
           }}
-          opponentProperties={Object.keys(opponentProperties)[0] ? {
-            [Object.keys(opponentProperties)[0]]: {
-              playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
-              sets: opponentProperties
-            }
-          } : {}}
-          onPropertySelect={handleSlyDealPropertySelect}
         />
         <AnimatePresence>
           {propertyStealAnimation && (
@@ -734,19 +451,11 @@ const MainGame = () => {
             setForcedDealModalOpen(false);
             setPendingForcedDealCard(null);
           }}
-          opponentProperties={Object.keys(opponentProperties)[0] ? {
-            [Object.keys(opponentProperties)[0]]: {
-              playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
-              sets: opponentProperties
-            }
-          } : {}}
-          userProperties={Object.keys(playerProperties)[0] ? {
-            [Object.keys(playerProperties)[0]]: {
-              playerName: user.username,
-              sets: playerProperties
-            }
-          } : {}}
-          onPropertySelect={handleForcedDealSelect}
+          opponentId={Object.keys(opponentProperties)[0]}
+          opponentName={opponentName}
+          opponentProperties={opponentProperties}
+          userProperties={playerProperties}
+          onPropertySelect={handleForcedDealSelectWrapper}
         />
         <AnimatePresence>
           {dealBreakerModalOpen && (
@@ -756,13 +465,10 @@ const MainGame = () => {
                 setDealBreakerModalOpen(false);
                 setPendingDealBreakerCard(null);
               }}
-              opponentProperties={Object.keys(opponentProperties)[0] ? {
-                [currentTurnPlayerId === user.unique_id ? Object.keys(opponentProperties)[0] : currentTurnPlayerId]: {
-                  playerName: currentTurnPlayerId === user.unique_id ? currentTurnPlayerName : 'Opponent',
-                  sets: opponentProperties
-                }
-              } : {}}
-              onPropertySetSelect={handleDealBreakerSetSelect}
+              opponentId={opponentId}
+              opponentName={opponentName}
+              opponentProperties={opponentProperties}
+              onPropertySetSelect={handleDealBreakerSetSelectWrapper}
             />
           )}
         </AnimatePresence>
@@ -773,7 +479,7 @@ const MainGame = () => {
         <DoubleRentOverlay
           isVisible={showDoubleRentOverlay}
           amount={doubleRentAmount}
-          onResponse={handleDoubleRentResponse}
+          onResponse={handleDoubleRentResponseWrapper}
         />
         
         {/* Game Layout */}
@@ -802,7 +508,7 @@ const MainGame = () => {
               bank={opponentBank}
               isOpponent={true}
               ItemTypes={ItemTypes}
-              handleCardDrop={handleCardDropBank}
+              handleCardDrop={handleCardDropBankWrapper}
               DraggableCard={DraggableCard}
               renderCardContent={renderCardContent}
             />
@@ -818,7 +524,7 @@ const MainGame = () => {
                 colorOrder={colorOrder}
                 isOpponent={false}
                 ItemTypes={ItemTypes}
-                onDrop={(item) => handleCardDropProperty(item.card)}
+                onDrop={(item) => handleCardDropPropertyWrapper(item.card)}
               />
             </div>
 
@@ -829,7 +535,7 @@ const MainGame = () => {
                 lastAction={lastAction}
                 renderCardContent={renderCardContent}
                 ItemTypes={ItemTypes}
-                handleCardDrop={handleCardDropAction}
+                handleCardDrop={handleCardDropActionWrapper}
               />
             </div>
 
@@ -851,7 +557,7 @@ const MainGame = () => {
               bank={playerBank}
               isOpponent={false}
               ItemTypes={ItemTypes}
-              handleCardDrop={handleCardDropBank}
+              handleCardDrop={handleCardDropBankWrapper}
               DraggableCard={DraggableCard}
               renderCardContent={renderCardContent}
             />
@@ -866,9 +572,11 @@ const MainGame = () => {
           }));
         }}
         amountDue={rentAmount}
+        recipientName={rentRecipientId === user.unique_id ? 'You' : opponentName}
+        rentType={rentType}
         playerBank={playerBank}
         playerProperties={playerProperties}
-        onPaymentSubmit={handleRentPayment}
+        onPaymentSubmit={handleRentPaymentWrapper}
       />
     </DndProvider>
   );

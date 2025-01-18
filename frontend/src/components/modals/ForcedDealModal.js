@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 
 const ForcedDealModal = ({ 
   isOpen, 
   onClose, 
+  opponentId,
+  opponentName,
   opponentProperties,
   userProperties,
   onPropertySelect 
@@ -19,11 +21,11 @@ const ForcedDealModal = ({
     }
   }, [isOpen]);
 
-  const handleOpponentPropertySelect = (property, owner) => {
+  const handleOpponentPropertySelect = (property) => {
     if (selectedOpponentProperty?.id === property.id) {
       setSelectedOpponentProperty(null);
     } else {
-      setSelectedOpponentProperty({ ...property, owner });
+      setSelectedOpponentProperty({ ...property, owner: { id: opponentId, name: opponentName } });
     }
   };
 
@@ -56,14 +58,6 @@ const ForcedDealModal = ({
       transition: { type: "spring", stiffness: 500, damping: 30 }
     }
   };
-
-  // Get the first opponent's properties
-  const opponent = Object.values(opponentProperties || {})[0];
-  const opponentCards = opponent ? Object.values(opponent.sets || {}).flat() : [];
-
-  // Get the user's properties
-  const user = Object.values(userProperties || {})[0];
-  const userCards = user ? Object.values(user.sets || {}).flat() : [];
 
   return (
     <motion.div 
@@ -99,37 +93,43 @@ const ForcedDealModal = ({
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
             {/* Opponent Properties Section */}
-            {opponent && (
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                    {opponent.playerName}'s Properties
-                  </h3>
-                  <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
-                </div>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                  {opponentName}'s Properties
+                </h3>
+                <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+              </div>
+              {Object.keys(opponentProperties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {opponentCards.map((card, index) => (
-                    <motion.div
-                      key={`${card.id}-${index}`}
-                      variants={cardVariants}
-                      initial="unselected"
-                      animate={selectedOpponentProperty?.id === card.id ? "selected" : "unselected"}
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => handleOpponentPropertySelect(card, { id: Object.keys(opponentProperties)[0], name: opponent.playerName })}
-                      className={`cursor-pointer transition-all transform-gpu ${
-                        selectedOpponentProperty?.id === card.id 
-                          ? '' 
-                          : selectedOpponentProperty
-                            ? 'opacity-40 grayscale'
-                            : 'hover:-translate-y-1'
-                      }`}
-                    >
-                      <PropertyCard {...card} />
-                    </motion.div>
+                  {Object.entries(opponentProperties).map(([color, cards]) => (
+                    cards.map((card, index) => (
+                      <motion.div
+                        key={`${card.id}-${index}`}
+                        variants={cardVariants}
+                        initial="unselected"
+                        animate={selectedOpponentProperty?.id === card.id ? "selected" : "unselected"}
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => handleOpponentPropertySelect(card)}
+                        className={`cursor-pointer transition-all transform-gpu ${
+                          selectedOpponentProperty?.id === card.id 
+                            ? '' 
+                            : selectedOpponentProperty
+                              ? 'opacity-40 grayscale'
+                              : 'hover:-translate-y-1'
+                        }`}
+                      >
+                        <PropertyCard {...card} />
+                      </motion.div>
+                    ))
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                  No properties to swap
+                </div>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="flex items-center gap-4 my-8">
@@ -139,37 +139,43 @@ const ForcedDealModal = ({
             </div>
 
             {/* User Properties Section */}
-            {user && (
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                    Your Properties
-                  </h3>
-                  <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
-                </div>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                  Your Properties
+                </h3>
+                <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+              </div>
+              {Object.keys(userProperties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {userCards.map((card, index) => (
-                    <motion.div
-                      key={`${card.id}-${index}`}
-                      variants={cardVariants}
-                      initial="unselected"
-                      animate={selectedUserProperty?.id === card.id ? "selected" : "unselected"}
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => handleUserPropertySelect(card)}
-                      className={`cursor-pointer transition-all transform-gpu ${
-                        selectedUserProperty?.id === card.id 
-                          ? '' 
-                          : selectedUserProperty
-                            ? 'opacity-40 grayscale'
-                            : 'hover:-translate-y-1'
-                      }`}
-                    >
-                      <PropertyCard {...card} />
-                    </motion.div>
+                  {Object.entries(userProperties).map(([color, cards]) => (
+                    cards.map((card, index) => (
+                      <motion.div
+                        key={`${card.id}-${index}`}
+                        variants={cardVariants}
+                        initial="unselected"
+                        animate={selectedUserProperty?.id === card.id ? "selected" : "unselected"}
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => handleUserPropertySelect(card)}
+                        className={`cursor-pointer transition-all transform-gpu ${
+                          selectedUserProperty?.id === card.id 
+                            ? '' 
+                            : selectedUserProperty
+                              ? 'opacity-40 grayscale'
+                              : 'hover:-translate-y-1'
+                        }`}
+                      >
+                        <PropertyCard {...card} />
+                      </motion.div>
+                    ))
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                  No properties to swap
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
