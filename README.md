@@ -38,17 +38,14 @@
 - Fix the issue where if a player pays rent in less than 2 seconds, then the "Collecting Rent..." animation doesn't go away for the rent requesting user
 - Fix rent amount issues with houses and hotels
 - Check responsiveness of all components, overlays, pages, and animations
-- Implement checks such that a player should not be able to play sly deal or forced deal if none of the opponents have any properties and if the player has none as well, respectively
-- Fix sly deal and forced deal to not allow players to steal from opponents' full property sets
 - Fix the issue where when a rent card is played into the action pile, the displayed rent card in the discard pile does not show rent colors
-- Improve the sly deal and forced deal animations
 - Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 - Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
-- For Forced Deal and Sly Deal, gray the houses and hotels out; also, display them as action cards and not property cards
 - Clean the code, avoid repetition, make it more readable, and optimize it if possible
 - Add an animation when loading the game page after clicking "Start Game"
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
+- Decide what to do if a player exits from the game
 
 ### Deviations from official Monopoly Deal rules:
 
