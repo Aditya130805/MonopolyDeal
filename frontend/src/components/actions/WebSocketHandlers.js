@@ -110,7 +110,10 @@ const handleCardPlayed = (
   if (data.player_id === user.unique_id && 
       data.card.type === 'action' && 
       data.card.name.toLowerCase() !== 'house' && 
-      data.card.name.toLowerCase() !== 'hotel' && 
+      data.card.name.toLowerCase() !== 'hotel' &&
+      data.card.name.toLowerCase() !== 'deal breaker' &&
+      data.card.name.toLowerCase() !== 'sly deal' &&
+      data.card.name.toLowerCase() !== 'forced deal' &&
       data.action_type !== 'to_bank' && 
       data.action_type !== 'to_properties') {
     setShowActionAnimation({ visible: true, action: data.action });

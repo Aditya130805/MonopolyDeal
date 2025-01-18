@@ -281,7 +281,22 @@ const MainGame = () => {
     }
   }, [pendingForcedDealCard]);
   useEffect(() => {
-    if (pendingDealBreakerCard) {      
+    if (pendingDealBreakerCard) { 
+      const isCompleteSet = (color, cards) => {
+        if (!Array.isArray(cards)) return false;
+        const requiredCards = setRequirements[color] || 0;
+        return cards.length >= requiredCards;
+      };
+    
+      // Check if there are any complete sets
+      const hasCompleteSets = Object.entries(opponentProperties).some(([color, cards]) => isCompleteSet(color, cards));    
+      
+      if (!hasCompleteSets) {
+        setError("Your opponent doesn't have any complete sets!");
+        setPendingDealBreakerCard(null);
+        return;
+      }
+      
       setDealBreakerModalOpen(true);
     }
   }, [pendingDealBreakerCard]);

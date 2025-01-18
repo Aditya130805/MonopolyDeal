@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
+import ActionCard from '../cards/ActionCard';
 
 const DealBreakerModal = ({ 
   isOpen, 
@@ -35,6 +36,56 @@ const DealBreakerModal = ({
 
   if (!isOpen) return null;
 
+  const splitProperties = (properties) => {
+    const mainSets = {};
+    const overflowSets = {};
+
+    Object.entries(properties).forEach(([color, cards]) => {
+      if (!Array.isArray(cards)) {
+        mainSets[color] = [];
+        return;
+      }
+
+      const propertyCards = cards.filter(card => card && card.type === 'property');
+      const requiredCards = setRequirements[color] || 0;
+      const houseCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'house');
+      const hotelCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'hotel');
+
+      // Add property cards to mainSets up to requiredCards
+      mainSets[color] = propertyCards.slice(0, requiredCards);
+
+      // Place the first house and hotel in mainSets
+      if (houseCards.length > 0) {
+        mainSets[color].push(houseCards[0]);
+      }
+      if (hotelCards.length > 0) {
+        mainSets[color].push(hotelCards[0]);
+      }
+
+      // Add excess property cards to overflowSets
+      if (propertyCards.length > requiredCards) {
+        overflowSets[color] = propertyCards.slice(requiredCards);
+      }
+
+      // Add remaining house and hotel cards to overflowSets
+      if (houseCards.length > 1) {
+        overflowSets[color] = (overflowSets[color] || []).concat(houseCards.slice(1));
+      }
+      if (hotelCards.length > 1) {
+        overflowSets[color] = (overflowSets[color] || []).concat(hotelCards.slice(1));
+      }
+    });
+
+    return { mainSets, overflowSets };
+  };
+
+  const isCompleteSet = (color, cards) => {
+    if (!Array.isArray(cards)) return false;
+    const propertyCards = cards.filter(card => card && card.type === 'property');
+    const requiredCards = setRequirements[color] || 0;
+    return propertyCards.length >= requiredCards;
+  };
+
   const setVariants = {
     unselected: { 
       scale: 1,
@@ -54,21 +105,30 @@ const DealBreakerModal = ({
     'black': 4
   };
 
-  const isCompleteSet = (cards) => {
-    if (!Array.isArray(cards)) return false;
-    
-    // Get the color of the set (using the first non-wild card's color)
-    const nonWildCard = cards.find(card => !card.isWild);
-    if (!nonWildCard) return false;
-    
-    const color = nonWildCard.color;
-    const requiredCards = setRequirements[color] || 0;
-    
-    return cards.length >= requiredCards;
+  const renderCard = (card) => {
+    if (card.type === 'property') {
+      return (
+        <PropertyCard
+          {...card}
+        />
+      );
+    } else if (card.type === 'action' && (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel')) {
+      return (
+        <ActionCard
+          {...card}
+        />
+      );
+    }
+    return null;
   };
 
-  // Check if there are any complete sets
-  const hasCompleteSets = Object.values(opponentProperties).some(isCompleteSet);
+  // Split properties into main and overflow sets
+  const { mainSets, overflowSets } = splitProperties(opponentProperties);
+
+  // Check if there are any complete sets in either main or overflow
+  const hasCompleteSets = Object.entries(mainSets).some(([color, cards]) => isCompleteSet(color, cards)) || Object.entries(overflowSets).some(([color, cards]) => isCompleteSet(color, cards));
+
+  if (!isOpen) return null;
 
   return (
     <motion.div 
@@ -112,10 +172,11 @@ const DealBreakerModal = ({
               </div>
               {hasCompleteSets ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {Object.entries(opponentProperties).map(([color, cards]) => (
-                    isCompleteSet(cards) && (
+                  {/* Render main sets */}
+                  {Object.entries(mainSets).map(([color, cards]) => (
+                    isCompleteSet(color, cards) && (
                       <motion.div
-                        key={color}
+                        key={`main-${color}`}
                         className="relative group"
                         variants={setVariants}
                         initial="unselected"
@@ -124,21 +185,47 @@ const DealBreakerModal = ({
                         onClick={() => handleSetSelect(color, cards)}
                       >
                         <div className="flex -space-x-20">
-                          {cards.map((card, index) => (
-                            <div 
-                              key={`${card.id}-${index}`}
-                              className="relative"
-                              style={{ zIndex: cards.length - index }}
+                          {cards.map((card, cardIndex) => (
+                            <motion.div
+                              key={`${card.id}-${cardIndex}`}
+                              className={`transform transition-transform duration-200`}
+                              style={{
+                                zIndex: cards.length - cardIndex,
+                                marginLeft: cardIndex > 0 ? '-5rem' : '0'
+                              }}
                             >
-                              <PropertyCard
-                                {...card}
-                                className={`transition-all ${
-                                  selectedSet?.color === color
-                                    ? 'ring-2 ring-red-500'
-                                    : ''
-                                }`}
-                              />
-                            </div>
+                              {renderCard(card)}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+                  
+                  {/* Render complete overflow sets */}
+                  {Object.entries(overflowSets).map(([color, cards]) => (
+                    isCompleteSet(color, cards) && (
+                      <motion.div
+                        key={`overflow-${color}`}
+                        className="relative group"
+                        variants={setVariants}
+                        initial="unselected"
+                        animate={selectedSet?.color === color ? "selected" : "unselected"}
+                        whileHover={{ scale: 1.01 }}
+                        onClick={() => handleSetSelect(color, cards)}
+                      >
+                        <div className="flex -space-x-20">
+                          {cards.map((card, cardIndex) => (
+                            <motion.div
+                              key={`${card.id}-${cardIndex}`}
+                              className={`transform transition-transform duration-200`}
+                              style={{
+                                zIndex: cards.length - cardIndex,
+                                marginLeft: cardIndex > 0 ? '-5rem' : '0'
+                              }}
+                            >
+                              {renderCard(card)}
+                            </motion.div>
                           ))}
                         </div>
                       </motion.div>
