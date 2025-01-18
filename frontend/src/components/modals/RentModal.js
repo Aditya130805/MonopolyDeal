@@ -22,9 +22,13 @@ const RentModal = ({
     if (isOpen) {
       setSelectedCards([]);
       setTotalSelected(0);
-      setHasSelectedAll(false);
+      
+      // If there are no selectable cards at all, set hasSelectedAll to true
+      const allCards = [...playerBank, ...Object.values(playerProperties).flat()];
+      const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
+      setHasSelectedAll(nonWildCards.length === 0);
     }
-  }, [isOpen]);
+  }, [isOpen, playerBank, playerProperties]);
 
   const handleCardSelect = (card) => {
     // Don't allow selecting completely wild property cards
@@ -201,7 +205,7 @@ const RentModal = ({
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
             onClick={handleSubmit}
-            disabled={!totalSelected || (!hasSelectedAll && totalSelected < amountDue)}
+            disabled={!hasSelectedAll && totalSelected < amountDue}
           >
             Pay {totalSelected}M
           </button>
