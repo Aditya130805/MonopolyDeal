@@ -18,6 +18,17 @@ const rents = {
 }
 
 const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay) => {
+    // Create full-screen overlay
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+    overlay.style.zIndex = '9998';
+    document.body.appendChild(overlay);
+
     const colorButtons = document.createElement('div');
 
     console.log("Player properties:", playerProperties);
@@ -60,7 +71,7 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
     colorButtons.style.flexDirection = 'column';
     colorButtons.style.borderRadius = '8px';
     colorButtons.style.overflow = 'hidden';
-    colorButtons.style.zIndex = '1000';
+    colorButtons.style.zIndex = '9999';
     
     // Get valid colors based on player's properties
     const validColors = card.rentColors.filter(rentColor => {
@@ -99,7 +110,7 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
         
         rentAmounts[rentColor] = totalRent;
     });
-    
+
     // Create split sections for each valid color
     validColors.forEach((color) => {
         const section = document.createElement('div');
@@ -138,7 +149,7 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
         section.onclick = () => {
             section.style.opacity = '1';
             setRentAmount(rentAmounts[color])
-             // Check for double rent card in player's hand
+            // Check for double rent card in player's hand
             const hasDoubleRentCard = playerHand.some(card => 
                 card.type === 'action' && card.name.toLowerCase() === 'double the rent'
             );
@@ -162,6 +173,7 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
             resizeObserver.disconnect();
             window.removeEventListener('resize', updatePosition);
             document.body.removeChild(colorButtons);
+            document.body.removeChild(overlay);
         };
         
         colorButtons.appendChild(section);

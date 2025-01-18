@@ -47,6 +47,17 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
     return;
   }
 
+  // Create full-screen overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+  overlay.style.zIndex = '9998';
+  document.body.appendChild(overlay);
+
   // Create color selection buttons
   const colorButtons = document.createElement('div');
   
@@ -70,12 +81,13 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
   resizeObserver.observe(document.querySelector('.property-set'));
   window.addEventListener('resize', updatePosition);
   
+  // Style the color buttons container
   colorButtons.style.backgroundColor = 'transparent';
   colorButtons.style.display = 'flex';
   colorButtons.style.flexDirection = 'column';
   colorButtons.style.borderRadius = '8px';
   colorButtons.style.overflow = 'hidden';
-  colorButtons.style.zIndex = '1000';
+  colorButtons.style.zIndex = '9999';
   
   // Create split sections for each complete set
   completeSets.forEach(([color, _], index) => {
@@ -123,6 +135,7 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
         resizeObserver.disconnect();
         window.removeEventListener('resize', updatePosition);
         document.body.removeChild(colorButtons);
+        document.body.removeChild(overlay);
       }, 50);
     };
     

@@ -12,6 +12,17 @@ const colorStyles = {
 };
 
 const handleWildPropertySelection = (card, socket, user) => {
+    // Create a full-screen overlay to block interactions
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+    overlay.style.zIndex = '9998';  // Higher than turn display
+    document.body.appendChild(overlay);
+
     const colorButtons = document.createElement('div');
     
     // Function to update position
@@ -40,7 +51,7 @@ const handleWildPropertySelection = (card, socket, user) => {
     colorButtons.style.flexDirection = 'column';
     colorButtons.style.borderRadius = '8px';
     colorButtons.style.overflow = 'hidden';
-    colorButtons.style.zIndex = '1000';
+    colorButtons.style.zIndex = '9999';  // Higher than overlay
     
     // Create split sections for each color
     card.color.forEach((color) => {
@@ -88,6 +99,7 @@ const handleWildPropertySelection = (card, socket, user) => {
                 resizeObserver.disconnect();
                 window.removeEventListener('resize', updatePosition);
                 document.body.removeChild(colorButtons);
+                document.body.removeChild(overlay);  // Remove the overlay
             }, 50);
         };
         
