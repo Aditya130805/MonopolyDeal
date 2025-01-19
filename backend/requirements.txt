@@ -12,3 +12,4 @@ whitenoise>=6.5.0
 psycopg2-binary>=2.9.6
 colorama>=0.4.6
 twisted[tls,http2]>=22.10.0
+dj-database-url>=2.1.0
