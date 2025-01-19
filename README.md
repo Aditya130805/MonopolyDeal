@@ -1,26 +1,12 @@
 # MonopolyDeal
 
-### Updates:
+## **Deployment Overview**
 
-- Implemented user authentication, login, and registration
-- Implemented user settings page: change username, change password, delete account
-- Implemented game room creation and joining
-- Designed card components
-- Implemented displaying player cards, bank, and properties (2-player only)
-- Implemented card dragging and dropping onto the bank, properties, and action pile
-- Implemented bank and property area additions
-- Implemented pass go, it's your birthday, debt collector, rent, sly deal, forced deal, deal breaker, and double the rent actions
+- **Backend:** Successfully deployed to [Railway.app](https://railway.app) using a GitHub monorepo. The backend utilizes a **PostgreSQL database** to store user information and **Redis** for in-game memory management.
+- **Frontend:** Deployed to [Vercel](https://vercel.com) via the same GitHub monorepo.
+- **Live Version:** You can access the live version of the game at [Monopoly Deal Digital](https://deal-frontend-psi.vercel.app).
 
-### Complete:
-
-#### **GAMEPLAY LOGIC COMPLETE!**
-
-- Charted out logic for player.py, taking care of their hand, properties, and bank
-- Added wild property card functionality
-- 11 actions now supported: Pass Go, House, Hotel, Sly Deal, Forced Deal, Deal Breaker, Rent, Debt Collector, It's Your Birthday, Double The Rent, and Just Say No
-- Implemented test cases for all actions created
-
-### Next steps / Issues to resolve:
+## Next steps / Issues to resolve:
 
 #### Gameplay Features/Enhancements:
 
@@ -47,7 +33,7 @@
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
 
-### Deviations from official Monopoly Deal rules:
+## Deviations from official Monopoly Deal rules:
 
 - In the official Monopoly Deal rules, houses and hotels lose their monetary value when added to property sets. If an entire property set is given to another player (e.g., due to a rent action), the houses and hotels are included with the set. In this game, however, houses and hotels retain their monetary value even when placed on property sets and can be used as payment. Note, however, if a property set contains both a house and a hotel and only the house is used for payment, the hotel is automatically moved to the player's bank.
 
