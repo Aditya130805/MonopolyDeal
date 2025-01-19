@@ -1,4 +1,4 @@
-from game.game import Game
+from backend.game_core.game import Game
 
 def main():
     # Initialize the game with player names
