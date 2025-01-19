@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import Navbar from './Navbar';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+
 const UserSettings = () => {
     const navigate = useNavigate();
     const { user, logout, setUser } = useAuth();
@@ -57,7 +59,7 @@ const UserSettings = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:8000/api/auth/me/', {
+            const response = await fetch(`${API_BASE_URL}/auth/me/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -118,7 +120,7 @@ const UserSettings = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:8000/api/auth/me/password/', {
+            const response = await fetch(`${API_BASE_URL}/auth/password/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -182,7 +184,7 @@ const UserSettings = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:8000/api/auth/me/delete/', {
+            const response = await fetch(`${API_BASE_URL}/auth/delete/`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -591,7 +593,7 @@ const UserSettings = () => {
 
                                                 // Verify password before showing modal
                                                 const token = localStorage.getItem('accessToken');
-                                                fetch('http://localhost:8000/api/auth/me/password/verify/', {
+                                                fetch(`${API_BASE_URL}/auth/me/password/verify/`, {
                                                     method: 'POST',
                                                     headers: {
                                                         'Content-Type': 'application/json',

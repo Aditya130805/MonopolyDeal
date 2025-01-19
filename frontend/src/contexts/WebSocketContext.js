@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+const WS_BASE_URL = process.env.REACT_APP_API_BASE_URL ? process.env.REACT_APP_API_BASE_URL.replace('http', 'ws').replace('/api', '') : 'ws://localhost:8000';
+
 const WebSocketContext = createContext(null);
 
 // Static connection management (outside of component lifecycle)
@@ -38,7 +40,7 @@ const connectWebSocket = (roomId, playerId) => {
 
     // Create new connection promise
     const lock = new Promise((resolve, reject) => {
-        const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomId}/`);
+        const ws = new WebSocket(`${WS_BASE_URL}/ws/game/${roomId}/`);
 
 
         ws.onopen = () => {

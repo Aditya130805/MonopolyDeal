@@ -1,16 +1,19 @@
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+    console.log("API_BASE_URL:", API_BASE_URL);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const fetchUserProfile = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/auth/me/', {
+            const response = await fetch(`${API_BASE_URL}/auth/me/`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
@@ -43,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await fetch('http://localhost:8000/api/auth/token/', {
+            const response = await fetch(`${API_BASE_URL}/auth/token/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,7 +72,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (username, email, password, password2) => {
         try {
-            const response = await fetch('http://localhost:8000/api/auth/register/', {
+            const response = await fetch(`${API_BASE_URL}/auth/register/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
