@@ -1,10 +1,10 @@
 import pytest
 from unittest.mock import patch
-from game.actions.debt_collector import DebtCollector
-from game.card import ActionCard, PropertyCard, RentCard, MoneyCard
-from game.player import Player
-from game.game import Game
-from constants import properties
+from backend.game_core.actions.debt_collector import DebtCollector
+from backend.game_core.card import ActionCard, PropertyCard, RentCard, MoneyCard
+from backend.game_core.player import Player
+from backend.game_core.game import Game
+from backend.game_core import properties
 
 # Fixtures for game and player setup
 @pytest.fixture

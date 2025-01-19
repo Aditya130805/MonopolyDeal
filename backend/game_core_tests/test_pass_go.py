@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import patch
-from game.actions.pass_go import PassGo
-from game.card import ActionCard
-from game.player import Player
-from game.deck import create_deck
-from game.game import Game
-from constants import properties
+from backend.game_core.actions.pass_go import PassGo
+from backend.game_core.card import ActionCard
+from backend.game_core.player import Player
+from backend.game_core.deck import create_deck
+from backend.game_core.game import Game
+from backend.game_core import properties
 
 @pytest.fixture
 def game_setup():

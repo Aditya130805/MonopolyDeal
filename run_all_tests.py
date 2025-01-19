@@ -5,7 +5,7 @@ import pytest
 num_runs = 25
 
 # Define the directory where the test files are located
-test_directory = "tests"
+test_directory = "backend/game_core_tests"
 
 # Create a dictionary to store results
 test_results = {}

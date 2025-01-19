@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import patch
-from game.actions.just_say_no import JustSayNo
-from game.card import ActionCard
-from game.player import Player
-from game.game import Game
+from backend.game_core.actions.just_say_no import JustSayNo
+from backend.game_core.card import ActionCard
+from backend.game_core.player import Player
+from backend.game_core.game import Game
 
 @pytest.fixture
 def player_and_just_say_no():
