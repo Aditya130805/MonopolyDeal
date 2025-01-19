@@ -183,22 +183,22 @@ class GameConsumer(AsyncWebsocketConsumer):
         
         if action == 'to_bank':
             self.play_to_bank(player, card['id'])
-        
+            
         elif action == 'to_properties':
             self.play_to_properties(player, card['id'], card['currentColor'])  
-        
+            
         elif action == 'pass_go':
             self.play_pass_go(game_state, player, card['id'])
-        
+            
         elif action == "it's_your_birthday":
             await self.play_its_your_birthday(game_state, player, card['id'])
-        
+            
         elif action == 'debt_collector':
             await self.play_debt_collector(game_state, player, card['id'])
             
         elif action == 'rent':
             await self.play_rent(game_state, player, card, data.get('rentAmount'))
-
+            
         elif action == 'sly_deal':
             await self.play_sly_deal(game_state, player, card['id'], data.get('target_property'))
             
@@ -207,7 +207,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             
         elif action == 'deal_breaker':
             await self.play_deal_breaker(game_state, player, card['id'], data.get('target_set'), data.get('target_color'))
-        
+            
         elif action == 'double_the_rent':
             await self.channel_layer.group_send(
                 self.game_group_name,
@@ -221,7 +221,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             )
             await self.play_double_the_rent(game_state, player, card['id'], data.get('double_the_rent_card')['id'], data.get('rentAmount'))
             self.manage_turns(game_state)  # The additional turn is handled here
-            
+
     def play_to_bank(self, player, card_id):
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
         if card_to_play:
@@ -328,19 +328,18 @@ class GameConsumer(AsyncWebsocketConsumer):
         target_property = None
         target_property_color = None
         for p in game_state.players:
-            if p.id == player.id:
-                continue
-            for color, props in p.properties.items():
-                for prop in props:
-                    if prop.id == target_property_id:
-                        target_player = p
-                        target_property = prop
-                        target_property_color = color
+            if p != player:  # Don't search in the current player's properties
+                for color, props in p.properties.items():
+                    for prop in props:
+                        if prop.id == target_property_id:
+                            target_player = p
+                            target_property = prop
+                            target_property_color = color
+                            break
+                    if target_property:
                         break
                 if target_property:
                     break
-            if target_property:
-                break
 
         if not target_player or not target_property:
             return
@@ -622,11 +621,17 @@ class GameConsumer(AsyncWebsocketConsumer):
                                 del paying_player.properties[color]
                             break
                     if card_found:
-                        break
+                            break
         
         return transferred_cards  # Return the list of transferred cards with full info
 
     def manage_turns(self, game_state):
+        # Check if current player has won
+        current_player = game_state.players[game_state.turn_index]
+        if current_player.has_won():
+            print("WON!")
+            game_state.winner = current_player
+
         if game_state.actions_remaining == 1:
             # Switch to next player's turn
             game_state.turn_index = (game_state.turn_index + 1) % len(game_state.players)

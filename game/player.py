@@ -398,8 +398,16 @@ class Player:
         # Win condition: 3 full property sets
         num_complete_sets = 0
         
+        def count_property_cards(self, color):
+            return sum(1 for card in self.properties.get(color, []) if isinstance(card, PropertyCard))
+        
+        num_properties_needed_for_full_set = {
+            "brown": 2, "mint": 2, "light blue": 3, "pink": 3, "orange": 3,
+            "red": 3, "yellow": 3, "green": 3, "blue": 2, "black": 4
+        }
+        
         for color in self.properties.keys():
-            num_property_cards_in_color = common_functions.count_fixed_property_cards(self, color) + common_functions.count_wild_property_cards(self, color)
+            num_property_cards_in_color = count_property_cards(self, color)
             num_complete_sets_in_color = num_property_cards_in_color // num_properties_needed_for_full_set[color]
             num_complete_sets += num_complete_sets_in_color
         

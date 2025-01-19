@@ -27,7 +27,9 @@ export const handleWebSocketMessage = (
   setActionsRemaining,
   setOpponentId,
   setOpponentName,
-  rentCollectionTimeoutRef
+  rentCollectionTimeoutRef,
+  setWinner,
+  setShowWinnerOverlay
 ) => {
   try {
     const data = JSON.parse(event.data);
@@ -78,7 +80,7 @@ export const handleWebSocketMessage = (
         break;
 
       case 'game_update':
-        handleGameUpdate(data, user, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName);
+        handleGameUpdate(data, user, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, setWinner, setShowWinnerOverlay);
         break;
     }
   } catch (error) {
@@ -222,7 +224,9 @@ const handleGameUpdate = (
   setCurrentTurnPlayerName,
   setActionsRemaining,
   setOpponentId,
-  setOpponentName
+  setOpponentName,
+  setWinner,
+  setShowWinnerOverlay
 ) => {
   const gameState = data.state;
   
@@ -253,4 +257,10 @@ const handleGameUpdate = (
   const currentTurnPlayer = gameState.players.find(p => p.id === gameState.current_turn);
   setCurrentTurnPlayerName(currentTurnPlayer ? currentTurnPlayer.name : '');
   setActionsRemaining(gameState.actions_remaining || 0);
+
+  // Handle winner
+  if (gameState.winner) {
+    setWinner(gameState.winner);
+    setShowWinnerOverlay(true);
+  }
 };

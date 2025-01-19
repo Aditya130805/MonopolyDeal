@@ -22,6 +22,7 @@ import PropertySwapOverlay from './overlays/PropertySwapOverlay';
 import DealBreakerModal from './modals/DealBreakerModal';
 import DealBreakerOverlay from './overlays/DealBreakerOverlay';
 import DoubleRentOverlay from './overlays/DoubleRentOverlay';
+import WinnerOverlay from './overlays/WinnerOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -98,6 +99,9 @@ const MainGame = () => {
 
   // State for rent modal
   const [rentModalOpen, setRentModalOpen] = useState(false);
+
+  const [winner, setWinner] = useState(null);
+  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -184,7 +188,7 @@ const MainGame = () => {
       return;
     }
     console.log("(Socket 2) Connected:", socket);
-    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, rentCollectionTimeoutRef);
+    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, rentCollectionTimeoutRef, setWinner, setShowWinnerOverlay);
     setTimeout(() => setIsSocketReady(true), 0);
   }, [socket]);
   useEffect(() => {
@@ -600,6 +604,7 @@ const MainGame = () => {
           amount={doubleRentAmount}
           onResponse={handleDoubleRentResponseWrapper}
         />
+        <WinnerOverlay isVisible={showWinnerOverlay} winner={winner} />
         
         {/* Game Layout */}
         <div className="flex flex-col justify-between h-[calc(100vh-4rem)] py-32 px-8 overflow-hidden bg-gray-200">
