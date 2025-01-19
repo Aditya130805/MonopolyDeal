@@ -17,7 +17,7 @@ ENV PORT=8000
 WORKDIR /app
 
 # Create a script to run migrations and start the server
-RUN echo '#!/bin/bash\ncd /app/backend\npython manage.py migrate\ndaphne -b 0.0.0.0 -p 8000 backend.backend.asgi:application' > /app/start.sh
+RUN echo '#!/bin/bash\ncd /app/backend\npython manage.py migrate\ncd ..\ndaphne -b 0.0.0.0 -p 8000 backend.backend.asgi:application' > /app/start.sh
 RUN chmod +x /app/start.sh
 
 # Command to run migrations and start the server
