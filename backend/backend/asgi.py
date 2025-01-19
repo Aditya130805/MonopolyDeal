@@ -1,14 +1,9 @@
 import os
-import sys
 import django
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-
-# Add the project root directory to Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from game import routing
+from backend.game import routing
 
 print(routing.websocket_urlpatterns)
 
