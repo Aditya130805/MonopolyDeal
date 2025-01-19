@@ -1,17 +1,17 @@
-from game.card import PropertyCard, MoneyCard, ActionCard, RentCard
-from game.actions.pass_go import PassGo
-from game.actions.house import House
-from game.actions.hotel import Hotel
-from game.actions.sly_deal import SlyDeal
-from game.actions.forced_deal import ForcedDeal
-from game.actions.deal_breaker import DealBreaker
-from game.actions.just_say_no import JustSayNo
-from game.actions.rent import Rent
-from game.actions.debt_collector import DebtCollector
-from game.actions.its_your_birthday import ItsYourBirthday
-from game.properties import num_properties_needed_for_full_set
-from game.actions import common_functions
-import game.properties
+from backend.game_core.card import PropertyCard, MoneyCard, ActionCard, RentCard
+from backend.game_core.actions.pass_go import PassGo
+from backend.game_core.actions.house import House
+from backend.game_core.actions.hotel import Hotel
+from backend.game_core.actions.sly_deal import SlyDeal
+from backend.game_core.actions.forced_deal import ForcedDeal
+from backend.game_core.actions.deal_breaker import DealBreaker
+from backend.game_core.actions.just_say_no import JustSayNo
+from backend.game_core.actions.rent import Rent
+from backend.game_core.actions.debt_collector import DebtCollector
+from backend.game_core.actions.its_your_birthday import ItsYourBirthday
+from backend.game_core.properties import num_properties_needed_for_full_set
+from backend.game_core.actions import common_functions
+import backend.game_core.properties
 
 class Player:
     def __init__(self, id, name):

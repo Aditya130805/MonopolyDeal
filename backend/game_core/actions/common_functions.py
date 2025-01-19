@@ -1,4 +1,4 @@
-from game.card import PropertyCard, ActionCard
+from backend.game_core.card import PropertyCard, ActionCard
 
 def count_fixed_property_cards(self, color):
     return sum(1 for card in self.properties.get(color, []) if isinstance(card, PropertyCard) and not card.is_wild)

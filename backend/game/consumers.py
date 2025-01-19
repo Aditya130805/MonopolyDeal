@@ -1,6 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-from game.game import Game
+from backend.game_core.game import Game
 from channels.db import database_sync_to_async
 import asyncio
 

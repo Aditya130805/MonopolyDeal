@@ -1,7 +1,7 @@
-from game.actions.base_action import BaseAction
-from game.card import ActionCard, PropertyCard, RentCard
-from game.properties import rent_values, num_properties_needed_for_full_set
-from game.actions.just_say_no import JustSayNo
+from backend.game_core.actions.base_action import BaseAction
+from backend.game_core.card import ActionCard, PropertyCard, RentCard
+from backend.game_core.properties import rent_values, num_properties_needed_for_full_set
+from backend.game_core.actions.just_say_no import JustSayNo
 
 class Rent(BaseAction):
     def select_target_player(self):

@@ -1,4 +1,4 @@
-from game.card import PropertyCard
+from backend.game_core.card import PropertyCard
 
 num_properties_needed_for_full_set = {
     "brown": 2, "mint": 2, "light blue": 3, "pink": 3, "orange": 3,

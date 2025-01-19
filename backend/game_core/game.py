@@ -1,5 +1,5 @@
-from game.deck import create_deck
-from game.player import Player
+from backend.game_core.deck import create_deck
+from backend.game_core.player import Player
 from colorama import init, Fore
 init()  # Initialize colorama to enable cross-platform color support
 

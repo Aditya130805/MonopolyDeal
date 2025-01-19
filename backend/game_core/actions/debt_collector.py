@@ -1,6 +1,6 @@
-from game.actions.base_action import BaseAction
-from game.card import ActionCard
-from game.actions.just_say_no import JustSayNo
+from backend.game_core.actions.base_action import BaseAction
+from backend.game_core.card import ActionCard
+from backend.game_core.actions.just_say_no import JustSayNo
 
 class DebtCollector(BaseAction):
     def select_target_player(self):

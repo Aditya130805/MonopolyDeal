@@ -1,4 +1,4 @@
-from game.card import PropertyCard, ActionCard, RentCard, MoneyCard
+from backend.game_core.card import PropertyCard, ActionCard, RentCard, MoneyCard
 import random
 
 def create_deck():

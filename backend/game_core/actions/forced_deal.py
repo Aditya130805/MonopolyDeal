@@ -1,8 +1,8 @@
-from game.actions.base_action import BaseAction
-from game.card import ActionCard, PropertyCard
-from game.actions import common_functions
-from game.properties import num_properties_needed_for_full_set
-from game.actions.just_say_no import JustSayNo
+from backend.game_core.actions.base_action import BaseAction
+from backend.game_core.card import ActionCard, PropertyCard
+from backend.game_core.actions import common_functions
+from backend.game_core.properties import num_properties_needed_for_full_set
+from backend.game_core.actions.just_say_no import JustSayNo
 
 class ForcedDeal(BaseAction):
 
