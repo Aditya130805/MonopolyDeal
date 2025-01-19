@@ -1,0 +1,15 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "watchPatterns": [
+      "/app/backend/**"
+    ]
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "PYTHONPATH=/app daphne -b 0.0.0.0 -p $PORT backend.asgi:application",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}

@@ -1,7 +1,0 @@
-[build]
-builder = "nixpacks"
-buildCommand = "cp -r /app/backend /app/backend_temp && rm -rf /app/backend && mv /app/backend_temp /app/backend"
-
-[deploy]
-startCommand = "cd /app && PYTHONPATH=/app daphne -b 0.0.0.0 -p $PORT backend.asgi:application"
-restartPolicyType = "ON_FAILURE"
