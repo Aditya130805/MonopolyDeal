@@ -29,7 +29,8 @@ export const handleWebSocketMessage = (
   setOpponentName,
   rentCollectionTimeoutRef,
   setWinner,
-  setShowWinnerOverlay
+  setShowWinnerOverlay,
+  setShowTieOverlay
 ) => {
   try {
     const data = JSON.parse(event.data);
@@ -80,7 +81,7 @@ export const handleWebSocketMessage = (
         break;
 
       case 'game_update':
-        handleGameUpdate(data, user, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, setWinner, setShowWinnerOverlay);
+        handleGameUpdate(data, user, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, setWinner, setShowWinnerOverlay, setShowTieOverlay);
         break;
     }
   } catch (error) {
@@ -226,7 +227,8 @@ const handleGameUpdate = (
   setOpponentId,
   setOpponentName,
   setWinner,
-  setShowWinnerOverlay
+  setShowWinnerOverlay,
+  setShowTieOverlay
 ) => {
   const gameState = data.state;
   
@@ -258,9 +260,15 @@ const handleGameUpdate = (
   setCurrentTurnPlayerName(currentTurnPlayer ? currentTurnPlayer.name : '');
   setActionsRemaining(gameState.actions_remaining || 0);
 
-  // Handle winner
+  // Handle winner or tie
   if (gameState.winner) {
     setWinner(gameState.winner);
     setShowWinnerOverlay(true);
+  } else if (gameState.deck_count === 0) {
+    // Check if all players' hands are empty
+    const allHandsEmpty = gameState.players.every(player => player.hand.length === 0);
+    if (allHandsEmpty) {
+      setShowTieOverlay(true);
+    }
   }
 };
