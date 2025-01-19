@@ -17,4 +17,4 @@ ENV PORT=8000
 WORKDIR /app
 
 # Command to run the application
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "backend.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "backend.backend.asgi:application"]
