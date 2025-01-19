@@ -39,7 +39,6 @@
 - Clean the code, avoid repetition, make it more readable, and optimize it if possible
 - Add an animation when loading the game page after clicking "Start Game"
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
-- Decide what to do if a player exits from the game
 
 ### Deviations from official Monopoly Deal rules:
 
