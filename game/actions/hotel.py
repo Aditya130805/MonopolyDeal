@@ -1,7 +1,7 @@
 from .base_action import BaseAction
 from game.card import ActionCard
 from game.actions import common_functions
-from constants.properties import num_properties_needed_for_full_set
+from game.properties import num_properties_needed_for_full_set
 
 class Hotel(BaseAction):
 

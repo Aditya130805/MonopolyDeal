@@ -9,9 +9,9 @@ from game.actions.just_say_no import JustSayNo
 from game.actions.rent import Rent
 from game.actions.debt_collector import DebtCollector
 from game.actions.its_your_birthday import ItsYourBirthday
-from constants.properties import num_properties_needed_for_full_set
+from game.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
-from constants import properties
+import game.properties
 
 class Player:
     def __init__(self, id, name):

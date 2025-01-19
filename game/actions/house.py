@@ -1,6 +1,6 @@
 from .base_action import BaseAction
 from game.card import ActionCard, PropertyCard
-from constants.properties import num_properties_needed_for_full_set
+from game.properties import num_properties_needed_for_full_set
 from game.actions import common_functions
 
 class House(BaseAction):

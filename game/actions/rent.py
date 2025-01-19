@@ -1,6 +1,6 @@
 from game.actions.base_action import BaseAction
 from game.card import ActionCard, PropertyCard, RentCard
-from constants.properties import rent_values, num_properties_needed_for_full_set
+from game.properties import rent_values, num_properties_needed_for_full_set
 from game.actions.just_say_no import JustSayNo
 
 class Rent(BaseAction):
