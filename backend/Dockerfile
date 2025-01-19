@@ -13,11 +13,8 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
 
-# Make entrypoint script executable
-RUN chmod +x /app/backend/entrypoint.sh
-
 # Set the working directory to /app
 WORKDIR /app
 
-# Use entrypoint script
-ENTRYPOINT ["/app/backend/entrypoint.sh"]
+# Command to run the application
+CMD ["daphne", "-b", "0.0.0.0", "-p", $PORT, "backend.asgi:application"]
