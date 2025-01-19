@@ -15,5 +15,5 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory to /app
 WORKDIR /app
 
-# Command to run the application
-CMD ["daphne", "-b", "0.0.0.0", "-p", "$PORT", "backend.asgi:application"]
+# Command to run the application (using shell form for env var expansion)
+CMD daphne -b 0.0.0.0 -p ${PORT} backend.asgi:application
