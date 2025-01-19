@@ -1,13 +1,18 @@
 import os
+import sys
 import django
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-from backend.game import routing
+
+# Add the project root directory to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from game import routing
 
 print(routing.websocket_urlpatterns)
 
-# Tells Django which settings file to use for the project. In this case, it’s referring to the settings.py file in the backend/backend directory.
+# Tells Django which settings file to use for the project. In this case, it's referring to the settings.py file in the backend/backend directory.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.backend.settings')
 
 # Initialize Django
