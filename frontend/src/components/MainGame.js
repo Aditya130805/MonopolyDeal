@@ -449,7 +449,11 @@ const MainGame = () => {
   const dndBackend = isTouchDevice ? TouchBackend : HTML5Backend;
   const dndOptions = isTouchDevice ? {
     enableMouseEvents: true,
-    delayTouchStart: 100, // Reduce the delay before drag starts
+    delayTouchStart: 0, // Remove the delay completely
+    touchSlop: 0, // Minimum movement required to trigger drag
+    ignoreContextMenu: true,
+    enableTouchEvents: true,
+    enableKeyboardEvents: true,
     enableHoverOutsideTarget: true,
     scrollAngleRanges: [{ start: 30, end: 330 }]
   } : {};
@@ -459,7 +463,13 @@ const MainGame = () => {
       type: ItemTypes.CARD,
       item: { card },
       options: {
-        dropEffect: 'move'
+        dropEffect: 'move',
+        touchStartThreshold: 1 // Minimal threshold for touch drag start
+      },
+      previewOptions: {
+        captureDraggingState: true,
+        anchorX: 0.5,
+        anchorY: 0.5
       },
       end: (item, monitor) => {
         const dropResult = monitor.getDropResult();
@@ -479,10 +489,15 @@ const MainGame = () => {
         initial={false}
         className="relative transform-gpu touch-manipulation"
         style={{
-          touchAction: 'none', // Prevents scrolling while dragging
+          touchAction: 'none',
           cursor: 'grab',
           WebkitUserSelect: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent', // Remove tap highlight on iOS
+          WebkitTouchCallout: 'none', // Disable touch callout
+        }}
+        onTouchStart={(e) => {
+          e.preventDefault(); // Prevent default touch behavior
         }}
       >
         {children}
