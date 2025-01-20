@@ -25,7 +25,7 @@ import DoubleRentOverlay from './overlays/DoubleRentOverlay';
 import WinnerOverlay from './overlays/WinnerOverlay';
 import TieOverlay from './overlays/TieOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { TouchBackend } from 'react-dnd-touch-backend';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { motion, AnimatePresence } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
@@ -444,84 +444,27 @@ const MainGame = () => {
     handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError);
   };
 
-  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  const dndBackend = TouchBackend;
-  const dndOptions = {
-    enableMouseEvents: true,
-    delay: 0,
-    delayTouchStart: 0,
-    enableKeyboardEvents: false,
-    enableHoverOutsideTarget: false,
-    ignoreContextMenu: true,
-    touchSlop: 2,
-    scrollAngleRanges: [{ start: 30, end: 330 }],
-    getDropTargetElementsAtPoint: (x, y, dropTargets) => {
-      const elements = document.elementsFromPoint(x, y);
-      return dropTargets.filter(t => elements.indexOf(t) > -1);
-    }
-  };
-
   const DraggableCard = ({ card, children }) => {
-    const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
+    const [{ isDragging }, drag] = useDrag(() => ({
       type: ItemTypes.CARD,
       item: { card },
+      end: (item, monitor) => {
+        const dropResult = monitor.getDropResult();
+        if (dropResult) {
+          setIsDragging(true);
+          setTimeout(() => setIsDragging(false), 300);
+        }
+      },
       collect: (monitor) => ({
         isDragging: monitor.isDragging()
       })
     }));
 
-    const handleTouchStart = (e) => {
-      // Prevent default touch behavior
-      e.preventDefault();
-      
-      const touch = e.touches[0];
-      const target = e.currentTarget;
-      const rect = target.getBoundingClientRect();
-      
-      // Create a drag preview element
-      const preview = target.cloneNode(true);
-      preview.style.position = 'fixed';
-      preview.style.left = `${rect.left}px`;
-      preview.style.top = `${rect.top}px`;
-      preview.style.width = `${rect.width}px`;
-      preview.style.height = `${rect.height}px`;
-      preview.style.pointerEvents = 'none';
-      preview.style.opacity = '0.8';
-      preview.style.zIndex = '1000';
-      document.body.appendChild(preview);
-
-      let startX = touch.clientX - rect.left;
-      let startY = touch.clientY - rect.top;
-
-      const moveHandler = (moveEvent) => {
-        const moveTouch = moveEvent.touches[0];
-        preview.style.left = `${moveTouch.clientX - startX}px`;
-        preview.style.top = `${moveTouch.clientY - startY}px`;
-      };
-
-      const endHandler = () => {
-        document.body.removeChild(preview);
-        document.removeEventListener('touchmove', moveHandler);
-        document.removeEventListener('touchend', endHandler);
-      };
-
-      document.addEventListener('touchmove', moveHandler, { passive: false });
-      document.addEventListener('touchend', endHandler);
-    };
-
     return (
       <motion.div 
         ref={drag}
         initial={false}
-        className="relative transform-gpu touch-manipulation"
-        style={{
-          touchAction: 'none',
-          cursor: 'grab',
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-        onTouchStart={handleTouchStart}
+        className="relative transform-gpu"
       >
         {children}
       </motion.div>
@@ -579,7 +522,7 @@ const MainGame = () => {
   };
 
   return (
-    <DndProvider backend={dndBackend} options={dndOptions}>
+    <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         
