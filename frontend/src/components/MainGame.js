@@ -26,6 +26,7 @@ import WinnerOverlay from './overlays/WinnerOverlay';
 import TieOverlay from './overlays/TieOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { TouchBackend } from 'react-dnd-touch-backend';
 import { motion, AnimatePresence } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
@@ -444,10 +445,22 @@ const MainGame = () => {
     handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError);
   };
 
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const dndBackend = isTouchDevice ? TouchBackend : HTML5Backend;
+  const dndOptions = isTouchDevice ? {
+    enableMouseEvents: true,
+    delayTouchStart: 100, // Reduce the delay before drag starts
+    enableHoverOutsideTarget: true,
+    scrollAngleRanges: [{ start: 30, end: 330 }]
+  } : {};
+
   const DraggableCard = ({ card, children }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
       type: ItemTypes.CARD,
       item: { card },
+      options: {
+        dropEffect: 'move'
+      },
       end: (item, monitor) => {
         const dropResult = monitor.getDropResult();
         if (dropResult) {
@@ -464,7 +477,13 @@ const MainGame = () => {
       <motion.div 
         ref={drag}
         initial={false}
-        className="relative transform-gpu"
+        className="relative transform-gpu touch-manipulation"
+        style={{
+          touchAction: 'none', // Prevents scrolling while dragging
+          cursor: 'grab',
+          WebkitUserSelect: 'none',
+          userSelect: 'none'
+        }}
       >
         {children}
       </motion.div>
@@ -522,7 +541,7 @@ const MainGame = () => {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={dndBackend} options={dndOptions}>
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         
