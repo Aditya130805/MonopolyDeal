@@ -25,7 +25,6 @@ import DoubleRentOverlay from './overlays/DoubleRentOverlay';
 import WinnerOverlay from './overlays/WinnerOverlay';
 import TieOverlay from './overlays/TieOverlay';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { motion, AnimatePresence } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
@@ -446,42 +445,69 @@ const MainGame = () => {
   };
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  const dndBackend = isTouchDevice ? TouchBackend : HTML5Backend;
-  const dndOptions = isTouchDevice ? {
+  const dndBackend = TouchBackend;
+  const dndOptions = {
     enableMouseEvents: true,
-    delayTouchStart: 0, // Remove the delay completely
-    touchSlop: 0, // Minimum movement required to trigger drag
+    delay: 0,
+    delayTouchStart: 0,
+    enableKeyboardEvents: false,
+    enableHoverOutsideTarget: false,
     ignoreContextMenu: true,
-    enableTouchEvents: true,
-    enableKeyboardEvents: true,
-    enableHoverOutsideTarget: true,
-    scrollAngleRanges: [{ start: 30, end: 330 }]
-  } : {};
+    touchSlop: 2,
+    scrollAngleRanges: [{ start: 30, end: 330 }],
+    getDropTargetElementsAtPoint: (x, y, dropTargets) => {
+      const elements = document.elementsFromPoint(x, y);
+      return dropTargets.filter(t => elements.indexOf(t) > -1);
+    }
+  };
 
   const DraggableCard = ({ card, children }) => {
-    const [{ isDragging }, drag] = useDrag(() => ({
+    const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
       type: ItemTypes.CARD,
       item: { card },
-      options: {
-        dropEffect: 'move',
-        touchStartThreshold: 1 // Minimal threshold for touch drag start
-      },
-      previewOptions: {
-        captureDraggingState: true,
-        anchorX: 0.5,
-        anchorY: 0.5
-      },
-      end: (item, monitor) => {
-        const dropResult = monitor.getDropResult();
-        if (dropResult) {
-          setIsDragging(true);
-          setTimeout(() => setIsDragging(false), 300);
-        }
-      },
       collect: (monitor) => ({
         isDragging: monitor.isDragging()
       })
     }));
+
+    const handleTouchStart = (e) => {
+      // Prevent default touch behavior
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const target = e.currentTarget;
+      const rect = target.getBoundingClientRect();
+      
+      // Create a drag preview element
+      const preview = target.cloneNode(true);
+      preview.style.position = 'fixed';
+      preview.style.left = `${rect.left}px`;
+      preview.style.top = `${rect.top}px`;
+      preview.style.width = `${rect.width}px`;
+      preview.style.height = `${rect.height}px`;
+      preview.style.pointerEvents = 'none';
+      preview.style.opacity = '0.8';
+      preview.style.zIndex = '1000';
+      document.body.appendChild(preview);
+
+      let startX = touch.clientX - rect.left;
+      let startY = touch.clientY - rect.top;
+
+      const moveHandler = (moveEvent) => {
+        const moveTouch = moveEvent.touches[0];
+        preview.style.left = `${moveTouch.clientX - startX}px`;
+        preview.style.top = `${moveTouch.clientY - startY}px`;
+      };
+
+      const endHandler = () => {
+        document.body.removeChild(preview);
+        document.removeEventListener('touchmove', moveHandler);
+        document.removeEventListener('touchend', endHandler);
+      };
+
+      document.addEventListener('touchmove', moveHandler, { passive: false });
+      document.addEventListener('touchend', endHandler);
+    };
 
     return (
       <motion.div 
@@ -493,12 +519,9 @@ const MainGame = () => {
           cursor: 'grab',
           WebkitUserSelect: 'none',
           userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent', // Remove tap highlight on iOS
-          WebkitTouchCallout: 'none', // Disable touch callout
+          WebkitTapHighlightColor: 'transparent',
         }}
-        onTouchStart={(e) => {
-          e.preventDefault(); // Prevent default touch behavior
-        }}
+        onTouchStart={handleTouchStart}
       >
         {children}
       </motion.div>
