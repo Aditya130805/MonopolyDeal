@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -12,12 +12,14 @@ import Particles from './Particles';
 import Navbar from './auth/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import ErrorNotification from './notifications/ErrorNotification';
 
 const ActiveGameRoom = () => {
   const { roomId } = useParams();
   const [players, setPlayers] = useState([]);
   const [isReady, setIsReady] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [error, setError] = useState('');
   const maxPlayers = 4;
   const requiredPlayers = 2;
   const navigate = useNavigate();
@@ -67,6 +69,10 @@ const ActiveGameRoom = () => {
   };
 
   const handleStartGame = () => {
+    if (players.length !== 2) {
+      setError("Sorry, we’re currently supporting only 2-player games. 3-4 player options are coming soon! 🎮");
+      return;
+    }
     if (socket) {
       socket.send(JSON.stringify({
         action: 'start_game',
@@ -153,6 +159,9 @@ const ActiveGameRoom = () => {
               <div className="w-[52px] sm:w-20"></div>
             </div>
           </motion.div>
+
+          {/* Error Notification */}
+          <ErrorNotification error={error} setError={setError} />
 
           {/* Players Section */}
           <motion.div
