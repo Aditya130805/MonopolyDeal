@@ -17,7 +17,6 @@
 
 #### UI/UX Improvements:
 
-- Fix 'card being cut while dragging' in Safari
 - Fix the hover state persisting after an invalid drop, resetting it without requiring a new hover
 - Bring back the fan effect for opponent's cards
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
