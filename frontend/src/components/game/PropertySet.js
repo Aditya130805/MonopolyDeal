@@ -1,18 +1,14 @@
 import React from 'react';
 import { HomeIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline';
-import { useDrop } from 'react-dnd';
+import { useDroppable } from '@dnd-kit/core';
 
-const PropertySet = ({ properties, isOpponent = false, setRequirements, colorOrder, ItemTypes, onDrop }) => {
+const PropertySet = ({ properties, isOpponent = false, setRequirements, colorOrder, onDrop }) => {
   // properties is already grouped by color, no need to reduce
   const propertyGroups = properties || {};
 
-  const [{ isOver }, drop] = !isOpponent && ItemTypes && onDrop ? useDrop(() => ({
-    accept: ItemTypes.CARD,
-    drop: onDrop,
-    collect: monitor => ({
-      isOver: !!monitor.isOver()
-    })
-  })) : [{ isOver: false }, null];
+  const { setNodeRef, isOver } = !isOpponent && onDrop ? useDroppable({
+    id: 'property-main'
+  }) : { setNodeRef: null, isOver: false };
 
   // Split properties into main sets and overflow
   const mainSets = {};
@@ -161,7 +157,7 @@ const PropertySet = ({ properties, isOpponent = false, setRequirements, colorOrd
 
   return (
     <div className={`inline-block ${isOpponent ? 'transform rotate-180' : ''}`}>
-      <div ref={drop} className="bg-white/90 rounded-lg shadow-lg p-3 relative property-set">
+      <div ref={setNodeRef} className="bg-white/90 rounded-lg shadow-lg p-3 relative property-set">
         {!isOpponent && isOver && (
           <div 
             className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 via-emerald-400/20 to-emerald-300/10 backdrop-blur-sm rounded-lg flex items-center justify-center pointer-events-none z-50"

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDrop } from 'react-dnd';
+import { useDroppable } from '@dnd-kit/core';
 import { BanknotesIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import CardBack from '../cards/CardBack';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +8,6 @@ const BankAndCards = ({
   hand, 
   bank, 
   isOpponent = false, 
-  ItemTypes,
   handleCardDrop,
   DraggableCard,
   renderCardContent 
@@ -37,13 +36,9 @@ const BankAndCards = ({
   }
 
   // Bank drop zone
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: ItemTypes.CARD,
-    drop: (item) => handleCardDrop(item.card),
-    collect: monitor => ({
-      isOver: !!monitor.isOver()
-    })
-  }));
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'bank'
+  });
 
   // Cards rendering calculations
   const totalCards = hand.length;
@@ -53,7 +48,7 @@ const BankAndCards = ({
     <div className={`flex items-center ${isOpponent ? 'gap-12' : 'gap-16'} ${isOpponent ? '-mt-48 flex-row-reverse' : '-mb-36'} w-full`}>
       {/* Compact Bank Section with Responsive Design */}
       <div 
-        ref={!isOpponent ? drop : null}
+        ref={!isOpponent ? setNodeRef : null}
         className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180 mt-14' : 'mt-9'} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-100`}
       >
         {!isOpponent && isOver && (

@@ -24,8 +24,7 @@ import DealBreakerOverlay from './overlays/DealBreakerOverlay';
 import DoubleRentOverlay from './overlays/DoubleRentOverlay';
 import WinnerOverlay from './overlays/WinnerOverlay';
 import TieOverlay from './overlays/TieOverlay';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, DragOverlay } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
@@ -444,27 +443,55 @@ const MainGame = () => {
     handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError);
   };
 
+  const mouseSensor = useSensor(MouseSensor);
+  const touchSensor = useSensor(TouchSensor);
+  const sensors = useSensors(mouseSensor, touchSensor);
+
+  const [activeCard, setActiveCard] = useState(null);
+  const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+  const handleDragStart = (event) => {
+    const { active } = event;
+    setActiveCard(active.data.current);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (over) {
+      const card = active.data.current;
+      if (over.id === 'bank') {
+        handleCardDropBankWrapper(card);
+      } else if (over.id === 'property-main' || over.id.startsWith('property-')) {
+        handleCardDropPropertyWrapper(card);
+      } else if (over.id === 'action') {
+        handleCardDropActionWrapper(card);
+      }
+    }
+    setActiveCard(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveCard(null);
+  };
+
   const DraggableCard = ({ card, children }) => {
-    const [{ isDragging }, drag] = useDrag(() => ({
-      type: ItemTypes.CARD,
-      item: { card },
-      end: (item, monitor) => {
-        const dropResult = monitor.getDropResult();
-        if (dropResult) {
-          setIsDragging(true);
-          setTimeout(() => setIsDragging(false), 300);
-        }
-      },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging()
-      })
-    }));
+    const { attributes, listeners, setNodeRef, isDragging, node } = useDraggable({
+      id: card.id,
+      data: card
+    });
 
     return (
       <motion.div 
-        ref={drag}
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
         initial={false}
         className="relative transform-gpu"
+        style={{
+          opacity: isDragging ? 0.5 : 1,
+          cursor: 'grab',
+          transform: isDragging ? 'none' : undefined // Prevent any transform during drag
+        }}
       >
         {children}
       </motion.div>
@@ -522,7 +549,12 @@ const MainGame = () => {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndContext 
+      sensors={sensors} 
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         
@@ -557,7 +589,7 @@ const MainGame = () => {
           opponentName={opponentName}
           opponentProperties={opponentProperties}
           onPropertySelect={(selectedProperty) => {
-            handleSlyDealPropertySelect(selectedProperty, socket, user, pendingSlyDealCard, setPendingSlyDealCard);
+            handleSlyDealPropertySelectWrapper(selectedProperty);
             setSlyDealModalOpen(false);
           }}
         />
@@ -691,6 +723,17 @@ const MainGame = () => {
           </div>
         </div>
       </div>
+      <DragOverlay dropAnimation={null}>
+        {activeCard ? (
+          <div style={{ 
+            transition: 'opacity 0.2s ease-in-out',
+            opacity: 1,
+            transform: !isTouchDevice ? 'translateY(-3rem)' : undefined
+          }}>
+            {renderCardContent(activeCard)}
+          </div>
+        ) : null}
+      </DragOverlay>
       <RentModal
         isOpen={rentModalOpen}
         onClose={() => {
@@ -704,7 +747,7 @@ const MainGame = () => {
         playerProperties={playerProperties}
         onPaymentSubmit={handleRentPaymentWrapper}
       />
-    </DndProvider>
+    </DndContext>
   );
 };
 

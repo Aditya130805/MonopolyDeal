@@ -2,19 +2,13 @@ import React from 'react';
 import CardBack from '../cards/CardBack';
 import CountOverlay from '../cards/CountOverlay';
 import ActionCard from '../cards/ActionCard';
-import { useDrop } from 'react-dnd';
+import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, ItemTypes, handleCardDrop }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: ItemTypes.CARD,
-    drop: (item) => {
-      handleCardDrop(item.card);
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver()
-    })
-  }));
+const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleCardDrop }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'action'
+  });
 
   const renderDrawPile = (cardsRemaining) => (
     <div className="relative">
@@ -57,9 +51,11 @@ const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, ItemTyp
   );
 
   return (
-    <div ref={drop} className="bg-gray-100 rounded-xl p-6 shadow-inner flex gap-6">
+    <div className="bg-gray-100 rounded-xl p-6 shadow-inner flex gap-6">
       {renderDrawPile(numCardsInDrawPile)}
-      {renderActionPile(lastAction)}
+      <div ref={setNodeRef}>
+        {renderActionPile(lastAction)}
+      </div>
     </div>
   );
 };
