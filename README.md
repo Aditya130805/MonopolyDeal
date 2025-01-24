@@ -22,6 +22,7 @@
 - Implement smooth card going from deck to player's hand animation for picking up any cards at the start of their turn / pass go
 - Check responsiveness of all components, overlays, pages, and animations
 - Add an animation when loading the game page after clicking "Start Game"
+- Improve link sharing og:image preview
 
 #### Bug Fixes:
 
@@ -31,6 +32,8 @@
 - Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
+- Using hard-coded public URL for og:image preview; make %PUBLIC_URL% work
+- Double sign up potentially causes the server to crash; fix that
 
 ## Deviations from official Monopoly Deal rules:
 
