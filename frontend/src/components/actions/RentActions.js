@@ -1,5 +1,4 @@
 export const handleRentPayment = (selectedCards, socket, user, rentRecipientId) => {
-  console.log("Sending rent payment for selected cards:", selectedCards);
   const message = {
     action: 'rent_payment',
     player: user.unique_id,
@@ -8,7 +7,6 @@ export const handleRentPayment = (selectedCards, socket, user, rentRecipientId) 
       selected_cards: selectedCards.map(card => card.id),
     }
   };
-  console.log("Sending rent payment message:", message);
   socket.send(JSON.stringify(message));
 };
 

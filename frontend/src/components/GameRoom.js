@@ -26,9 +26,8 @@ const GameRoom = () => {
   const { roomId } = useParams();
 
   const handleUpdate = useCallback((data) => {
-    console.log("Received WebSocket data:", data);
+    // console.log("Received WebSocket data:", data);
     if (data.type === 'rejection') {
-      console.log("REJECTED 2!");
       setError(data.message);
       navigate('/');
       return;
@@ -61,7 +60,6 @@ const GameRoom = () => {
         setIsCreator(true);  // Set isCreator to true when creating a room
         navigate(`/room/${response.room_id}`);
       } else {
-        console.log(response);
         setError(response.message || 'Failed to create room');
       }
     } catch (error) {

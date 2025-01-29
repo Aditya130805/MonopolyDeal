@@ -17,7 +17,7 @@ const rents = {
     'black': [1, 2, 3, 4]
 }
 
-const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay) => {
+const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay, onColorSelect) => {
     // Create full-screen overlay
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
@@ -148,28 +148,7 @@ const handleRentColorSelection = (card, playerProperties, playerHand, actionsRem
         
         section.onclick = () => {
             section.style.opacity = '1';
-            setRentAmount(rentAmounts[color])
-            // Check for double rent card in player's hand
-            const hasDoubleRentCard = playerHand.some(card => 
-                card.type === 'action' && card.name.toLowerCase() === 'double the rent'
-            );
-            if (hasDoubleRentCard && actionsRemaining > 1) {
-                setDoubleRentAmount(rentAmounts[color] * 2);
-                setShowDoubleRentOverlay(true);
-            }
-            else {
-                setTimeout(() => {
-                    setShowActionAnimation({ visible: true, action: "Rent Request" });
-                    socket.send(JSON.stringify({
-                        'action': 'rent',
-                        'player': user.unique_id,
-                        'card': card,
-                        'rentColor': color,
-                        'rentAmount': rentAmounts[color]
-                    }));
-                    setPendingRentCard(null);
-                }, 50);
-            }
+            onColorSelect(color, rentAmounts[color]);
             resizeObserver.disconnect();
             window.removeEventListener('resize', updatePosition);
             document.body.removeChild(colorButtons);

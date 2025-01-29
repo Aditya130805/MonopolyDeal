@@ -6,9 +6,7 @@ import ActionCard from '../cards/ActionCard';
 const DealBreakerModal = ({ 
   isOpen, 
   onClose, 
-  opponentId,
-  opponentName,
-  opponentProperties,
+  modalData,
   onPropertySetSelect 
 }) => {
   const [selectedSet, setSelectedSet] = useState(null);
@@ -23,7 +21,7 @@ const DealBreakerModal = ({
     if (selectedSet?.color === color) {
       setSelectedSet(null);
     } else {
-      setSelectedSet({ color, cards, owner: { id: opponentId, name: opponentName } });
+      setSelectedSet({ color, cards, owner: { id: modalData.opponentId, name: modalData.opponentName } });
     }
   };
 
@@ -123,7 +121,7 @@ const DealBreakerModal = ({
   };
 
   // Split properties into main and overflow sets
-  const { mainSets, overflowSets } = splitProperties(opponentProperties);
+  const { mainSets, overflowSets } = splitProperties(modalData.opponentProperties);
 
   // Check if there are any complete sets in either main or overflow
   const hasCompleteSets = Object.entries(mainSets).some(([color, cards]) => isCompleteSet(color, cards)) || Object.entries(overflowSets).some(([color, cards]) => isCompleteSet(color, cards));
@@ -166,7 +164,7 @@ const DealBreakerModal = ({
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                  {opponentName}'s Complete Property Sets
+                  {modalData.opponentName}'s Complete Property Sets
                 </h3>
                 <div className="h-0.5 flex-1 bg-gradient-to-r from-red-200 to-transparent"></div>
               </div>

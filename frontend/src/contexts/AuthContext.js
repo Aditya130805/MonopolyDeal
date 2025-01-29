@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:800
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    console.log("API_BASE_URL:", API_BASE_URL);
+    // console.log("API_BASE_URL:", API_BASE_URL);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();

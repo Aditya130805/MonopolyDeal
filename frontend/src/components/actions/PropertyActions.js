@@ -1,5 +1,4 @@
 export const handleSlyDealPropertySelect = (selectedProperty, socket, user, pendingSlyDealCard, setPendingSlyDealCard) => {
-  console.log("Selected property for Sly Deal:", selectedProperty);
   socket.send(JSON.stringify({
     action: 'sly_deal',
     player: user.unique_id,
@@ -38,7 +37,6 @@ export const handleDealBreakerSetSelect = (
   setDealBreakerModalOpen,
   setPendingDealBreakerCard
 ) => {
-  console.log("Selected Set:", selectedSet);
   const message = {
     action: 'deal_breaker',
     player: user.unique_id,

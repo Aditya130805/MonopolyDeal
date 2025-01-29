@@ -135,8 +135,115 @@ class GameConsumer(AsyncWebsocketConsumer):
                 game_state.actions_remaining = 1  # This will trigger the turn switch in manage_turns
                 self.manage_turns(game_state)  # This will switch turns
                 await self.send_game_state()
+        
+        ###### GAME ACTIONS ######
+        elif action == 'just_say_no_choice':
+            playing_player = data.get('playing_player')
+            against_player = data.get('against_player')
+            card = data.get('card')
+            against_card = data.get('against_card')
+            against_rent_card = data.get('against_rent_card') or None
+            playing_player_name = data.get('playing_player_name')
+            against_player_name = data.get('against_player_name')
+            real_action_data = json.loads(data.get('data'))
+            game_state = GameConsumer.game_instances[self.room_id]
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_card_played',
+                    'player_id': real_action_data['player'],
+                    'action': real_action_data['action'],
+                    'action_type': 'to_bank' if real_action_data['action'] == 'to_bank' else 'to_properties' if real_action_data['action'] == 'to_properties' else 'action',
+                    'card': real_action_data['card']
+                }
+            )
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_just_say_no_choice',
+                    'against_player': against_player,
+                    'playing_player': playing_player,
+                    'card': card,
+                    'against_card': against_card,
+                    'against_rent_card': against_rent_card,
+                    'playing_player_name': playing_player_name,
+                    'against_player_name': against_player_name,
+                    'data': real_action_data
+                }
+            )
+        elif action == 'just_say_no_response':
+            play_just_say_no = data.get('play_just_say_no')
+            playing_player = data.get('playing_player')
+            against_player = data.get('against_player')
+            playing_player_name = data.get('playing_player_name')
+            against_player_name = data.get('against_player_name')
+            card = data.get('card')
+            against_card = data.get('against_card')
+            against_rent_card = data.get('against_rent_card') or None
+            real_action_data = json.loads(data.get('data'))
+            game_state = GameConsumer.game_instances[self.room_id]
+            if not play_just_say_no:
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_just_say_no_response',
+                        'play_just_say_no': play_just_say_no,
+                        'playing_player': playing_player,
+                        'against_player': against_player,
+                        'playing_player_name': playing_player_name,
+                        'against_player_name': against_player_name,
+                        'card': card,
+                        'against_card': against_card,
+                        'against_rent_card': against_rent_card,
+                        'data': real_action_data
+                    }
+                )
+                # Proceed as usual
+                await self.handle_action_with_notification(real_action_data, real_action_data['action'], real_action_data['card'], real_action_data['player'])
+                self.manage_turns(game_state)
+                await self.send_game_state()
+            else:
+                game_state = GameConsumer.game_instances[self.room_id]
+                against_player_object = next(player for player in game_state.players if player.id == against_player)
+                playing_player_object = next(player for player in game_state.players if player.id == playing_player)
+                against_card_to_remove = next(c for c in against_player_object.hand if c.id == against_card['id'])
+                if against_rent_card:
+                    against_card_to_remove_2 = next(c for c in against_player_object.hand if c.id == against_rent_card['id'])
+                    against_player_object.hand.remove(against_card_to_remove_2)
+                playing_player_card = next(c for c in playing_player_object.hand if c.id == card['id'])
+                against_player_object.hand.remove(against_card_to_remove)
+                playing_player_object.hand.remove(playing_player_card)
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_card_played',
+                        'player_id': playing_player,
+                        'action': action,
+                        'action_type': 'to_bank' if action == 'to_bank' else 'to_properties' if action == 'to_properties' else 'action',
+                        'card': card
+                    }
+                )
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_just_say_no_response',
+                        'play_just_say_no': play_just_say_no,
+                        'playing_player': playing_player,
+                        'against_player': against_player,
+                        'playing_player_name': playing_player_name,
+                        'against_player_name': against_player_name,
+                        'card': card,
+                        'against_card': against_card,
+                        'against_rent_card': against_rent_card,
+                        'data': real_action_data
+                    }
+                )
+                game_state.discard_pile.append(playing_player_card)
+                self.manage_turns(game_state)
+                if against_rent_card:
+                    self.manage_turns(game_state)  # The additional turn is handled here
+                await self.send_game_state()
         else:
-            # Game actions
             card = data.get('card')
             player_id = data.get('player')
             game_state = GameConsumer.game_instances[self.room_id]
@@ -629,7 +736,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         # Check if current player has won
         current_player = game_state.players[game_state.turn_index]
         if current_player.has_won():
-            print("WON!")
+            print(f"{current_player.name} WON!")
             game_state.winner = current_player
 
         if game_state.actions_remaining == 1:
@@ -681,6 +788,33 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 
     ########## BROADCASTS - FINAL MESSAGE SEND VIA SOCKET ##########
+    
+    async def broadcast_just_say_no_response(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'just_say_no_response',
+            'play_just_say_no': event['play_just_say_no'],
+            'playing_player': event['playing_player'],
+            'against_player': event['against_player'],
+            'playing_player_name': event['playing_player_name'],
+            'against_player_name': event['against_player_name'],
+            'card': event['card'],
+            'against_card': event['against_card'],
+            'against_rent_card': event['against_rent_card'],
+            'data': event['data']
+        }))
+    
+    async def broadcast_just_say_no_choice(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'just_say_no_choice',
+            'against_player': event['against_player'],
+            'playing_player': event['playing_player'],
+            'card': event['card'],
+            'against_card': event['against_card'],
+            'against_rent_card': event['against_rent_card'],
+            'playing_player_name': event['playing_player_name'],
+            'against_player_name': event['against_player_name'],
+            'data': event['data']
+        }))
 
     async def broadcast_game_started(self, event):
         # This method will be called when a game has started

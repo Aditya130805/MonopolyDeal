@@ -30,13 +30,94 @@ export const handleWebSocketMessage = (
   rentCollectionTimeoutRef,
   setWinner,
   setShowWinnerOverlay,
-  setShowTieOverlay
+  setShowTieOverlay,
+  setShowJustSayNoModal,
+  setShowJustSayNoChoiceWaitingOverlay,
+  setShowJustSayNoPlayedOverlay
 ) => {
   try {
     const data = JSON.parse(event.data);
-    console.log(`(Handler 2) WebSocket message in room ${roomId}:`, data);
 
     switch (data.type) {
+      case 'just_say_no_response':
+        // Clear any existing Just Say No related UI
+        setShowJustSayNoChoiceWaitingOverlay({
+          isVisible: false,
+          playerName: ""
+        });
+        setShowJustSayNoModal({
+          isVisible: false,
+          playingPlayer: "",
+          againstPlayer: "",
+          playingPlayerName: "",
+          againstPlayerName: "",
+          againstCard: null,
+          card: null,
+          data: null
+        });
+        if (data.play_just_say_no) {
+          // Show the Just Say No Played overlay
+          setShowJustSayNoPlayedOverlay({
+            isVisible: true,
+            playingPlayerName: data.playing_player_name,
+            againstPlayerName: data.against_player_name,
+            actionCard: data.against_card,
+            justSayNoCard: data.card
+          });
+
+          // Hide the overlay after 3 seconds
+          setTimeout(() => {
+            setShowJustSayNoPlayedOverlay(prev => ({
+              ...prev,
+              isVisible: false
+            }));
+          }, 3000);
+        }
+        break;
+
+      case 'just_say_no_choice':
+        // First clear any existing overlays
+        setShowJustSayNoPlayedOverlay(prev => ({
+          ...prev,
+          isVisible: false
+        }));
+        
+        if (data.playing_player === user.unique_id) {
+          setShowJustSayNoModal({
+            isVisible: true,
+            playingPlayer: data.playing_player,
+            againstPlayer: data.against_player,
+            playingPlayerName: data.playing_player_name,
+            againstPlayerName: data.against_player_name,
+            againstCard: data.against_card,
+            againstRentCard: data.against_rent_card,
+            card: data.card,
+            data: data.data
+          });
+          // Clear the waiting overlay when showing modal
+          setShowJustSayNoChoiceWaitingOverlay({
+            isVisible: false,
+            playerName: ""
+          });
+        } else {
+          setShowJustSayNoChoiceWaitingOverlay({
+            isVisible: true,
+            playerName: data.playing_player_name
+          });
+          // Clear the modal when showing waiting overlay
+          setShowJustSayNoModal({
+            isVisible: false,
+            playingPlayer: "",
+            againstPlayer: "",
+            playingPlayerName: "",
+            againstPlayerName: "",
+            againstCard: null,
+            card: null,
+            data: null
+          });
+        }
+        break;
+
       case 'card_played':
         handleCardPlayed(data, user, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation);
         break;
@@ -114,22 +195,22 @@ const handleCardPlayed = (
     cardNotificationTimeoutRef.current = null;
   }, 2000);
   
-  // Additionally show action animation for specific cases
-  if (data.player_id === user.unique_id && 
-      data.card.type === 'action' && 
-      data.card.name.toLowerCase() !== 'house' && 
-      data.card.name.toLowerCase() !== 'hotel' &&
-      data.card.name.toLowerCase() !== 'deal breaker' &&
-      data.card.name.toLowerCase() !== 'sly deal' &&
-      data.card.name.toLowerCase() !== 'forced deal' &&
-      data.action_type !== 'to_bank' && 
-      data.action_type !== 'to_properties') {
-    setShowActionAnimation({ visible: true, action: data.action });
-    // Hide animation after 2 seconds
-    setTimeout(() => {
-      setShowActionAnimation(prev => ({ ...prev, visible: false }));
-    }, 2000);
-  }
+  // // Additionally show action animation for specific cases
+  // if (data.player_id === user.unique_id && 
+  //     data.card.type === 'action' && 
+  //     data.card.name.toLowerCase() !== 'house' && 
+  //     data.card.name.toLowerCase() !== 'hotel' &&
+  //     data.card.name.toLowerCase() !== 'deal breaker' &&
+  //     data.card.name.toLowerCase() !== 'sly deal' &&
+  //     data.card.name.toLowerCase() !== 'forced deal' &&
+  //     data.action_type !== 'to_bank' && 
+  //     data.action_type !== 'to_properties') {
+  //   setShowActionAnimation({ visible: true, action: data.action });
+  //   // Hide animation after 2 seconds
+  //   setTimeout(() => {
+  //     setShowActionAnimation(prev => ({ ...prev, visible: false }));
+  //   }, 2000);
+  // }
 };
 
 const handleRentRequest = (
@@ -143,7 +224,6 @@ const handleRentRequest = (
   setRentType,
   rentCollectionTimeoutRef
 ) => {
-  console.log("RENT REQUEST DATA:", data);
   setRentAmount(data.amount);
   setRentRecipientId(data.recipient_id);
   setRentType(data.rent_type);

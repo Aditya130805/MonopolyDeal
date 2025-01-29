@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DoubleRentOverlay = ({ isVisible, amount, onResponse }) => {
+const DoubleRentOverlay = ({ isVisible, modalData, onResponse }) => {
   if (!isVisible) return null;
 
   return (
@@ -84,7 +84,7 @@ const DoubleRentOverlay = ({ isVisible, amount, onResponse }) => {
                   transition={{ delay: 0.4 }}
                   className="text-xl text-white opacity-90"
                 >
-                  ${amount/2}
+                  ${modalData.doubleRentAmount/2}
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -100,7 +100,7 @@ const DoubleRentOverlay = ({ isVisible, amount, onResponse }) => {
                   transition={{ delay: 0.6 }}
                   className="text-4xl font-bold text-yellow-300"
                 >
-                  ${amount}
+                  ${modalData.doubleRentAmount}
                 </motion.div>
               </div>
             </motion.div>

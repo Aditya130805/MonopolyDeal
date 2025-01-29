@@ -38,7 +38,7 @@ const ActiveGameRoom = () => {
 
   const handleMessage = (event) => {
     try {
-      console.log(`WebSocket message in room ${roomId}:`, event.data);
+      // console.log(`WebSocket message in room ${roomId}:`, event.data);
       const data = JSON.parse(event.data);
       if (data.type && data.type === "rejection") {
         navigate("/play");
