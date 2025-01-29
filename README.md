@@ -14,6 +14,7 @@
 - Implement "Just Say No" functionality
 - Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
+- Add an option on the victory and tie screens to re-play, i.e., go back to the same game room
 
 #### UI/UX Improvements:
 
@@ -23,6 +24,7 @@
 - Check responsiveness of all components, overlays, pages, and animations
 - Add an animation when loading the game page after clicking "Start Game"
 - Improve link sharing og:image preview
+- Display rent amount in JustSayNoModal; display selectedSet for DealBreaker in JustSayNoModal; display selectedProperty for SlyDeal in JustSayNoModal; display selectedUserProperty and selectedOpponentProperty for ForcedDeal in JustSayNoModal - so users know exactly if they want to play just say no or not
 
 #### Bug Fixes:
 
@@ -34,6 +36,7 @@
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area
 - Using hard-coded public URL for og:image preview; make %PUBLIC_URL% work
 - Double sign up potentially causes the server to crash; fix that
+- If an in-game player's WebSocket disconnects mid-game, send a message to everyone notifying them that they have disconnected, and exit the game
 
 ## Deviations from official Monopoly Deal rules:
 
