@@ -24,7 +24,6 @@
 - Check responsiveness of all components, overlays, pages, and animations
 - Add an animation when loading the game page after clicking "Start Game"
 - Improve link sharing og:image preview
-- Display rent amount in JustSayNoModal; display selectedSet for DealBreaker in JustSayNoModal; display selectedProperty for SlyDeal in JustSayNoModal; display selectedUserProperty and selectedOpponentProperty for ForcedDeal in JustSayNoModal - so users know exactly if they want to play just say no or not
 
 #### Bug Fixes:
 
@@ -37,6 +36,7 @@
 - Using hard-coded public URL for og:image preview; make %PUBLIC_URL% work
 - Double sign up potentially causes the server to crash; fix that
 - If an in-game player's WebSocket disconnects mid-game, send a message to everyone notifying them that they have disconnected, and exit the game
+- If a player wins by playing an action such as DealBreaker or SlyDeal, show that animation, and ONCE IT ENDS, show victory overlay; at the moment, it displays both together
 
 ## Deviations from official Monopoly Deal rules:
 
@@ -45,3 +45,5 @@
 - In the official Monopoly Deal rules, a multicolor wild card cannot be used to charge rent if it is the only card in a player's possession. However, to make the game more exciting, this restriction is relaxed, allowing rent to be charged even if the multicolor wild card is the only card available.
 
 - In the official Monopoly Deal rules, if the deck runs out, the discard pile is shuffled back into the deck to continue the game. However, this feature has not been implemented yet.
+
+- In the official Monopoly Deal rules, when a Just Say No card is played to counter "Double the Rent", the user is still required to pay rent. However, in this game, the user does not have to pay any rent at all if they play a Just Say No card to counter "Double the Rent".
