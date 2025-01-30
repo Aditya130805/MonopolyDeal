@@ -62,7 +62,7 @@ const MainGame = () => {
   const [currentTurnPlayerName, setCurrentTurnPlayerName] = useState('');
   const [actionsRemaining, setActionsRemaining] = useState(3);
   const [showActionAnimation, setShowActionAnimation] = useState({ visible: false, action: null, onComplete: null });
-  const [showCardNotification, setShowCardNotification] = useState({ visible: false, card: null, actionType: null });
+  const [cardNotifications, setCardNotifications] = useState([]);
   const cardNotificationTimeoutRef = useRef(null);
   const rentCollectionTimeoutRef = useRef(null);
   const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
@@ -240,7 +240,7 @@ const MainGame = () => {
       return;
     }
     console.log("(Socket 2) Connected:", socket);
-    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, rentCollectionTimeoutRef, setWinner, setShowWinnerOverlay, setShowTieOverlay, setShowJustSayNoModal, setShowJustSayNoChoiceWaitingOverlay, setShowJustSayNoPlayedOverlay);
+    socket.onmessage = (event) => handleWebSocketMessage(event, user, roomId, cardNotificationTimeoutRef, setCardNotifications, setShowActionAnimation, setRentAmount, setRentRecipientId, setRentModalOpen, setShowRentCollectionOverlay, setShowPaymentSuccessfulOverlay, setRentType, setPropertyStealAnimation, setPropertySwapAnimation, setDealBreakerOverlay, setPlayerHand, setPlayerBank, setPlayerProperties, setOpponentHand, setOpponentBank, setOpponentProperties, setNumCardsInDrawPile, setLastAction, setCurrentTurnPlayerId, setCurrentTurnPlayerName, setActionsRemaining, setOpponentId, setOpponentName, rentCollectionTimeoutRef, setWinner, setShowWinnerOverlay, setShowTieOverlay, setShowJustSayNoModal, setShowJustSayNoChoiceWaitingOverlay, setShowJustSayNoPlayedOverlay);
     setTimeout(() => setIsSocketReady(true), 0);
   }, [socket]);
   useEffect(() => {
@@ -898,17 +898,24 @@ const MainGame = () => {
             index={index}
           />
         ))}
+        {/* Render stacked card notifications */}
+        {cardNotifications.slice().reverse().map((notification, index) => (
+          <CardNotification
+            key={notification.id}
+            card={notification.card}
+            isVisible={notification.visible}
+            actionType={notification.actionType}
+            onComplete={() => {
+              setCardNotifications(prev => prev.filter(n => n.id !== notification.id));
+            }}
+            index={index}
+          />
+        ))}
         <RentCollectionOverlay isVisible={showRentCollectionOverlay} />
         <ActionAnimation 
           action={showActionAnimation.action}
           isVisible={showActionAnimation.visible}
           onComplete={() => setShowActionAnimation({ visible: false, action: null })}
-        />
-        <CardNotification
-          card={showCardNotification.card}
-          isVisible={showCardNotification.visible}
-          actionType={showCardNotification.actionType}
-          onComplete={() => setShowCardNotification({ visible: false, card: null, actionType: null })}
         />
         <PaymentSuccessfulOverlay
           isVisible={showPaymentSuccessfulOverlay.isVisible}

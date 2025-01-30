@@ -19,7 +19,7 @@ const ActiveGameRoom = () => {
   const [players, setPlayers] = useState([]);
   const [isReady, setIsReady] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]);
   const maxPlayers = 4;
   const requiredPlayers = 2;
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const ActiveGameRoom = () => {
 
   const handleStartGame = () => {
     if (players.length !== 2) {
-      setError("Sorry, we’re currently supporting only 2-player games. 3-4 player options are coming soon! 🎮");
+      setErrors(prev => [...prev, { id: Date.now(), message: "Sorry, we're currently supporting only 2-player games. 3-4 player options are coming soon! 🎮" }]);
       return;
     }
     if (socket) {
@@ -160,8 +160,17 @@ const ActiveGameRoom = () => {
             </div>
           </motion.div>
 
-          {/* Error Notification */}
-          <ErrorNotification error={error} setError={setError} />
+          {/* Error Notifications */}
+          {errors.slice().reverse().map((error, index) => (
+            <ErrorNotification
+              key={error.id}
+              error={error.message}
+              setError={() => {
+                setErrors(prev => prev.filter(e => e.id !== error.id));
+              }}
+              index={index}
+            />
+          ))}
 
           {/* Players Section */}
           <motion.div

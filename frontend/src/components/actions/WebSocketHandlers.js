@@ -3,7 +3,7 @@ export const handleWebSocketMessage = (
   user,
   roomId,
   cardNotificationTimeoutRef,
-  setShowCardNotification,
+  setCardNotifications,
   setShowActionAnimation,
   setRentAmount,
   setRentRecipientId,
@@ -119,7 +119,7 @@ export const handleWebSocketMessage = (
         break;
 
       case 'card_played':
-        handleCardPlayed(data, user, cardNotificationTimeoutRef, setShowCardNotification, setShowActionAnimation);
+        handleCardPlayed(data, user, cardNotificationTimeoutRef, setCardNotifications, setShowActionAnimation);
         break;
 
       case 'rent_request':
@@ -174,7 +174,7 @@ const handleCardPlayed = (
   data,
   user,
   cardNotificationTimeoutRef,
-  setShowCardNotification,
+  setCardNotifications,
   setShowActionAnimation
 ) => {
   // Clear any existing timeout
@@ -182,35 +182,15 @@ const handleCardPlayed = (
     clearTimeout(cardNotificationTimeoutRef.current);
   }
   
-  // Show notification to all players
-  setShowCardNotification({ 
-    visible: true, 
+  // Add new card notification
+  const newNotification = {
+    id: Date.now(),
     card: data.card,
-    actionType: data.action_type 
-  });
+    visible: true,
+    actionType: data.action_type
+  };
   
-  // Set new timeout to hide notification
-  cardNotificationTimeoutRef.current = setTimeout(() => {
-    setShowCardNotification(prev => ({ ...prev, visible: false }));
-    cardNotificationTimeoutRef.current = null;
-  }, 2000);
-  
-  // // Additionally show action animation for specific cases
-  // if (data.player_id === user.unique_id && 
-  //     data.card.type === 'action' && 
-  //     data.card.name.toLowerCase() !== 'house' && 
-  //     data.card.name.toLowerCase() !== 'hotel' &&
-  //     data.card.name.toLowerCase() !== 'deal breaker' &&
-  //     data.card.name.toLowerCase() !== 'sly deal' &&
-  //     data.card.name.toLowerCase() !== 'forced deal' &&
-  //     data.action_type !== 'to_bank' && 
-  //     data.action_type !== 'to_properties') {
-  //   setShowActionAnimation({ visible: true, action: data.action });
-  //   // Hide animation after 2 seconds
-  //   setTimeout(() => {
-  //     setShowActionAnimation(prev => ({ ...prev, visible: false }));
-  //   }, 2000);
-  // }
+  setCardNotifications(prev => [...prev, newNotification]);
 };
 
 const handleRentRequest = (

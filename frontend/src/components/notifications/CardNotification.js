@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const CardNotification = ({ card, isVisible, onComplete, actionType }) => {
+const CardNotification = ({ card, isVisible, onComplete, actionType, index = 0 }) => {
   if (!card) {
     return null;
   }
@@ -9,15 +9,23 @@ const CardNotification = ({ card, isVisible, onComplete, actionType }) => {
   const [localVisible, setLocalVisible] = useState(isVisible);
 
   useEffect(() => {
-    setLocalVisible(isVisible);
     if (isVisible) {
-      const timer = setTimeout(() => {
-        setLocalVisible(false);
-        if (onComplete) onComplete();
-      }, 2000);
+      setLocalVisible(true);
+    }
+  }, [isVisible]);
+
+  const handleClose = () => {
+    setLocalVisible(false);
+    // Wait for animation to complete before calling onComplete
+    setTimeout(() => onComplete(), 300);
+  };
+
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(handleClose, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, onComplete]);
+  }, [isVisible]);
 
   const getCardEmoji = (card, actionType) => {
     // If the card is going to bank, show money emoji
@@ -80,8 +88,11 @@ const CardNotification = ({ card, isVisible, onComplete, actionType }) => {
     return 'linear-gradient(135deg, #FFD700, #FFC107)';
   };
 
+  // Calculate bottom position based on index
+  const bottomPosition = 2 + (index * 6.5);
+
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {localVisible && (
         <motion.div
           initial={{ x: 100, opacity: 0, scale: 0.8 }}
@@ -94,7 +105,7 @@ const CardNotification = ({ card, isVisible, onComplete, actionType }) => {
           }}
           style={{
             position: 'fixed',
-            bottom: '20px',
+            bottom: `${bottomPosition}rem`,
             right: '20px',
             background: 'rgba(255, 255, 255, 0.95)',
             padding: '15px',
