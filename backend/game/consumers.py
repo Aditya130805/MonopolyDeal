@@ -307,10 +307,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.play_rent(game_state, player, card, data.get('rentAmount'))
             
         elif action == 'sly_deal':
-            await self.play_sly_deal(game_state, player, card['id'], data.get('target_property'))
+            await self.play_sly_deal(game_state, player, card['id'], data.get('target_property')['id'])
             
         elif action == 'forced_deal':
-            await self.play_forced_deal(game_state, player, card['id'], data.get('target_property'), data.get('user_property'))
+            await self.play_forced_deal(game_state, player, card['id'], data.get('target_property')['id'], data.get('user_property')['id'])
             
         elif action == 'deal_breaker':
             await self.play_deal_breaker(game_state, player, card['id'], data.get('target_set'), data.get('target_color'))

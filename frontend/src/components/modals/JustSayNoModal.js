@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ActionCard from '../cards/ActionCard';
+import PropertyCard from '../cards/PropertyCard';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 
 const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
@@ -39,7 +40,8 @@ const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 relative overflow-hidden"
+            className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 rounded-xl shadow-2xl p-8 mx-4 relative overflow-hidden"
+            style={{ width: modalData.againstCard?.name === 'Deal Breaker' ? '900px' : '600px' }}
           >
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -57,7 +59,7 @@ const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="flex justify-center mb-8"
+              className={`flex justify-center items-start ${modalData.againstCard?.name === 'Deal Breaker' ? 'space-x-24' : 'space-x-5'} mb-8`}
             >
               <div className="relative">
                 <motion.div
@@ -69,7 +71,6 @@ const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
                     delay: 0.5,
                     ease: "easeInOut",
                   }}
-                  className="transform hover:scale-105 transition-transform duration-200"
                 >
                   <ActionCard {...modalData.againstCard} />
                 </motion.div>
@@ -82,6 +83,67 @@ const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
                   Against You!
                 </motion.div>
               </div>
+
+              {modalData.againstCard?.name === 'Deal Breaker' && modalData.data && (
+                <div className="flex flex-col items-start">
+                  <div className="flex" style={{ marginLeft: '-80px' }}>
+                    {modalData.data.target_set.map((card, index) => (
+                      <div 
+                        key={index} 
+                        style={{ marginLeft: index === 0 ? '0' : '-80px' }}
+                      >
+                        {card.type === 'action' && (
+                          <ActionCard {...card} />
+                        )}
+                        {card.type === 'property' && (
+                          <PropertyCard {...card} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(modalData.againstCard?.name === 'Rent' || 
+                modalData.againstCard?.name === 'Multicolor Rent' || 
+                modalData.againstCard?.name === 'Double The Rent') && modalData.data && (
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center">
+                    <div className="bg-purple-700/50 rounded-xl px-6 py-4 border border-purple-300/30">
+                      <div className="text-purple-100 text-lg font-semibold">
+                        Rent Amount:
+                      </div>
+                      <div className="text-white text-4xl font-bold mt-1">
+                        ${modalData.data.rentAmount}M
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {modalData.againstCard?.name === 'Sly Deal' && modalData.data && (
+                <div className="flex flex-col items-start">
+                  <div>
+                    <PropertyCard {...modalData.data.target_property} />
+                  </div>
+                </div>
+              )}
+
+              {modalData.againstCard?.name === 'Forced Deal' && modalData.data && (
+                <div className="flex flex-col items-start">
+                  <div className="flex items-end">
+                    <div className="flex flex-col">
+                      <div className="text-purple-100 text-sm mb-1 text-center">They want</div>
+                      <PropertyCard {...modalData.data.target_property} />
+                    </div>
+                    <div className="text-purple-100 text-2xl mx-3 mb-[110px]">⇄</div>
+                    <div className="flex flex-col">
+                      <div className="text-purple-100 text-sm mb-1 text-center">You receive</div>
+                      <PropertyCard {...modalData.data.user_property} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             <motion.div

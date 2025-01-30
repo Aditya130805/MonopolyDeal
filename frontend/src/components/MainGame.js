@@ -590,7 +590,7 @@ const MainGame = () => {
           action: 'sly_deal',
           player: user.unique_id,
           card: pendingSlyDealCard,
-          target_property: selectedProperty.id
+          target_property: selectedProperty
         })
       }))
     }
@@ -599,7 +599,7 @@ const MainGame = () => {
         action: 'sly_deal',
         player: user.unique_id,
         card: pendingSlyDealCard,
-        target_property: selectedProperty.id
+        target_property: selectedProperty
       }));
     }
     setSlyDealModalOpen(prev => ({ ...prev, isVisible: false }));
@@ -622,8 +622,8 @@ const MainGame = () => {
           action: 'forced_deal',
           player: user.unique_id,
           card: pendingForcedDealCard,
-          target_property: opponentProperty.id,
-          user_property: userProperty.id
+          target_property: opponentProperty,
+          user_property: userProperty
         })
       }))
     } else {
@@ -631,8 +631,8 @@ const MainGame = () => {
         action: 'forced_deal',
         player: user.unique_id,
         card: pendingForcedDealCard,
-        target_property: opponentProperty.id,
-        user_property: userProperty.id
+        target_property: opponentProperty,
+        user_property: userProperty
       }))
     }
     setForcedDealModalOpen(prev => ({ ...prev, isVisible: false }));
