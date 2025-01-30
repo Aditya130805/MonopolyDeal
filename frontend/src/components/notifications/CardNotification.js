@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CardNotification = ({ card, isVisible, onComplete, actionType }) => {
+  if (!card) {
+    return null;
+  }
+
   const [localVisible, setLocalVisible] = useState(isVisible);
 
   useEffect(() => {

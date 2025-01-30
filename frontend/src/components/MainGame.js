@@ -57,7 +57,7 @@ const MainGame = () => {
   const [numCardsInDrawPile, setNumCardsInDrawPile] = useState([]);
   const [lastAction, setLastAction] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]);
   const [currentTurnPlayerId, setCurrentTurnPlayerId] = useState('');
   const [currentTurnPlayerName, setCurrentTurnPlayerName] = useState('');
   const [actionsRemaining, setActionsRemaining] = useState(3);
@@ -867,6 +867,16 @@ const MainGame = () => {
     }));
   };
 
+  const setError = (errorMessage) => {
+    const newError = {
+      id: Date.now(),
+      message: errorMessage,
+      timestamp: Date.now()
+    };
+    
+    setErrors(prev => [...prev, newError]);
+  };
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -877,7 +887,17 @@ const MainGame = () => {
       <div className="min-h-screen bg-gray-100">
         <Navbar />
         
-        <ErrorNotification error={error} setError={setError} />
+        {/* Render stacked error notifications */}
+        {errors.slice().reverse().map((error, index) => (
+          <ErrorNotification 
+            key={error.id}
+            error={error.message}
+            setError={() => {
+              setErrors(prev => prev.filter(e => e.id !== error.id));
+            }}
+            index={index}
+          />
+        ))}
         <RentCollectionOverlay isVisible={showRentCollectionOverlay} />
         <ActionAnimation 
           action={showActionAnimation.action}
