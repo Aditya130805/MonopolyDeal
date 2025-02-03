@@ -8,7 +8,8 @@ from .views import (
     UserDetailView, 
     PasswordUpdateView, 
     DeleteAccountView,
-    PasswordVerifyView
+    PasswordVerifyView,
+    UserCountView
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('me/password/', PasswordUpdateView.as_view(), name='password_update'),
     path('me/password/verify/', PasswordVerifyView.as_view(), name='password_verify'),
     path('me/delete/', DeleteAccountView.as_view(), name='delete_account'),
+    path('user-count/', UserCountView.as_view(), name='user-count')
 ]

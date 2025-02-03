@@ -89,3 +89,11 @@ class DeleteAccountView(generics.DestroyAPIView):
             return Response({'detail': 'Account deleted successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserCountView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    
+    def get(self, request):
+        user_count = User.objects.count()
+        return Response({'count': user_count})

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowRightIcon, 
@@ -16,6 +16,23 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage = () => {
   const { user } = useAuth();
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+  const [userCount, setUserCount] = useState('...');
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/user-count/`);
+        const data = await response.json();
+        setUserCount(data.count.toLocaleString());
+      } catch (error) {
+        console.error('Error fetching user count:', error);
+        setUserCount('10+');
+      }
+    };
+
+    fetchUserCount();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,9 +86,9 @@ const LandingPage = () => {
         {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto px-4">
           {[
-            { number: "1M+", label: "Players Worldwide" },
+            { number: `${userCount}`, label: "Players Worldwide" },
             { number: "4.8★", label: "Player Rating" },
-            { number: "10M+", label: "Games Played" },
+            { number: "10+", label: "Games Played" },
           ].map((stat, index) => (
             <motion.div
               key={index}
