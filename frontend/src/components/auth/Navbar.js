@@ -39,7 +39,7 @@ const Navbar = () => {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <Link to="/" className="flex-shrink-0 flex items-center">
-                            <span className="text-xl font-bold text-black">MonopolyDeal</span>
+                            <span className="text-xl font-bold text-black">Cardopoly</span>
                         </Link>
                     </div>
 

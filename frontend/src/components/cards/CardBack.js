@@ -12,8 +12,8 @@ const CardBack = ({ width = 140, height = 190 }) => {
       </div>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
-          <div className="font-bold text-[#b0fbb0] text-lg tracking-wide">MONOPOLY</div>
-          <div className="text-[#a8f9a8] mt-1 font-medium tracking-wider">DEAL</div>
+          <div className="font-bold text-[#b0fbb0] text-lg tracking-wide">CARDOPOLY</div>
+          {/* <div className="text-[#a8f9a8] mt-1 font-medium tracking-wider">DEAL</div> */}
         </div>
       </div>
       {/* Decorative corners */}

@@ -1,17 +1,16 @@
-# MonopolyDeal
+# Cardopoly
 
 ## **Deployment Overview**
 
 - **Backend:** Successfully deployed to [Railway.app](https://railway.app) using a GitHub monorepo. The backend utilizes a **PostgreSQL database** to store user information and **Redis** for in-game memory management.
 - **Frontend:** Deployed to [Vercel](https://vercel.com) via the same GitHub monorepo.
-- **Live Version:** You can access the live version of the game at [Monopoly Deal Digital](https://deal-frontend-psi.vercel.app).
+- **Live Version:** You can access the live version of the game at [Cardopoly](https://cardopoly.vercel.app).
 
 ## Next steps / Issues to resolve:
 
 #### Gameplay Features/Enhancements:
 
 - Modify MainGame to allow for multiple players
-- Implement "Just Say No" functionality
 - Allow a user to choose which color they want to turn a wild property into if they steal it via sly deal / forced deal or receive it as part of any rent (it's your birthday / debt collector / rent / multicolor rent)
 - Potentially display all the games the user is active (game codes) in in the GameRoom.js page.
 - Add an option on the victory and tie screens to re-play, i.e., go back to the same game room
@@ -29,7 +28,6 @@
 
 - Potentially elevate the placement of card notification if an error is already being displayed, so they don't overlap
 - Fix the case where a user presses the back button on game screen and is taken to the waiting room - close the connection and take them home instead
-- Fix the "card is null" error that randomly appears and is likely some problem in CardNotification
 - Some rooms may have players in them even though websockets have been closed - REASON UNKNOWN
 - User may be logged in but not authenticated and thus, unable to create a game - REASON: JWT token expiration
 - Let's say we make 5 blue property cards, then the 3rd set is not being shown in the properties area

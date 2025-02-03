@@ -120,7 +120,7 @@ const UserSettings = () => {
                 return;
             }
 
-            const response = await fetch(`${API_BASE_URL}/auth/password/`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me/password/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -184,7 +184,7 @@ const UserSettings = () => {
                 return;
             }
 
-            const response = await fetch(`${API_BASE_URL}/auth/delete/`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me/delete/`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -434,7 +434,7 @@ const UserSettings = () => {
                                         </div>
                                         <div className="text-left">
                                             <p className="text-sm text-purple-800 leading-relaxed">
-                                                Your username is your gaming identity in Monopoly Deal. Choose a memorable name that reflects your playing style while keeping it friendly and appropriate for all players.
+                                                Your username is your gaming identity in Cardopoly. Choose a memorable name that reflects your playing style while keeping it friendly and appropriate for all players.
                                             </p>
                                         </div>
                                     </div>
@@ -534,7 +534,7 @@ const UserSettings = () => {
                                                 <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>Use a unique password for your Monopoly Deal account to prevent unauthorized access</span>
+                                                <span>Use a unique password for your Cardopoly account to prevent unauthorized access</span>
                                             </li>
                                             <li className="flex items-start gap-2">
                                                 <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -33,7 +33,7 @@ const LandingPage = () => {
             New Release 🥳
           </div>
           <h1 className="text-7xl font-bold mb-6 text-black mt-10 leading-tight pb-2">
-            Monopoly Deal Digital
+            Cardopoly (Digital)
           </h1>
           <p className="text-2xl mb-8 text-gray-800 leading-relaxed">
             Experience the thrill of the classic card game in a modern digital format. 
@@ -137,7 +137,7 @@ const LandingPage = () => {
             </div>
             <h2 className="text-4xl font-bold mb-6 text-black mt-12">How to Play</h2>
             <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-              Master the game with these simple steps and become a Monopoly Deal champion!
+              Master the game with these simple steps and become a Cardopoly champion!
             </p>
           </motion.div>
 
@@ -192,7 +192,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <h2 className="text-4xl font-bold mb-8 text-black">Ready to Deal?</h2>
           <p className="text-xl mb-8 text-gray-700">
-            Join millions of players in the digital Monopoly Deal revolution. 
+            Join millions of players in the digital Cardopoly revolution. 
             Your property empire awaits!
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -224,7 +224,7 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-white/80 py-6 mt-20 border-t border-gray-200">
         <div className="container mx-auto px-4 text-center text-gray-700">
-          <p> 2024 Monopoly Deal Digital. All rights reserved.</p>
+          <p> 2024 Cardopoly. All rights reserved.</p>
         </div>
       </footer>
     </div>
