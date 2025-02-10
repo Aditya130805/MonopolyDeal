@@ -9,6 +9,7 @@ import UserSettings from './components/auth/UserSettings';
 import MainGame from './components/MainGame';
 import PrivateRoute from './components/auth/PrivateRoute';
 import PublicRoute from './components/auth/PublicRoute';
+import HowToPlay from './components/HowToPlay';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { DndProvider } from 'react-dnd';
@@ -43,6 +44,7 @@ function AppContent() { // New component to use the hook
             <div className="App">
           <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/how-to-play" element={<HowToPlay />} />
               <Route 
                 path="/login" 
                 element={

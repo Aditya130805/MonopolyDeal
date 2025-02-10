@@ -8,7 +8,8 @@ import {
   TrophyIcon,
   BookOpenIcon,
   PlayIcon,
-  BoltIcon
+  BoltIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import Navbar from './auth/Navbar';
@@ -58,16 +59,28 @@ const LandingPage = () => {
           </p>
           <div className="flex items-center justify-center gap-4">
             {user ? (
-              <Link to="/play">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-black text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  Start Playing
-                  <PlayIcon className="w-5 h-5 ml-2" />
-                </motion.button>
-              </Link>
+              <div className="mt-10 flex items-center justify-center gap-4">
+                <Link to="/play">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-black text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    Start Playing
+                    <PlayIcon className="w-5 h-5 ml-2" />
+                  </motion.button>
+                </Link>
+                <Link to="/how-to-play">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    How to Play
+                    <InformationCircleIcon className="w-5 h-5 ml-2" />
+                  </motion.button>
+                </Link>
+              </div>
             ) : (
               <Link to="/register">
                 <motion.button
@@ -214,15 +227,15 @@ const LandingPage = () => {
           </p>
           <div className="flex items-center justify-center gap-4">
             {user ? (
-              <Link to="/play">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-black px-10 py-4 rounded-full font-bold text-lg text-white shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  Start Playing Now
-                </motion.button>
-              </Link>
+                <Link to="/play">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-black px-10 py-4 rounded-full font-bold text-lg text-white shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    Start Playing Now
+                  </motion.button>
+                </Link>
             ) : (
               <Link to="/register">
                 <motion.button
