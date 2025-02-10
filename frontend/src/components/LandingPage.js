@@ -57,30 +57,18 @@ const LandingPage = () => {
             Experience the thrill of the classic card game in a modern digital format. 
             Build your property empire, outsmart your opponents, and become the ultimate real estate tycoon!
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="mt-10 flex items-center justify-center gap-4">
             {user ? (
-              <div className="mt-10 flex items-center justify-center gap-4">
-                <Link to="/play">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-black text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    Start Playing
-                    <PlayIcon className="w-5 h-5 ml-2" />
-                  </motion.button>
-                </Link>
-                <Link to="/how-to-play">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    How to Play
-                    <InformationCircleIcon className="w-5 h-5 ml-2" />
-                  </motion.button>
-                </Link>
-              </div>
+              <Link to="/play">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-black text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  Start Playing
+                  <PlayIcon className="w-5 h-5 ml-2" />
+                </motion.button>
+              </Link>
             ) : (
               <Link to="/register">
                 <motion.button
@@ -93,6 +81,16 @@ const LandingPage = () => {
                 </motion.button>
               </Link>
             )}
+            <Link to="/how-to-play">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-lg flex items-center shadow-lg hover:shadow-xl transition-shadow"
+              >
+                How to Play
+                <InformationCircleIcon className="w-5 h-5 ml-2" />
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
 
