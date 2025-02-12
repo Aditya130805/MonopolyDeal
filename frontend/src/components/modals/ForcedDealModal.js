@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const setRequirements = {
   'brown': 2,
@@ -18,16 +19,18 @@ const setRequirements = {
 
 const ForcedDealModal = ({ 
   isOpen, 
-  onClose, 
+  onClose,
   modalData,
   onPropertySelect 
 }) => {
-  if (!modalData || !modalData.gameState) return null;
+  if (!modalData) return null;
+
+  const { gameState, setGameState } = useGameState();
   
   const [selectedOpponentProperty, setSelectedOpponentProperty] = useState(null);
   const [selectedUserProperty, setSelectedUserProperty] = useState(null);
-  const player = modalData.gameState.players.find(p => p.id === modalData.userId);
-  const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+  const player = gameState.players.find(p => p.id === modalData.userId);
+  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
   const card = modalData.card;
 
   useEffect(() => {

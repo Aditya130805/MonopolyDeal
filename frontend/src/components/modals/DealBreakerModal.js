@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const DealBreakerModal = ({ 
   isOpen, 
@@ -9,10 +10,12 @@ const DealBreakerModal = ({
   modalData,
   onPropertySetSelect 
 }) => {
-  if (!modalData || !modalData.gameState) return null;
-  
+  if (!modalData) return null;
+
+  const { gameState, setGameState } = useGameState();
+
   const [selectedSet, setSelectedSet] = useState(null);
-  const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
   const card = modalData.card;
 
   useEffect(() => {

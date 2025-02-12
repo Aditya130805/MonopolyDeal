@@ -8,7 +8,7 @@ import JustSayNoModal from './modals/JustSayNoModal';
 const GameModals = ({
   // Rent Modal props
   rentModalOpen,
-  setRentModalOpen,
+  setRentModalData,
   rentModalData,
   handleRentPayment,
   
@@ -40,13 +40,8 @@ const GameModals = ({
     <>
       <RentModal
         isOpen={rentModalOpen}
-        onClose={() => setRentModalOpen(false)}
-        // modalData={rentModalData}
-        amountDue={rentModalData?.amountDue}
-        recipientName={rentModalData?.recipientName}
-        rentType={rentModalData?.rentType}
-        playerBank={rentModalData?.playerBank}
-        playerProperties={rentModalData?.playerProperties}
+        onClose={() => setRentModalData(prev => ({ ...prev, isVisible: false }))}
+        modalData={rentModalData}
         onPaymentSubmit={handleRentPayment}
       />
 

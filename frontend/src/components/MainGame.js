@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useGameState } from '../contexts/GameStateContext';
 import Navbar from './auth/Navbar';
 import MoneyCard from './cards/MoneyCard';
 import PropertyCard from './cards/PropertyCard';
@@ -160,9 +161,9 @@ const MainGame = () => {
   const { roomId } = useParams();
   const { socket } = useWebSocket();
   const { user } = useAuth();
+  const { gameState, setGameState } = useGameState();
   const [isSocketReady, setIsSocketReady] = useState(false);
   // const [hoveredCard, setHoveredCard] = useState(null);
-  const [gameState, setGameState] = useState(createEmptyGameState());
   const [playerHand, setPlayerHand] = useState([]);
   const [playerBank, setPlayerBank] = useState([]);
   const [playerProperties, setPlayerProperties] = useState({});
@@ -197,7 +198,6 @@ const MainGame = () => {
   const [pendingDealBreakerCard, setPendingDealBreakerCard] = useState(null);
   const [forcedDealModalData, setForcedDealModalData] = useState({
     isVisible: false,
-    gameState: null,
     card: null,
     opponentId: ''
   })
@@ -212,13 +212,11 @@ const MainGame = () => {
   });
   const [slyDealModalData, setSlyDealModalData] = useState({
     isVisible: false,
-    gameState: null,
     card: null,
     opponentId: '',
   })
   const [dealBreakerModalData, setDealBreakerModalData] = useState({
     isVisible: false,
-    gameState: null,
     card: null,
     opponentId: '',
   })
@@ -238,20 +236,13 @@ const MainGame = () => {
   })
   const [doubleRentAmount, setDoubleRentAmount] = useState(0);
 
-  // State for rent modal
-  const [rentModalOpen, setRentModalOpen] = useState(false);
-  // const [rentModalData, setRentModalData] = useState({
-  //   isVisible: false,
-  //   gameState: null,
-  //   opponentId: null,
-  //   userId: null,
-  //   card: null,
-  //   amountDue: 0,
-  //   // recipientName: opponentName,
-  //   rentType: null,
-  //   // playerBank: playerBank,
-  //   // playerProperties: playerProperties,
-  // })
+  const [rentModalData, setRentModalData] = useState({
+    isVisible: false,
+    opponentId: null,
+    userId: null,
+    amountDue: 0,
+    rentType: null,
+  })
 
   const [winner, setWinner] = useState(null);
   const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
@@ -277,6 +268,7 @@ const MainGame = () => {
     card: null,
     data: null
   });
+  const [pendingRentRequest, setPendingRentRequest] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -341,13 +333,8 @@ const MainGame = () => {
   };
 
   const handleRentRequest = (data) => {
-    setRentAmount(data.amount);
-    setRentRecipientId(data.recipient_id);
-    setRentType(data.rent_type);
-    
     if (data.recipient_id !== user.unique_id) {
-      // setRentModalData(prev => ({ ...prev, isVisible: true, opponentId: data.recipient_id, amountDue: data.amount, rentType: data.rent_type}))
-      setRentModalOpen(true);
+      setRentModalData(prev => ({ ...prev, isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type}))
     } else {
       // Show rent animation first for the player who played the rent card
       setShowActionAnimation({
@@ -377,11 +364,7 @@ const MainGame = () => {
     // Hide overlay for the player who requested rent
     setShowRentCollectionOverlay(false);
     // Clear states since rent collection is complete
-    // setRentModalData({...prev, isVisible: false, gameState: null, card: null, opponentId: null, amountDue: 0, rentType: null})
-    setRentModalOpen(false);
-    setRentAmount(0);
-    setRentRecipientId(null);
-    setRentType(null);
+    setRentModalData(prev => ({ ...prev, isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null}))
     setShowPaymentSuccessfulOverlay({
       isVisible: true,
       playerName: data.player_name,
@@ -616,6 +599,32 @@ const MainGame = () => {
     }
   }, [pendingPassGoCard]);
   useEffect(() => {
+    // if (pendingItsYourBirthdayCard) {
+    //   const opponent = gameState.players.find(player => player.id !== opponentId);
+    //   const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
+    //   const birthdayActionData = JSON.stringify({
+    //     action: "it's_your_birthday",
+    //     player: user.unique_id,
+    //     card: pendingItsYourBirthdayCard
+    //   })
+    //   if (justSayNoCard) {
+    //     socket.send(JSON.stringify({
+    //       action: "just_say_no_choice",
+    //       playing_player: opponentId,
+    //       against_player: user.unique_id,
+    //       card: justSayNoCard,
+    //       against_card: pendingItsYourBirthdayCard,
+    //       data: birthdayActionData
+    //     }))
+    //   } else {
+    //     setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
+    //     setTimeout(() => {
+    //       setShowActionAnimation(prev => ({ visible: false, action: '' }));
+    //     }, 2000);
+    //     socket.send(birthdayActionData);
+    //   }
+    //   setPendingItsYourBirthdayCard(null);
+    // }
     if (pendingItsYourBirthdayCard) {
       const justSayNoCard = opponentHand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
       if (justSayNoCard) {
@@ -814,7 +823,6 @@ const MainGame = () => {
 
       setSlyDealModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingSlyDealCard,
         opponentId: opponentId
       });
@@ -875,7 +883,6 @@ const MainGame = () => {
 
       setForcedDealModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingForcedDealCard,
         opponentId: opponentId
       })
@@ -900,7 +907,6 @@ const MainGame = () => {
 
       setDealBreakerModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingDealBreakerCard,
         opponentId: opponentId
       });
@@ -909,7 +915,7 @@ const MainGame = () => {
 
   // Handle sly deal property selection
   const handleSlyDealPropertySelectWrapper = (modalData, selectedProperty) => {
-    const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
     const card = modalData.card;
     const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
     if (justSayNoCard) {
@@ -943,7 +949,7 @@ const MainGame = () => {
 
   // Handle forced deal property selection
   const handleForcedDealSelectWrapper = (modalData, opponentProperty, userProperty) => {
-    const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
     const card = modalData.card;
     const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
     if (justSayNoCard) {
@@ -978,7 +984,7 @@ const MainGame = () => {
 
   // Handle deal breaker set selection
   const handleDealBreakerSetSelectWrapper = (modalData, selectedSet) => {
-    const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
     const card = modalData.card;
     const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
     if (justSayNoCard) {
@@ -1086,12 +1092,14 @@ const MainGame = () => {
   };
 
   // Handle rent payment
-  const handleRentPaymentWrapper = (selectedCards) => {
+  const handleRentPaymentWrapper = (modalData, selectedCards) => {
     // handleRentPayment(selectedCards, socket, user, rentRecipientId);
     const message = {
       action: 'rent_payment',
-      player: user.unique_id,
-      recipient_id: rentRecipientId,
+      // player: user.unique_id,
+      // recipient_id: rentRecipientId,
+      player: modalData.userId,
+      recipient_id: modalData.opponentId,
       card: {
         selected_cards: selectedCards.map(card => card.id),
       }
@@ -1244,31 +1252,19 @@ const MainGame = () => {
 
         {/* Game Modals */}
         <GameModals
-          rentModalOpen={rentModalOpen}
-          setRentModalOpen={setRentModalOpen}
+          rentModalOpen={rentModalData.isVisible}
+          setRentModalData={setRentModalData}
           rentModalData={{
-            amountDue: rentAmount,
-            recipientName: rentRecipientId === user.unique_id ? 'You' : opponentName,
-            rentType: rentType,
-            playerBank: playerBank,
-            playerProperties: playerProperties,
+            opponentId: rentModalData.opponentId,
+            userId: rentModalData.userId,
+            amountDue: rentModalData.amountDue,
+            rentType: rentModalData.rentType,
           }}
-          // rentModalOpen={rentModalData.isVisible}
-          // setRentModalData={setRentModalData}
-          // rentModalData={{
-          //   gameState: rentModalData.gameState,
-          //   card: rentModalData.card,
-          //   opponentId: rentModalData.opponentId,
-          //   userId: rentModalData.userId,
-          //   amountDue: rentModalData.amountDue,
-          //   rentType: rentModalData.rentType,
-          // }}
           handleRentPayment={handleRentPaymentWrapper}
           
           slyDealModalOpen={slyDealModalData.isVisible}
           setSlyDealModalData={setSlyDealModalData}
           slyDealModalData={{
-            gameState: slyDealModalData.gameState,
             opponentId: slyDealModalData.opponentId,
             card: slyDealModalData.card,
           }}
@@ -1277,7 +1273,6 @@ const MainGame = () => {
           forcedDealModalOpen={forcedDealModalData.isVisible}
           setForcedDealModalData={setForcedDealModalData}
           forcedDealModalData={{
-            gameState: forcedDealModalData.gameState,
             opponentId: forcedDealModalData.opponentId,
             userId: user.unique_id,
             card: forcedDealModalData.card,
@@ -1287,7 +1282,6 @@ const MainGame = () => {
           dealBreakerModalOpen={dealBreakerModalData.isVisible}
           setDealBreakerModalData={setDealBreakerModalData}
           dealBreakerModalData={{
-            gameState: dealBreakerModalData.gameState,
             opponentId: dealBreakerModalData.opponentId,
             card: dealBreakerModalData.card,
           }}

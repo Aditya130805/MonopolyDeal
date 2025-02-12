@@ -3,17 +3,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MoneyCard from '../cards/MoneyCard';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const RentModal = ({ 
   isOpen, 
-  onClose, 
-  amountDue,
-  recipientName,
-  rentType,
-  playerBank, 
-  playerProperties,
+  onClose,
+  modalData, 
   onPaymentSubmit 
 }) => {
+  if (!modalData || !isOpen) return null;
+
+  const { gameState, setGameState } = useGameState();
+  const amountDue = modalData.amountDue;
+  const rentType = modalData.rentType;
+  const player = gameState.players.find(p => p.id === modalData.userId);
+  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+
   const [selectedCards, setSelectedCards] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
   const [hasSelectedAll, setHasSelectedAll] = useState(false);
@@ -24,11 +29,11 @@ const RentModal = ({
       setTotalSelected(0);
       
       // If there are no selectable cards at all, set hasSelectedAll to true
-      const allCards = [...playerBank, ...Object.values(playerProperties).flat()];
+      const allCards = [...player.bank, ...Object.values(player.properties).flat()];
       const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
       setHasSelectedAll(nonWildCards.length === 0);
     }
-  }, [isOpen, playerBank, playerProperties]);
+  }, [isOpen, player.bank, player.properties]);
 
   const handleCardSelect = (card) => {
     // Don't allow selecting completely wild property cards
@@ -47,7 +52,7 @@ const RentModal = ({
     }
 
     // Check if all selectable cards have been selected
-    const allCards = [...playerBank, ...Object.values(playerProperties).flat()];
+    const allCards = [...player.bank, ...Object.values(player.properties).flat()];
     const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
     const selectedCount = selectedCards.length + (isSelected ? -1 : 1); // Account for the current card being toggled
     setHasSelectedAll(selectedCount === nonWildCards.length);
@@ -63,7 +68,7 @@ const RentModal = ({
   };
 
   const handleSubmit = () => {
-    onPaymentSubmit(selectedCards);
+    onPaymentSubmit(modalData, selectedCards);
     onClose();
   };
 
@@ -100,7 +105,7 @@ const RentModal = ({
         <div className="relative flex items-center justify-between mb-4 shrink-0">
           <div className="flex items-center gap-6">
             <div>
-              <div className="text-sm font-medium text-gray-500">Pay {recipientName}</div>
+              <div className="text-sm font-medium text-gray-500">Pay {opponent.name}</div>
               <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
                 {amountDue}M
               </div>
@@ -138,7 +143,7 @@ const RentModal = ({
               <div className="h-0.5 flex-1 bg-gradient-to-r from-blue-200 to-transparent"></div>
             </div>
             <div className="flex flex-wrap items-start gap-4 pr-4">
-              {playerBank.map(card => (
+              {player.bank.map(card => (
                 <motion.div 
                   key={card.id}
                   variants={cardVariants}
@@ -170,7 +175,7 @@ const RentModal = ({
               <div className="h-0.5 flex-1 bg-gradient-to-r from-blue-200 to-transparent"></div>
             </div>
             <div className="flex flex-wrap items-start gap-4 pr-4">
-              {Object.values(playerProperties).flat().map(card => (
+              {Object.values(player.properties).flat().map(card => (
                 <motion.div 
                   key={card.id}
                   variants={cardVariants}

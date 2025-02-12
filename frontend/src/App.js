@@ -12,6 +12,7 @@ import PublicRoute from './components/auth/PublicRoute';
 import HowToPlay from './components/HowToPlay';
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
+import { GameStateProvider } from './contexts/GameStateContext';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import './App.css';
@@ -20,13 +21,13 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent /> {/* Extract content to a separate component */}
+        <AppContent /> 
       </AuthProvider>
     </Router>
   );
 }
 
-function AppContent() { // New component to use the hook
+function AppContent() { 
   const { user } = useAuth();
   const [playerId, setPlayerId] = useState(null);
 
@@ -40,8 +41,9 @@ function AppContent() { // New component to use the hook
 
   return (
       <DndProvider backend={HTML5Backend}>
-        <WebSocketProvider playerId={playerId}> {/* ONE provider at the top */}
-            <div className="App">
+        <WebSocketProvider playerId={playerId}> 
+            <GameStateProvider>
+              <div className="App">
           <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/how-to-play" element={<HowToPlay />} />
@@ -100,6 +102,7 @@ function AppContent() { // New component to use the hook
               )}
             </Routes>
           </div>
+        </GameStateProvider>
         </WebSocketProvider>
       </DndProvider>
   );
