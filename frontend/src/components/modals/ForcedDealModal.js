@@ -22,8 +22,13 @@ const ForcedDealModal = ({
   modalData,
   onPropertySelect 
 }) => {
+  if (!modalData || !modalData.gameState) return null;
+  
   const [selectedOpponentProperty, setSelectedOpponentProperty] = useState(null);
   const [selectedUserProperty, setSelectedUserProperty] = useState(null);
+  const player = modalData.gameState.players.find(p => p.id === modalData.userId);
+  const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+  const card = modalData.card;
 
   useEffect(() => {
     if (isOpen) {
@@ -36,7 +41,7 @@ const ForcedDealModal = ({
     if (selectedOpponentProperty?.id === property.id) {
       setSelectedOpponentProperty(null);
     } else {
-      setSelectedOpponentProperty({ ...property, owner: { id: modalData.opponentId, name: modalData.opponentName } });
+      setSelectedOpponentProperty({ ...property, owner: { id: opponent.id, name: opponent.name } });
     }
   };
 
@@ -50,7 +55,7 @@ const ForcedDealModal = ({
 
   const handleSubmit = () => {
     if (selectedOpponentProperty && selectedUserProperty) {
-      onPropertySelect(selectedOpponentProperty, selectedUserProperty);
+      onPropertySelect(modalData, selectedOpponentProperty, selectedUserProperty);
       onClose();
     }
   };
@@ -234,13 +239,13 @@ const ForcedDealModal = ({
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                  {modalData.opponentName}'s Properties
+                  {opponent.name}'s Properties
                 </h3>
                 <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
               </div>
-              {Object.keys(modalData.opponentProperties).length > 0 ? (
+              {Object.keys(opponent.properties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {Object.entries(modalData.opponentProperties).map(([color, cards]) => (
+                  {Object.entries(opponent.properties).map(([color, cards]) => (
                     cards.map((card, index) => renderPropertyCard(card, color, cards, true))
                   ))}
                 </div>
@@ -266,9 +271,9 @@ const ForcedDealModal = ({
                 </h3>
                 <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
               </div>
-              {Object.keys(modalData.userProperties).length > 0 ? (
+              {Object.keys(player.properties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {Object.entries(modalData.userProperties).map(([color, cards]) => (
+                  {Object.entries(player.properties).map(([color, cards]) => (
                     cards.map((card, index) => renderPropertyCard(card, color, cards, false))
                   ))}
                 </div>

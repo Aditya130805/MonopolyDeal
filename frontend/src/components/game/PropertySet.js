@@ -1,10 +1,12 @@
 import React from 'react';
 import { HomeIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline';
 import { useDroppable } from '@dnd-kit/core';
+import { setRequirements } from '../../utils/gameUtils';
 
-const PropertySet = ({ properties, isOpponent = false, setRequirements, colorOrder, onDrop }) => {
+const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
   // properties is already grouped by color, no need to reduce
   const propertyGroups = properties || {};
+  const colorOrder = ['brown', 'mint', 'blue', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'black'];
 
   const { setNodeRef, isOver } = !isOpponent && onDrop ? useDroppable({
     id: 'property-main'

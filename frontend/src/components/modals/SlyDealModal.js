@@ -2,19 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-
-const setRequirements = {
-  'brown': 2,
-  'mint': 2,
-  'blue': 2,
-  'light blue': 3,
-  'pink': 3,
-  'orange': 3,
-  'red': 3,
-  'yellow': 3,
-  'green': 3,
-  'black': 4,
-};
+import { setRequirements, splitProperties } from '../../utils/gameUtils';
 
 const SlyDealModal = ({ 
   isOpen, 
@@ -22,7 +10,11 @@ const SlyDealModal = ({
   modalData,
   onPropertySelect,
 }) => {
+  if (!modalData || !modalData.gameState) return null;
+  
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const opponent = modalData.gameState.players.find(p => p.id === modalData.opponentId);
+  const card = modalData.card;
 
   useEffect(() => {
     if (isOpen) {
@@ -34,13 +26,14 @@ const SlyDealModal = ({
     if (selectedProperty?.id === property.id) {
       setSelectedProperty(null);
     } else {
-      setSelectedProperty({ ...property, owner: { id: modalData.opponentId, name: modalData.opponentName } });
+      // setSelectedProperty({ ...property, owner: { id: modalData.opponentId, name: modalData.opponentName } });
+      setSelectedProperty({ ...property, owner: { id: opponent.id, name: opponent.name } });
     }
   };
 
   const handleSubmit = () => {
     if (selectedProperty) {
-      onPropertySelect(selectedProperty);
+      onPropertySelect(modalData, selectedProperty);
       onClose();
     }
   };
@@ -58,49 +51,6 @@ const SlyDealModal = ({
       y: -10,
       transition: { type: "spring", stiffness: 500, damping: 30 }
     }
-  };
-
-  const splitProperties = (properties) => {
-    const mainSets = {};
-    const overflowSets = {};
-
-    Object.entries(properties).forEach(([color, cards]) => {
-      if (!Array.isArray(cards)) {
-        mainSets[color] = [];
-        return;
-      }
-
-      const propertyCards = cards.filter(card => card && card.type === 'property');
-      const requiredCards = setRequirements[color] || 0;
-      const houseCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'house');
-      const hotelCards = cards.filter(card => card.type === 'action' && card.name.toLowerCase() === 'hotel');
-
-      // Add property cards to mainSets up to requiredCards
-      mainSets[color] = propertyCards.slice(0, requiredCards);
-
-      // Place house and hotel cards in mainSets
-      if (houseCards.length > 0) {
-        mainSets[color].push(houseCards[0]);
-      }
-      if (hotelCards.length > 0) {
-        mainSets[color].push(hotelCards[0]);
-      }
-
-      // Add excess property cards to overflowSets
-      if (propertyCards.length > requiredCards) {
-        overflowSets[color] = propertyCards.slice(requiredCards);
-      }
-
-      // Add remaining house and hotel cards to overflowSets
-      if (houseCards.length > 1) {
-        overflowSets[color] = (overflowSets[color] || []).concat(houseCards.slice(1));
-      }
-      if (hotelCards.length > 1) {
-        overflowSets[color] = (overflowSets[color] || []).concat(hotelCards.slice(1));
-      }
-    });
-
-    return { mainSets, overflowSets };
   };
 
   const isInMainSet = (card, color, mainSets) => {
@@ -220,13 +170,16 @@ const SlyDealModal = ({
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                  {modalData.opponentName}'s Properties
+                  {/* {modalData.opponentName}'s Properties */}
+                  {opponent.name}'s Properties
                 </h3>
                 <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
               </div>
-              {Object.keys(modalData.opponentProperties).length > 0 ? (
+              {/* {Object.keys(modalData.opponentProperties).length > 0 ? ( */}
+              {Object.keys(opponent.properties).length > 0 ? (
                 <div className="flex flex-wrap items-start gap-4">
-                  {Object.entries(modalData.opponentProperties).map(([color, cards]) => (
+                  {/* {Object.entries(modalData.opponentProperties).map(([color, cards]) => ( */}
+                  {Object.entries(opponent.properties).map(([color, cards]) => (
                     cards.map((card, index) => renderPropertyCard(card, color, cards))
                   ))}
                 </div>

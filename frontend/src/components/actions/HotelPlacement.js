@@ -1,3 +1,5 @@
+import { setRequirements, splitProperties } from "../../utils/gameUtils";
+
 const colorStyles = {
   'brown': '#92400E',
   'light blue': '#7DD3FC',
@@ -11,9 +13,10 @@ const colorStyles = {
   'mint': '#A7F3D0'
 };
 
-export const handleHotelPlacement = (card, playerProperties, setError, socket, user, setRequirements, mainSets, overflowSets) => {
+export const handleHotelPlacement = (card, playerProperties, setError, socket, user) => {
   
   let completeSets = [];
+  let { mainSets, overflowSets } = splitProperties(playerProperties);
 
   // First find complete sets in mainSets that have a house but no hotel
   Object.entries(mainSets).forEach(([color, cards]) => {
