@@ -34,7 +34,6 @@ import { handleRentPayment, handleDoubleRentResponse } from './actions/RentActio
 import { handleSlyDealPropertySelect, handleForcedDealSelect, handleDealBreakerSetSelect } from './actions/PropertyActions';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
 import { handleWebSocketMessage } from './actions/WebSocketHandlers';
-import { createEmptyGameState, createPlayerState, setGameStateFromBackend } from '../types/gameState';
 import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers } from '../utils/gameUtils';
 
 const DraggableCard = memo(({ card, children }) => {
@@ -161,7 +160,7 @@ const MainGame = () => {
   const { roomId } = useParams();
   const { socket } = useWebSocket();
   const { user } = useAuth();
-  const { gameState, setGameState } = useGameState();
+  const { gameState, setGameState, setGameStateFromBackend } = useGameState();
   const [isSocketReady, setIsSocketReady] = useState(false);
   // const [hoveredCard, setHoveredCard] = useState(null);
   const [playerHand, setPlayerHand] = useState([]);
