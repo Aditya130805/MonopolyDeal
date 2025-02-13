@@ -6,7 +6,6 @@ import { useWebSocket } from '../../contexts/WebSocketContext';
 import { useGameState } from '../../contexts/GameStateContext';
 
 const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
-  console.log("Modal data:", isOpen, modalData);
   const { socket } = useWebSocket();
   const { gameState, setGameState } = useGameState();
   const player = gameState.players.find(p => p.id === modalData.playerId);

@@ -35,7 +35,7 @@ import { handleSlyDealPropertySelect, handleForcedDealSelect, handleDealBreakerS
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
 import { handleWebSocketMessage } from './actions/WebSocketHandlers';
 import { createEmptyGameState, createPlayerState, setGameStateFromBackend } from '../types/gameState';
-import { setRequirements, splitProperties, getCurrentPlayer, getOpponentPlayers, getOpponentById } from '../utils/gameUtils';
+import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers } from '../utils/gameUtils';
 
 const DraggableCard = memo(({ card, children }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -382,7 +382,6 @@ const MainGame = () => {
 
   const handleGameUpdate = (data) => {
     const state = data.state;
-    console.log("Received state:", state);
     setGameState(setGameStateFromBackend(state));
     
     // Use state directly instead of gameState since it's the new data
@@ -573,7 +572,7 @@ const MainGame = () => {
   }, [pendingHotelCard])
   useEffect(() => {
     if (pendingPassGoCard) {
-      let playerHand = getCurrentPlayer(gameState, user.unique_id).hand;
+      let playerHand = gameState.find(player => player.unique_id === user.unique_id).hand;
       let actionsRemaining = gameState.actions_remaining;
       if (2 - 1 + playerHand.length - (actionsRemaining - 1) > 7) {
         setError('Pass Go cannot be played as it will exceed the 7-card limit');

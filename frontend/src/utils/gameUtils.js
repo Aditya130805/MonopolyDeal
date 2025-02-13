@@ -74,10 +74,10 @@ export const splitProperties = (properties) => {
 };
 
 /**
- * Gets the current player object from the game state
+ * Gets a specific player by their ID
  */
-export const getCurrentPlayer = (gameState, userId) => {
-  return gameState.players.find(player => player.id === userId);
+export const getPlayerById = (gameState, playerId) => {
+  return gameState.players.find(player => player.id === playerId);
 };
 
 /**
@@ -85,11 +85,4 @@ export const getCurrentPlayer = (gameState, userId) => {
  */
 export const getOpponentPlayers = (gameState, userId) => {
   return gameState.players.filter(player => player.id !== userId);
-};
-
-/**
- * Gets a specific opponent by their ID
- */
-export const getOpponentById = (gameState, opponentId) => {
-  return gameState.players.find(player => player.id === opponentId);
 };
