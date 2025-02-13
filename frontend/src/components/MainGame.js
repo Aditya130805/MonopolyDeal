@@ -175,9 +175,14 @@ const MainGame = () => {
   const [cardNotifications, setCardNotifications] = useState([]);
   const cardNotificationTimeoutRef = useRef(null);
   const rentCollectionTimeoutRef = useRef(null);
-  // const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
-  const [rentCollectionOverlayData, setRentCollectionOverlayData] = useState({ isVisible: false });
   const isUserTurnRef = useRef(false);
+  const [rentAmount, setRentAmount] = useState(0);
+  const [rentRecipientId, setRentRecipientId] = useState(null);
+  const [rentType, setRentType] = useState(null);
+  const [doubleRentAmount, setDoubleRentAmount] = useState(0);
+  const [winner, setWinner] = useState(null);
+
+  ////////// PENDING CARDS VARS
   const [pendingHouseCard, setPendingHouseCard] = useState(null);
   const [pendingHotelCard, setPendingHotelCard] = useState(null);
   const [pendingPassGoCard, setPendingPassGoCard] = useState(null);
@@ -187,89 +192,56 @@ const MainGame = () => {
   const [pendingSlyDealCard, setPendingSlyDealCard] = useState(null);
   const [pendingForcedDealCard, setPendingForcedDealCard] = useState(null);
   const [pendingDealBreakerCard, setPendingDealBreakerCard] = useState(null);
-  const [forcedDealModalData, setForcedDealModalData] = useState({
-    isVisible: false,
-    card: null,
-    opponentId: ''
-  })
-  const [rentAmount, setRentAmount] = useState(0);
-  const [rentRecipientId, setRentRecipientId] = useState(null);
-  const [rentType, setRentType] = useState(null);
+
+  ////////// OVERLAY DATA VARS
+  const [winnerOverlayData, setWinnerOverlayData] = useState({ 
+    isVisible: false, winner: ""
+  });
+  const [tieOverlayData, setTieOverlayData] = useState({ 
+    isVisible: false 
+  });
+  const [rentCollectionOverlayData, setRentCollectionOverlayData] = useState({ 
+    isVisible: false 
+  });
+  const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({ 
+    isVisible: false, playerId: "" 
+  });
+  const [justSayNoPlayedOverlayData, setJustSayNoPlayedOverlayData] = useState({
+    isVisible: false, playingPlayerId: "", againstPlayerId: "", actionCard: null, justSayNoCard: null
+  });
   const [paymentSuccessfulOverlayData, setPaymentSuccessfulOverlayData] = useState({
-    isVisible: false,
-    playerId: '',
-    targetId: '',
-    selectedCards: []
-  })
-  const [slyDealModalData, setSlyDealModalData] = useState({
-    isVisible: false,
-    card: null,
-    opponentId: '',
-  })
-  const [dealBreakerModalData, setDealBreakerModalData] = useState({
-    isVisible: false,
-    card: null,
-    opponentId: '',
-  })
+    isVisible: false, playerId: '', targetId: '', selectedCards: []
+  });
   const [propertyStealOverlayData, setPropertyStealOverlayData] = useState({
-    isVisible: false,
-    property: null,
-    stealerId: '',
-    targetId: '',
-  })
+    isVisible: false, property: null, stealerId: '', targetId: ''
+  });
   const [propertySwapOverlayData, setPropertySwapOverlayData] = useState({
-    isVisible: false,
-    property1: null,
-    property2: null,
-    player1Id: '',
-    player2Id: ''
-  })
+    isVisible: false, property1: null, property2: null, player1Id: '', player2Id: ''
+  });
   const [dealBreakerOverlayData, setDealBreakerOverlayData] = useState({
-    isVisible: false,
-    stealerId: '',
-    targetId: '',
-    color: '',
-    propertySet: []
+    isVisible: false, stealerId: '', targetId: '', color: '', propertySet: []
+  });
+
+  ////////// MODAL DATA VARS
+  const [justSayNoModalData, setJustSayNoModalData] = useState({
+    isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+  });
+  const [rentModalData, setRentModalData] = useState({
+    isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null
   });
   const [doubleRentModalData, setDoubleRentModalData] = useState({
-    isVisible: false,
-    doubleRentAmount: 0,
-    opponentId: ''
-  })
-  const [doubleRentAmount, setDoubleRentAmount] = useState(0);
-
-  const [rentModalData, setRentModalData] = useState({
-    isVisible: false,
-    opponentId: null,
-    userId: null,
-    amountDue: 0,
-    rentType: null,
-  })
-
-  const [winner, setWinner] = useState(null);
-  const [winnerOverlayData, setWinnerOverlayData] = useState({ isVisible: false, winner: "" });
-  const [tieOverlayData, setTieOverlayData] = useState({ isVisible: false });
-  const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({
-    isVisible: false,
-    playerId: ""
-  })
-  const [justSayNoPlayedOverlayData, setJustSayNoPlayedOverlayData] = useState({
-    isVisible: false,
-    playingPlayerId: "",
-    againstPlayerId: "",
-    actionCard: null,
-    justSayNoCard: null
+    isVisible: false, doubleRentAmount: 0, opponentId: ''
   });
-  const [justSayNoModalData, setJustSayNoModalData] = useState({
-    isVisible: false,
-    playerId: "",
-    opponentId: "",
-    againstCard: null,
-    againstRentCard: null,
-    card: null,
-    data: null
+  const [slyDealModalData, setSlyDealModalData] = useState({
+    isVisible: false, card: null, opponentId: ''
   });
-  const [pendingRentRequest, setPendingRentRequest] = useState(null);
+  const [forcedDealModalData, setForcedDealModalData] = useState({
+    isVisible: false, card: null, opponentId: ''
+  });
+  const [dealBreakerModalData, setDealBreakerModalData] = useState({
+    isVisible: false, card: null, opponentId: ''
+  });
+
 
   useEffect(() => {
     return () => {
