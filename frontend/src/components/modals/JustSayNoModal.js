@@ -3,19 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ActionCard from '../cards/ActionCard';
 import PropertyCard from '../cards/PropertyCard';
 import { useWebSocket } from '../../contexts/WebSocketContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
+  console.log("Modal data:", isOpen, modalData);
   const { socket } = useWebSocket();
+  const { gameState, setGameState } = useGameState();
+  const player = gameState.players.find(p => p.id === modalData.playerId);
+  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
 
   const handleResponse = (wantsToPlayJustSayNo) => {
     if (socket) {
       socket.send(JSON.stringify({
         action: 'just_say_no_response',
         play_just_say_no: wantsToPlayJustSayNo,
-        playing_player: modalData.playingPlayer,
-        against_player: modalData.againstPlayer,
-        playing_player_name: modalData.playingPlayerName,
-        against_player_name: modalData.againstPlayerName,
+        playing_player: modalData.playerId,
+        against_player: modalData.opponentId,
+        playing_player_name: player.name,
+        against_player_name: opponent.name,
         card: modalData.card,
         against_card: modalData.againstCard,
         against_rent_card: modalData.againstRentCard,
@@ -51,7 +56,7 @@ const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
             >
               <h2 className="text-3xl font-bold text-white mb-2">Just Say No?</h2>
               <p className="text-purple-100 text-lg">
-                {modalData.againstPlayerName} has played an action against you! Counter it?
+                {opponent.name} has played an action against you! Counter it?
               </p>
             </motion.div>
 

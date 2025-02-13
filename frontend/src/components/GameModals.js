@@ -32,7 +32,7 @@ const GameModals = ({
   
   // Just Say No Modal props
   justSayNoModalOpen,
-  setJustSayNoModalOpen,
+  setJustSayNoModalData,
   justSayNoModalData,
   handleJustSayNoResponse
 }) => {
@@ -68,7 +68,7 @@ const GameModals = ({
 
       <JustSayNoModal
         isOpen={justSayNoModalOpen}
-        onClose={() => setJustSayNoModalOpen(false)}
+        onClose={() => setJustSayNoModalData(prev => ({ ...prev, isVisible: false }))}
         modalData={justSayNoModalData}
         onResponse={handleJustSayNoResponse}
       />

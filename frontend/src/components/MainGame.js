@@ -257,12 +257,10 @@ const MainGame = () => {
     againstPlayerName: "",
     actionCard: null
   });
-  const [showJustSayNoModal, setShowJustSayNoModal] = useState({
+  const [justSayNoModalData, setJustSayNoModalData] = useState({
     isVisible: false,
-    playingPlayer: "",
-    againstPlayer: "",
-    playingPlayerName: "",
-    againstPlayerName: "",
+    playerId: "",
+    opponentId: "",
     againstCard: null,
     againstRentCard: null,
     card: null,
@@ -439,13 +437,12 @@ const MainGame = () => {
             isVisible: false,
             playerName: ""
           });
-          setShowJustSayNoModal({
+          setJustSayNoModalData({
             isVisible: false,
-            playingPlayer: "",
-            againstPlayer: "",
-            playingPlayerName: "",
-            againstPlayerName: "",
+            playerId: "",
+            opponentId: "",
             againstCard: null,
+            againstRentCard: null,
             card: null,
             data: null
           });
@@ -477,12 +474,10 @@ const MainGame = () => {
           }));
           
           if (data.playing_player === user.unique_id) {
-            setShowJustSayNoModal({
+            setJustSayNoModalData({
               isVisible: true,
-              playingPlayer: data.playing_player,
-              againstPlayer: data.against_player,
-              playingPlayerName: data.playing_player_name,
-              againstPlayerName: data.against_player_name,
+              playerId: data.playing_player,
+              opponentId: data.against_player,
               againstCard: data.against_card,
               againstRentCard: data.against_rent_card,
               card: data.card,
@@ -499,13 +494,12 @@ const MainGame = () => {
               playerName: data.playing_player_name
             });
             // Clear the modal when showing waiting overlay
-            setShowJustSayNoModal({
+            setJustSayNoModalData({
               isVisible: false,
-              playingPlayer: "",
-              againstPlayer: "",
-              playingPlayerName: "",
-              againstPlayerName: "",
+              playerId: "",
+              opponentId: "",
               againstCard: null,
+              againstRentCard: null,
               card: null,
               data: null
             });
@@ -1286,18 +1280,16 @@ const MainGame = () => {
             card: dealBreakerModalData.card,
           }}
           handleDealBreakerPropertySetSelect={handleDealBreakerSetSelectWrapper}
-          
-          justSayNoModalOpen={showJustSayNoModal.isVisible}
-          setJustSayNoModalOpen={setShowJustSayNoModal}
+
+          justSayNoModalOpen={justSayNoModalData.isVisible}
+          setJustSayNoModalData={setJustSayNoModalData}
           justSayNoModalData={{
-            playingPlayer: showJustSayNoModal.playingPlayer,
-            againstPlayer: showJustSayNoModal.againstPlayer,
-            playingPlayerName: showJustSayNoModal.playingPlayerName,
-            againstPlayerName: showJustSayNoModal.againstPlayerName,
-            againstCard: showJustSayNoModal.againstCard,
-            againstRentCard: showJustSayNoModal.againstRentCard,
-            card: showJustSayNoModal.card,
-            data: showJustSayNoModal.data
+            playerId: justSayNoModalData.playerId,
+            opponentId: justSayNoModalData.opponentId,
+            againstCard: justSayNoModalData.againstCard,
+            againstRentCard: justSayNoModalData.againstRentCard,
+            card: justSayNoModalData.card,
+            data: justSayNoModalData.data
           }}
           handleJustSayNoResponse={() => {}}
         />
