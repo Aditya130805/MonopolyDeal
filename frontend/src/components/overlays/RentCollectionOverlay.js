@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const RentCollectionOverlay = ({ isVisible }) => {
+const RentCollectionOverlay = ({ isVisible, onClose, overlayData }) => {
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
+      {isVisible && overlayData && (
         <motion.div
+          className="fixed inset-0 bg-black bg-opacity-90 z-[9999] flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed inset-0 bg-black bg-opacity-90 z-[9999] flex items-center justify-center"
+          transition={{ duration: 0.3 }}
         >
           <div className="text-center">
             <motion.div

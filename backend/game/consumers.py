@@ -260,8 +260,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'recipient_id': recipient_id,
                         'player_id': player_id,
                         'selected_cards': transferred_cards,  
-                        'player_name': paying_player.name,
-                        'recipient_name': receiving_player.name
+                        # 'player_name': paying_player.name,
+                        # 'recipient_name': receiving_player.name
                     }
                 )
                 # self.manage_turns(game_state)
@@ -589,8 +589,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 self.game_group_name,
                 {
                     'type': 'broadcast_deal_breaker_overlay',
-                    'player_name': player.name,
-                    'target_name': target_player.name,
+                    'stealerId': player.id,
+                    'targetId': target_player.id,
                     'color': target_color,
                     'property_set': [card.to_dict() for card in cards_to_transfer]
                 }
@@ -862,8 +862,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             'recipient_id': event['recipient_id'],
             'player_id': event['player_id'],
             'selected_cards': event['selected_cards'],
-            'player_name': event['player_name'],
-            'recipient_name': event['recipient_name']
+            # 'player_name': event['player_name'],
+            # 'recipient_name': event['recipient_name']
         }))
 
     async def broadcast_room_update(self, event):
@@ -899,8 +899,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         """Send deal breaker overlay data to the client"""
         await self.send(text_data=json.dumps({
             'type': 'deal_breaker_overlay',
-            'player_name': event['player_name'],
-            'target_name': event['target_name'],
+            'stealerId': event['stealerId'],
+            'targetId': event['targetId'],
             'color': event['color'],
             'property_set': event['property_set']
         }))

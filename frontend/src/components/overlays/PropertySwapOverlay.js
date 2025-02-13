@@ -1,64 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
+import { useAuth } from '../../contexts/AuthContext';
+import { useGameState } from '../../contexts/GameStateContext';
+import { colorMap, getPropertyWithDefaults } from '../../utils/gameUtils';
 
-const PropertySwapOverlay = ({ animation, onComplete, user }) => {
-  const [isVisible, setIsVisible] = useState(false);
+const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
+  const { user } = useAuth();
+  const { gameState } = useGameState();
+  
+  const property1 = overlayData?.property1;
+  const property2 = overlayData?.property2;
+  const player1Id = overlayData?.player1Id;
+  const player2Id = overlayData?.player2Id;
+  const player1Name = gameState.players.find(p => p.id === player1Id)?.name;
+  const player2Name = gameState.players.find(p => p.id === player2Id)?.name;
 
   useEffect(() => {
-    if (animation) {
-      setIsVisible(true);
+    if (isVisible) {
+      // Auto-close the overlay after 2 seconds
       const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(onComplete, 300); // Call onComplete after exit animation
+        onClose();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [animation, onComplete]);
+  }, [isVisible, onClose]);
 
-  if (!animation) return null;
-
-  const { property1, property2, player1Id, player2Id, player1Name, player2Name } = animation;
   const isUserInvolved = player1Id === user.unique_id || player2Id === user.unique_id;
   const isUserPlayer1 = player1Id === user.unique_id;
 
   const getColorStyle = (property) => {
-    const colorMap = {
-      'brown': { bg: '#8B4513', text: '#F3EBE5', gradient: ['#8B4513DD', '#A0522DDD', '#B8860BDD'] },
-      'light blue': { bg: '#87CDDB', text: '#F0FAFF', gradient: ['#87CDDBDD', '#98D3EDDD', '#ADD8E6DD'] },
-      'pink': { bg: '#FF1493', text: '#FFF0F7', gradient: ['#FF1493DD', '#FF69B4DD', '#FFB6C1DD'] },
-      'orange': { bg: '#FF7C2D', text: '#FFF4F0', gradient: ['#FF7C2DDD', '#FFA54FDD', '#FFB366DD'] },
-      'red': { bg: '#FF0000', text: '#FFF0F0', gradient: ['#FF0000DD', '#FF4444DD', '#FF6666DD'] },
-      'yellow': { bg: '#FFE026', text: '#FFFBF0', gradient: ['#FFE026DD', '#FFE44DDD', '#FFE875DD'] },
-      'green': { bg: '#00A352', text: '#F0FFF7', gradient: ['#00A352DD', '#00B359DD', '#00C364DD'] },
-      'blue': { bg: '#0055DD', text: '#F0F7FF', gradient: ['#0055DDDD', '#1E69FFDD', '#3C7FFFDD'] },
-      'mint': { bg: '#C8E0CF', text: '#F2F9F4', gradient: ['#C8E0CFDD', '#D1E6D7DD', '#DAECDFDD'] },
-    };
-    return colorMap[property.color] || { bg: '#4A5568', text: '#FFFFFF', gradient: ['#4A5568DD', '#5A6678DD', '#6B7888DD'] };
+    return property ? (colorMap[property.color] || { bg: '#4A5568', text: '#FFFFFF', gradient: ['#4A5568DD', '#5A6678DD', '#6B7888DD'] }) : {};
   };
 
   const colorStyle = getColorStyle(property1);
 
-  // Ensure properties have all required fields for PropertyCard
-  const getPropertyWithDefaults = (property) => ({
-    name: property.name || 'Unknown',
-    color: property.color || 'gray',
-    value: property.value || 0,
-    rent: property.rent || [1],
-    isWild: property.isWild || false,
-    isUtility: property.isUtility || false,
-    isRailroad: property.isRailroad || false,
-    width: 160,
-    height: 220,
-    ...property
-  });
-
-  const property1WithDefaults = getPropertyWithDefaults(property1);
-  const property2WithDefaults = getPropertyWithDefaults(property2);
+  const property1WithDefaults = property1 ? getPropertyWithDefaults(property1) : null;
+  const property2WithDefaults = property2 ? getPropertyWithDefaults(property2) : null;
 
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
+      {isVisible && overlayData && (
         <motion.div
           className="fixed inset-0 flex items-center justify-center z-[9999]"
           initial={{ opacity: 0 }}

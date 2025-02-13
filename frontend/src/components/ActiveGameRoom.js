@@ -69,10 +69,6 @@ const ActiveGameRoom = () => {
   };
 
   const handleStartGame = () => {
-    if (players.length !== 2) {
-      setErrors(prev => [...prev, { id: Date.now(), message: "Sorry, we're currently supporting only 2-player games. 3-4 player options are coming soon! 🎮" }]);
-      return;
-    }
     if (socket) {
       socket.send(JSON.stringify({
         action: 'start_game',

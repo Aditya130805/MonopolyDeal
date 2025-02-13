@@ -14,16 +14,7 @@ import ActionAnimation from './overlays/ActionAnimation';
 import CardNotification from './notifications/CardNotification';
 import GameModals from './GameModals';
 import ErrorNotification from './notifications/ErrorNotification';
-import RentCollectionOverlay from './overlays/RentCollectionOverlay';
-import PaymentSuccessfulOverlay from './overlays/PaymentSuccessfulOverlay';
-import PropertyStealOverlay from './overlays/PropertyStealOverlay';
-import PropertySwapOverlay from './overlays/PropertySwapOverlay';
-import DealBreakerOverlay from './overlays/DealBreakerOverlay';
-import DoubleRentOverlay from './overlays/DoubleRentOverlay';
-import WinnerOverlay from './overlays/WinnerOverlay';
-import TieOverlay from './overlays/TieOverlay';
-import JustSayNoChoiceWaitingOverlay from './overlays/JustSayNoChoiceWaitingOverlay';
-import JustSayNoPlayedOverlay from './overlays/JustSayNoPlayedOverlay';
+import GameOverlays from './GameOverlays';
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, DragOverlay } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
@@ -184,7 +175,8 @@ const MainGame = () => {
   const [cardNotifications, setCardNotifications] = useState([]);
   const cardNotificationTimeoutRef = useRef(null);
   const rentCollectionTimeoutRef = useRef(null);
-  const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
+  // const [showRentCollectionOverlay, setShowRentCollectionOverlay] = useState(false);
+  const [rentCollectionOverlayData, setRentCollectionOverlayData] = useState({ isVisible: false });
   const isUserTurnRef = useRef(false);
   const [pendingHouseCard, setPendingHouseCard] = useState(null);
   const [pendingHotelCard, setPendingHotelCard] = useState(null);
@@ -203,12 +195,12 @@ const MainGame = () => {
   const [rentAmount, setRentAmount] = useState(0);
   const [rentRecipientId, setRentRecipientId] = useState(null);
   const [rentType, setRentType] = useState(null);
-  const [showPaymentSuccessfulOverlay, setShowPaymentSuccessfulOverlay] = useState({
+  const [paymentSuccessfulOverlayData, setPaymentSuccessfulOverlayData] = useState({
     isVisible: false,
-    playerName: '',
-    targetName: '',
+    playerId: '',
+    targetId: '',
     selectedCards: []
-  });
+  })
   const [slyDealModalData, setSlyDealModalData] = useState({
     isVisible: false,
     card: null,
@@ -219,19 +211,30 @@ const MainGame = () => {
     card: null,
     opponentId: '',
   })
-  const [propertyStealAnimation, setPropertyStealAnimation] = useState(null);
-  const [propertySwapAnimation, setPropertySwapAnimation] = useState(null);
-  const [dealBreakerOverlay, setDealBreakerOverlay] = useState({
+  const [propertyStealOverlayData, setPropertyStealOverlayData] = useState({
     isVisible: false,
-    playerName: '',
-    targetName: '',
+    property: null,
+    stealerId: '',
+    targetId: '',
+  })
+  const [propertySwapOverlayData, setPropertySwapOverlayData] = useState({
+    isVisible: false,
+    property1: null,
+    property2: null,
+    player1Id: '',
+    player2Id: ''
+  })
+  const [dealBreakerOverlayData, setDealBreakerOverlayData] = useState({
+    isVisible: false,
+    stealerId: '',
+    targetId: '',
     color: '',
     propertySet: []
   });
-  const [showDoubleRentOverlay, setShowDoubleRentOverlay] = useState({
+  const [doubleRentModalData, setDoubleRentModalData] = useState({
     isVisible: false,
     doubleRentAmount: 0,
-    opponentHand: []
+    opponentId: ''
   })
   const [doubleRentAmount, setDoubleRentAmount] = useState(0);
 
@@ -244,17 +247,18 @@ const MainGame = () => {
   })
 
   const [winner, setWinner] = useState(null);
-  const [showWinnerOverlay, setShowWinnerOverlay] = useState(false);
-  const [showTieOverlay, setShowTieOverlay] = useState(false);
-  const [showJustSayNoChoiceWaitingOverlay, setShowJustSayNoChoiceWaitingOverlay] = useState({
+  const [winnerOverlayData, setWinnerOverlayData] = useState({ isVisible: false, winner: "" });
+  const [tieOverlayData, setTieOverlayData] = useState({ isVisible: false });
+  const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({
     isVisible: false,
-    playerName: ""
-  });
-  const [showJustSayNoPlayedOverlay, setShowJustSayNoPlayedOverlay] = useState({
+    playerId: ""
+  })
+  const [justSayNoPlayedOverlayData, setJustSayNoPlayedOverlayData] = useState({
     isVisible: false,
-    playingPlayerName: "",
-    againstPlayerName: "",
-    actionCard: null
+    playingPlayerId: "",
+    againstPlayerId: "",
+    actionCard: null,
+    justSayNoCard: null
   });
   const [justSayNoModalData, setJustSayNoModalData] = useState({
     isVisible: false,
@@ -346,7 +350,8 @@ const MainGame = () => {
         // Hide action animation (will trigger fade out)
         setShowActionAnimation(prev => ({ ...prev, visible: false }));
         // Show rent collection overlay
-        setShowRentCollectionOverlay(true);
+        // setShowRentCollectionOverlay(true);
+        setRentCollectionOverlayData({ isVisible: true })
       }, 2000);
     }
   };
@@ -359,23 +364,19 @@ const MainGame = () => {
     }
     
     // Hide overlay for the player who requested rent
-    setShowRentCollectionOverlay(false);
+    // setShowRentCollectionOverlay(false);
+    setRentCollectionOverlayData({ isVisible: false });
     // Clear states since rent collection is complete
     setRentModalData(prev => ({ ...prev, isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null}))
-    setShowPaymentSuccessfulOverlay({
+    setPaymentSuccessfulOverlayData({
       isVisible: true,
-      playerName: data.player_name,
-      targetName: data.recipient_name,
+      playerId: data.player_id,
+      targetId: data.recipient_id,
       selectedCards: data.selected_cards
-    });
+    })
     // Hide overlay after 2 seconds
     setTimeout(() => {
-      setShowPaymentSuccessfulOverlay({
-        isVisible: false,
-        playerName: '',
-        targetName: '',
-        selectedCards: []
-      });
+      setPaymentSuccessfulOverlayData({ isVisible: false, playerId: '', targetId: '', selectedCards: []})
     }, 2000);
   };
 
@@ -414,12 +415,14 @@ const MainGame = () => {
     // Handle winner or tie
     if (state.winner) {
       setWinner(state.winner);
-      setShowWinnerOverlay(true);
+      // setShowWinnerOverlay(true);
+      setWinnerOverlayData({ isVisible: true, winner: state.winner });
     } else if (state.deck_count === 0) {
       // Check if all players' hands are empty
       const allHandsEmpty = state.players.every(player => player.hand.length === 0);
       if (allHandsEmpty) {
-        setShowTieOverlay(true);
+        // setShowTieOverlay(true);
+        setTieOverlayData({ isVisible: true });
       }
     }
   };
@@ -430,11 +433,10 @@ const MainGame = () => {
 
       switch (data.type) {
         case 'just_say_no_response':
-          // Clear any existing Just Say No related UI
-          setShowJustSayNoChoiceWaitingOverlay({
+          setJustSayNoChoiceWaitingOverlayData({
             isVisible: false,
-            playerName: ""
-          });
+            playerId: ""
+          })
           setJustSayNoModalData({
             isVisible: false,
             playerId: "",
@@ -445,31 +447,35 @@ const MainGame = () => {
             data: null
           });
           if (data.play_just_say_no) {
-            // Show the Just Say No Played overlay
-            setShowJustSayNoPlayedOverlay({
+            setJustSayNoPlayedOverlayData({
               isVisible: true,
-              playingPlayerName: data.playing_player_name,
-              againstPlayerName: data.against_player_name,
+              playingPlayerId: data.playing_player,
+              againstPlayerId: data.against_player,
               actionCard: data.against_card,
               justSayNoCard: data.card
-            });
+            })
 
             // Hide the overlay after 3 seconds
             setTimeout(() => {
-              setShowJustSayNoPlayedOverlay(prev => ({
-                ...prev,
-                isVisible: false
-              }));
+              setJustSayNoPlayedOverlayData({
+                isVisible: false,
+                playingPlayerId: "",
+                againstPlayerId: "",
+                actionCard: null,
+                justSayNoCard: null
+              })
             }, 3000);
           }
           break;
 
         case 'just_say_no_choice':
-          // First clear any existing overlays
-          setShowJustSayNoPlayedOverlay(prev => ({
-            ...prev,
-            isVisible: false
-          }));
+          setJustSayNoPlayedOverlayData({
+            isVisible: false,
+            playingPlayerId: "",
+            againstPlayerId: "",
+            actionCard: null,
+            justSayNoCard: null
+          })
           
           if (data.playing_player === user.unique_id) {
             setJustSayNoModalData({
@@ -481,15 +487,14 @@ const MainGame = () => {
               card: data.card,
               data: data.data
             });
-            // Clear the waiting overlay when showing modal
-            setShowJustSayNoChoiceWaitingOverlay({
+            setJustSayNoChoiceWaitingOverlayData({
               isVisible: false,
-              playerName: ""
+              playerId: ""
             });
           } else {
-            setShowJustSayNoChoiceWaitingOverlay({
+            setJustSayNoChoiceWaitingOverlayData({
               isVisible: true,
-              playerName: data.playing_player_name
+              playerId: data.playing_player
             });
             // Clear the modal when showing waiting overlay
             setJustSayNoModalData({
@@ -517,34 +522,32 @@ const MainGame = () => {
           break;
 
         case 'property_stolen':
-          setPropertyStealAnimation({
+          setPropertyStealOverlayData({
+            isVisible: true,
             property: data.property,
             stealerId: data.player_id,
             targetId: data.target_id,
-            stealerName: data.player_name,
-            targetName: data.target_name
-          });
+          })
           break;
 
         case 'property_swap':
-          setPropertySwapAnimation({
+          setPropertySwapOverlayData({
+            isVisible: true,
             property1: data.property1,
             property2: data.property2,
             player1Id: data.player1_id,
-            player2Id: data.player2_id,
-            player1Name: data.player1_name,
-            player2Name: data.player2_name
+            player2Id: data.player2_id
           });
           break;
 
         case 'deal_breaker_overlay':
-          setDealBreakerOverlay({
+          setDealBreakerOverlayData({
             isVisible: true,
-            playerName: data.player_name,
-            targetName: data.target_name,
+            stealerId: data.stealerId,
+            targetId: data.targetId,
             color: data.color,
             propertySet: data.property_set
-          });
+          })
           break;
 
         case 'game_update':
@@ -571,7 +574,7 @@ const MainGame = () => {
   }, [pendingHotelCard])
   useEffect(() => {
     if (pendingPassGoCard) {
-      let playerHand = gameState.find(player => player.unique_id === user.unique_id).hand;
+      let playerHand = gameState.players.find(p => p.id === user.unique_id).hand;
       let actionsRemaining = gameState.actions_remaining;
       if (2 - 1 + playerHand.length - (actionsRemaining - 1) > 7) {
         setError('Pass Go cannot be played as it will exceed the 7-card limit');
@@ -715,10 +718,10 @@ const MainGame = () => {
 
         if (hasDoubleRentCard && actionsRemaining > 1) {
           setDoubleRentAmount(rentAmount * 2);
-          setShowDoubleRentOverlay({
+          setDoubleRentModalData({
             isVisible: true,
             doubleRentAmount: rentAmount * 2,
-            opponentHand: opponentHand
+            opponentId: opponentId
           });
         } else {
           const justSayNoCard = opponentHand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
@@ -756,7 +759,7 @@ const MainGame = () => {
         }
       };
 
-      handleRentColorSelection(pendingRentCard, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay, handleRentColorSelect);
+      handleRentColorSelection(pendingRentCard, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setDoubleRentModalData, handleRentColorSelect);
     }
   }, [pendingRentCard]);
   useEffect(() => {
@@ -1011,20 +1014,22 @@ const MainGame = () => {
   };
 
   // Handle double rent response
-  const handleDoubleRentResponseWrapper = (useDoubleRent) => {
-    setShowDoubleRentOverlay(prev => ({ ...prev, isVisible: false }));
+  const handleDoubleRentResponseWrapper = (modalData, useDoubleRent) => {
+    // setShowDoubleRentOverlay(prev => ({ ...prev, isVisible: false }));
+    setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentId: '' });
+    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
     
     if (useDoubleRent) {
       const doubleTheRentCard = playerHand.find(card => 
         card.type === 'action' && card.name.toLowerCase() === 'double the rent'
       );
-      const justSayNoCard = showDoubleRentOverlay.opponentHand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
+      const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
       if (justSayNoCard) {
         socket.send(JSON.stringify({
           action: "just_say_no_choice",
-          playing_player: opponentId,
+          playing_player: opponent.id,
           against_player: user.unique_id,
-          playing_player_name: opponentName,
+          playing_player_name: opponent.name,
           against_player_name: user.username,
           card: justSayNoCard,
           against_card: doubleTheRentCard,
@@ -1047,13 +1052,13 @@ const MainGame = () => {
         }));
       }
     } else {
-      const justSayNoCard = showDoubleRentOverlay.opponentHand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
+      const justSayNoCard = opponent.hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
       if (justSayNoCard) {
         socket.send(JSON.stringify({
           action: "just_say_no_choice",
-          playing_player: opponentId,
+          playing_player: opponent.id,
           against_player: user.unique_id,
-          playing_player_name: opponentName,
+          playing_player_name: opponent.name,
           against_player_name: user.username,
           card: justSayNoCard,
           against_card: pendingRentCard,
@@ -1201,6 +1206,39 @@ const MainGame = () => {
     setErrors(prev => [...prev, newError]);
   };
 
+  // Preload overlays and modals when game starts
+  useEffect(() => {
+    const preloadComponents = async () => {
+      // Preload all overlay components
+      const overlays = [
+        import('./overlays/DealBreakerOverlay'),
+        import('./overlays/JustSayNoChoiceWaitingOverlay'),
+        import('./overlays/JustSayNoPlayedOverlay'),
+        import('./overlays/PaymentSuccessfulOverlay'),
+        import('./overlays/PropertyStealOverlay'),
+        import('./overlays/PropertySwapOverlay'),
+        import('./overlays/RentCollectionOverlay'),
+        import('./overlays/TieOverlay'),
+        import('./overlays/WinnerOverlay')
+      ];
+
+      // Preload all modal components
+      const modals = [
+        import('./modals/RentModal'),
+        import('./modals/SlyDealModal'),
+        import('./modals/ForcedDealModal'),
+        import('./modals/DealBreakerModal'),
+        import('./modals/JustSayNoModal'),
+        import('./modals/DoubleRentModal')
+      ];
+      
+      // Load all components in parallel
+      await Promise.all([...overlays, ...modals]);
+    };
+
+    preloadComponents();
+  }, []); // Only run once when component mounts
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -1242,6 +1280,44 @@ const MainGame = () => {
         />
         
 
+        {/* Game Overlays */}
+        <GameOverlays
+          // Done
+          propertyStealOverlayData={propertyStealOverlayData}
+          setPropertyStealOverlayData={setPropertyStealOverlayData}
+          
+          // Done
+          propertySwapOverlayData={propertySwapOverlayData}
+          setPropertySwapOverlayData={setPropertySwapOverlayData}
+
+          // Done
+          dealBreakerOverlayData={dealBreakerOverlayData}
+          setDealBreakerOverlayData={setDealBreakerOverlayData}
+
+          // Done
+          rentCollectionOverlayData={rentCollectionOverlayData}
+          setRentCollectionOverlayData={setRentCollectionOverlayData}
+          
+          // Done
+          paymentSuccessfulOverlayData={paymentSuccessfulOverlayData}
+          setPaymentSuccessfulOverlayData={setPaymentSuccessfulOverlayData}
+
+          // Done
+          justSayNoChoiceWaitingOverlayData={justSayNoChoiceWaitingOverlayData}
+          setJustSayNoChoiceWaitingOverlayData={setJustSayNoChoiceWaitingOverlayData}
+          
+          justSayNoPlayedOverlayData={justSayNoPlayedOverlayData}
+          setJustSayNoPlayedOverlayData={setJustSayNoPlayedOverlayData}
+
+          // Done
+          tieOverlayData={tieOverlayData}
+          setTieOverlayData={setTieOverlayData}
+
+          // Done
+          winnerOverlayData={winnerOverlayData}
+          setWinnerOverlayData={setWinnerOverlayData}
+        />
+
         {/* Game Modals */}
         <GameModals
           rentModalOpen={rentModalData.isVisible}
@@ -1253,6 +1329,14 @@ const MainGame = () => {
             rentType: rentModalData.rentType,
           }}
           handleRentPayment={handleRentPaymentWrapper}
+
+          doubleRentModalOpen={doubleRentModalData.isVisible}
+          setDoubleRentModalData={setDoubleRentModalData}
+          doubleRentModalData={{
+            doubleRentAmount: doubleRentModalData.doubleRentAmount,
+            opponentId: doubleRentModalData.opponentId,
+          }}
+          handleDoubleRentResponse={handleDoubleRentResponseWrapper}
           
           slyDealModalOpen={slyDealModalData.isVisible}
           setSlyDealModalData={setSlyDealModalData}
@@ -1291,45 +1375,6 @@ const MainGame = () => {
           }}
           handleJustSayNoResponse={() => {}}
         />
-        
-
-        {/* Overlays */}
-        <RentCollectionOverlay isVisible={showRentCollectionOverlay} />
-        <PaymentSuccessfulOverlay
-          isVisible={showPaymentSuccessfulOverlay.isVisible}
-          playerName={showPaymentSuccessfulOverlay.playerName}
-          targetName={showPaymentSuccessfulOverlay.targetName}
-          selectedCards={showPaymentSuccessfulOverlay.selectedCards}
-        />
-        {propertySwapAnimation && (<PropertySwapOverlay
-          animation={propertySwapAnimation}
-          onComplete={() => setPropertySwapAnimation(null)}
-          user={user}
-        />)}
-        {propertyStealAnimation && (<PropertyStealOverlay
-          animation={propertyStealAnimation}
-          onComplete={() => setPropertyStealAnimation(null)}
-          user={user}
-        />)}
-        <DealBreakerOverlay
-          {...dealBreakerOverlay}
-          onClose={() => setDealBreakerOverlay(prev => ({ ...prev, isVisible: false }))}
-        />
-        <JustSayNoChoiceWaitingOverlay isVisible={showJustSayNoChoiceWaitingOverlay.isVisible} playerName={showJustSayNoChoiceWaitingOverlay.playerName} />
-        <JustSayNoPlayedOverlay
-          isVisible={showJustSayNoPlayedOverlay.isVisible}
-          playingPlayerName={showJustSayNoPlayedOverlay.playingPlayerName}
-          againstPlayerName={showJustSayNoPlayedOverlay.againstPlayerName}
-          actionCard={showJustSayNoPlayedOverlay.actionCard}
-          justSayNoCard={showJustSayNoPlayedOverlay.justSayNoCard}
-        />
-        <DoubleRentOverlay
-          isVisible={showDoubleRentOverlay.isVisible}
-          modalData={showDoubleRentOverlay}
-          onResponse={handleDoubleRentResponseWrapper}
-        />
-        <WinnerOverlay isVisible={showWinnerOverlay} winner={winner} />
-        <TieOverlay isVisible={showTieOverlay} />
         
         {/* Game Layout */}
         <div className="flex flex-col justify-between h-[calc(100vh-4rem)] py-32 px-8 overflow-hidden bg-gray-200">

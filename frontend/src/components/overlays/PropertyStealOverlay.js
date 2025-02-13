@@ -1,58 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
+import { useAuth } from '../../contexts/AuthContext';
+import { useGameState } from '../../contexts/GameStateContext';
+import { colorMap, getPropertyWithDefaults } from '../../utils/gameUtils';
 
-const PropertyStealOverlay = ({ animation, onComplete, user }) => {
-  const [isVisible, setIsVisible] = useState(false);
+const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
+  const { user } = useAuth();
+  const { gameState } = useGameState();
+
+  const property = overlayData?.property;  // The actual property object
+  const stealerId = overlayData?.stealerId;
+  const targetId = overlayData?.targetId;
+  const stealerName = gameState.players.find(p => p.id === stealerId)?.name;
+  const targetName = gameState.players.find(p => p.id === targetId)?.name;
 
   useEffect(() => {
-    if (animation) {
-      setIsVisible(true);
+    if (isVisible) {
+      // Auto-close the overlay after 2 seconds
       const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(onComplete, 300); // Call onComplete after exit animation
+        onClose();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [animation, onComplete]);
+  }, [isVisible, onClose]);
 
-  if (!animation) return null;
-
-  const { property, stealerId, targetId, stealerName, targetName } = animation;
   const isUserStealing = stealerId === user.unique_id;
 
-  const colorMap = {
-    'brown': { bg: '#8B4513', text: '#F3EBE5', gradient: ['#8B4513DD', '#A0522DDD', '#B8860BDD'] },
-    'light blue': { bg: '#87CDDB', text: '#F0FAFF', gradient: ['#87CDDBDD', '#98D3EDDD', '#ADD8E6DD'] },
-    'pink': { bg: '#FF1493', text: '#FFF0F7', gradient: ['#FF1493DD', '#FF69B4DD', '#FFB6C1DD'] },
-    'orange': { bg: '#FF7C2D', text: '#FFF4F0', gradient: ['#FF7C2DDD', '#FFA54FDD', '#FFB366DD'] },
-    'red': { bg: '#FF0000', text: '#FFF0F0', gradient: ['#FF0000DD', '#FF4444DD', '#FF6666DD'] },
-    'yellow': { bg: '#FFE026', text: '#FFFBF0', gradient: ['#FFE026DD', '#FFE44DDD', '#FFE875DD'] },
-    'green': { bg: '#00A352', text: '#F0FFF7', gradient: ['#00A352DD', '#00B359DD', '#00C364DD'] },
-    'blue': { bg: '#0055DD', text: '#F0F7FF', gradient: ['#0055DDDD', '#1E69FFDD', '#3C7FFFDD'] },
-    'mint': { bg: '#C8E0CF', text: '#F2F9F4', gradient: ['#C8E0CFDD', '#D1E6D7DD', '#DAECDFDD'] },
-    'black': { bg: '#1A1A1A', text: '#F8F8F8', gradient: ['#1A1A1ADD', '#2D2D2DDD', '#404040DD'] }
-  };
+  const colorStyle = property ? (colorMap[property.color] || { bg: '#4A5568', text: '#FFFFFF', gradient: ['#4A5568DD', '#5A6678DD', '#6B7888DD'] }) : {};
 
-  const colorStyle = colorMap[property.color] || { bg: '#4A5568', text: '#FFFFFF', gradient: ['#4A5568DD', '#5A6678DD', '#6B7888DD'] };
-
-  // Ensure property has all required fields for PropertyCard
-  const propertyWithDefaults = {
-    name: property.name || 'Unknown',
-    color: property.color || 'gray',
-    value: property.value || 0,
-    rent: property.rent || [1],
-    isWild: property.isWild || false,
-    isUtility: property.isUtility || false,
-    isRailroad: property.isRailroad || false,
-    width: 160,
-    height: 220,
-    ...property
-  };
+  const propertyWithDefaults = property ? getPropertyWithDefaults(property) : null;
 
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
+      {isVisible && overlayData && (
         <motion.div
           className="fixed inset-0 flex items-center justify-center z-[9999]"
           initial={{ opacity: 0 }}

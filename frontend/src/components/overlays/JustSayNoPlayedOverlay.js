@@ -1,11 +1,24 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ActionCard from '../cards/ActionCard';
+import { useGameState } from '../../contexts/GameStateContext';
 
-const JustSayNoPlayedOverlay = ({ isVisible, playingPlayerName, againstPlayerName, actionCard, justSayNoCard }) => {
+const JustSayNoPlayedOverlay = ({ isVisible, onClose, overlayData }) => {
+  const { gameState } = useGameState();
+  
+  const playingPlayerId = overlayData?.playingPlayerId;
+  const againstPlayerId = overlayData?.againstPlayerId;
+  const actionCard = overlayData?.actionCard;
+  const justSayNoCard = overlayData?.justSayNoCard;
+  
+  const player = gameState.players.find(p => p.id === playingPlayerId);
+  const opponent = gameState.players.find(p => p.id === againstPlayerId);
+  const playingPlayerName = player?.name;
+  const againstPlayerName = opponent?.name;
+
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
+      {isVisible && overlayData && player && opponent && actionCard && justSayNoCard && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -47,7 +60,7 @@ const JustSayNoPlayedOverlay = ({ isVisible, playingPlayerName, againstPlayerNam
               <motion.div
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
                 <ActionCard {...justSayNoCard} />
               </motion.div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DoubleRentOverlay = ({ isVisible, modalData, onResponse }) => {
-  if (!isVisible) return null;
+const DoubleRentModal = ({ isOpen, onClose, modalData, onResponse }) => {
+  if (!modalData || !isOpen) return null;
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -117,7 +117,7 @@ const DoubleRentOverlay = ({ isVisible, modalData, onResponse }) => {
                 }}
                 whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                 whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                onClick={() => onResponse(false)}
+                onClick={() => onResponse(modalData, false)}
                 className="px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-xl font-semibold transition-colors duration-200 shadow-md hover:shadow-lg"
               >
                 Keep Original
@@ -132,7 +132,7 @@ const DoubleRentOverlay = ({ isVisible, modalData, onResponse }) => {
                 }}
                 whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                 whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                onClick={() => onResponse(true)}
+                onClick={() => onResponse(modalData, true)}
                 className="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-green-700 rounded-xl font-semibold transition-colors duration-200 shadow-md hover:shadow-lg"
               >
                 Double It!
@@ -145,4 +145,4 @@ const DoubleRentOverlay = ({ isVisible, modalData, onResponse }) => {
   );
 };
 
-export default DoubleRentOverlay;
+export default DoubleRentModal;

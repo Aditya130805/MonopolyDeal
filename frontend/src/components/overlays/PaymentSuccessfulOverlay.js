@@ -3,13 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
 import MoneyCard from '../cards/MoneyCard';
+import { useGameState } from '../../contexts/GameStateContext';
 
-const PaymentSuccessfulOverlay = ({
-  isVisible,
-  playerName,
-  targetName,
-  selectedCards
-}) => {
+const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
+  const { gameState } = useGameState();
+  
+  const playerId = overlayData?.playerId;
+  const targetId = overlayData?.targetId;
+  const selectedCards = overlayData?.selectedCards || [];
+  
+  const player = gameState.players.find(p => p.id === playerId);
+  const target = gameState.players.find(p => p.id === targetId);
+
   const colorStyle = {
     bg: '#4A5568',
     text: '#FFFFFF',
@@ -19,20 +24,21 @@ const PaymentSuccessfulOverlay = ({
   useEffect(() => {
     if (isVisible) {
       const timer = setTimeout(() => {
-        // Add onClose prop and call it here when implementing auto-close
-      }, 4000);
+        onClose();
+      }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isVisible]);
+  }, [isVisible, onClose]);
 
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <AnimatePresence mode="wait" onExitComplete={onClose}>
+      {isVisible && overlayData && player && target && (
         <motion.div
           className="fixed inset-0 flex items-center justify-center z-[9999]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
           {/* Backdrop blur */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -156,7 +162,7 @@ const PaymentSuccessfulOverlay = ({
                       textShadow: '2px 2px 0px rgba(0,0,0,0.2)'
                     }}
                   >
-                    {playerName}
+                    {player.name}
                   </span>
                   <span className="mx-2">paid</span>
                   <span 
@@ -166,7 +172,7 @@ const PaymentSuccessfulOverlay = ({
                       textShadow: '2px 2px 0px rgba(0,0,0,0.2)'
                     }}
                   >
-                    {targetName}
+                    {target.name}
                   </span>
                 </motion.div>
 
@@ -190,7 +196,7 @@ const PaymentSuccessfulOverlay = ({
                   transition={{ delay: 0.4 }}
                 >
                   <div className="flex -space-x-20 relative">
-                    {selectedCards && selectedCards.map((card, index) => {
+                    {selectedCards.map((card, index) => {
                       let CardComponent = card.type === 'money' ? MoneyCard 
                                       : card.type === 'property' ? PropertyCard 
                                       : ActionCard;
