@@ -19,12 +19,8 @@ import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggab
 import { motion } from 'framer-motion';
 import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
-import { handleWildPropertySelection } from '../utils/wildPropertyHandler';
 import { handleRentColorSelection } from '../utils/rentActionHandler';
-import { handleRentPayment, handleDoubleRentResponse } from './actions/RentActions';
-import { handleSlyDealPropertySelect, handleForcedDealSelect, handleDealBreakerSetSelect } from './actions/PropertyActions';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
-import { handleWebSocketMessage } from './actions/WebSocketHandlers';
 import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers, findJustSayNoInHand } from '../utils/gameUtils';
 
 const DraggableCard = memo(({ card, children }) => {
@@ -630,12 +626,12 @@ const MainGame = () => {
           if (justSayNoCard) {
             socket.send(JSON.stringify({
               action: "just_say_no_choice",
-              playerId: opponentId,
+              playerId: opponent.id,
               opponentId: userPlayer.id,
               card: justSayNoCard,
               againstCard: pendingRentCard,
               data: rentActionData
-            }));
+            }))
           } else {
             setShowActionAnimation({ visible: true, action: "Rent Request" });
             setTimeout(() => {
@@ -1046,7 +1042,7 @@ const MainGame = () => {
     }
     socket.send(JSON.stringify({
       'action': 'skip_turn',
-      'player': user.unique_id
+      'player': userPlayer.id
     }));
   };
 
