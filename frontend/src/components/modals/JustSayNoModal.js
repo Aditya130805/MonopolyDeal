@@ -5,24 +5,22 @@ import PropertyCard from '../cards/PropertyCard';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { useGameState } from '../../contexts/GameStateContext';
 
-const JustSayNoModal = ({ isOpen, onClose, modalData, roomId }) => {
+const JustSayNoModal = ({ isOpen, onClose, modalData, onResponse }) => {
   const { socket } = useWebSocket();
-  const { gameState, setGameState } = useGameState();
+  const { gameState } = useGameState();
   const player = gameState.players.find(p => p.id === modalData.playerId);
   const opponent = gameState.players.find(p => p.id === modalData.opponentId);
 
-  const handleResponse = (wantsToPlayJustSayNo) => {
+  const handleResponse = (playJustSayNo) => {
     if (socket) {
       socket.send(JSON.stringify({
         action: 'just_say_no_response',
-        play_just_say_no: wantsToPlayJustSayNo,
-        playing_player: modalData.playerId,
-        against_player: modalData.opponentId,
-        playing_player_name: player.name,
-        against_player_name: opponent.name,
+        playJustSayNo: playJustSayNo,
+        playerId: modalData.playerId,
+        opponentId: modalData.opponentId,
         card: modalData.card,
-        against_card: modalData.againstCard,
-        against_rent_card: modalData.againstRentCard,
+        againstCard: modalData.againstCard,
+        againstRentCard: modalData.againstRentCard,
         data: JSON.stringify(modalData.data)
       }));
     }

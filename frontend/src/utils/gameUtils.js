@@ -113,3 +113,7 @@ export const getPlayerById = (gameState, playerId) => {
 export const getOpponentPlayers = (gameState, userId) => {
   return gameState.players.filter(player => player.id !== userId);
 };
+
+export const findJustSayNoInHand = (gameState, playerId) => {
+  return getPlayerById(gameState, playerId).hand.find(card => card.type === 'action' && card.name.toLowerCase() === 'just say no') || null;
+}

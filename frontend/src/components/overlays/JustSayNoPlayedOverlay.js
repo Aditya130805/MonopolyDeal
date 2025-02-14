@@ -6,19 +6,19 @@ import { useGameState } from '../../contexts/GameStateContext';
 const JustSayNoPlayedOverlay = ({ isVisible, onClose, overlayData }) => {
   const { gameState } = useGameState();
   
-  const playingPlayerId = overlayData?.playingPlayerId;
-  const againstPlayerId = overlayData?.againstPlayerId;
-  const actionCard = overlayData?.actionCard;
+  const playerId = overlayData?.playerId;
+  const opponentId = overlayData?.opponentId;
+  const againstCard = overlayData?.againstCard;
   const justSayNoCard = overlayData?.justSayNoCard;
   
-  const player = gameState.players.find(p => p.id === playingPlayerId);
-  const opponent = gameState.players.find(p => p.id === againstPlayerId);
+  const player = gameState.players.find(p => p.id === playerId);
+  const opponent = gameState.players.find(p => p.id === opponentId);
   const playingPlayerName = player?.name;
   const againstPlayerName = opponent?.name;
 
   return (
     <AnimatePresence mode="wait" onExitComplete={onClose}>
-      {isVisible && overlayData && player && opponent && actionCard && justSayNoCard && (
+      {isVisible && overlayData && player && opponent && againstCard && justSayNoCard && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -54,7 +54,7 @@ const JustSayNoPlayedOverlay = ({ isVisible, onClose, overlayData }) => {
                   <span className="text-6xl z-10">🚫</span>
                 </motion.div>
                 <div className="opacity-50">
-                  <ActionCard {...actionCard} />
+                  <ActionCard {...againstCard} />
                 </div>
               </div>
               <motion.div

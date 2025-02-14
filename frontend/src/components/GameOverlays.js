@@ -104,7 +104,7 @@ const GameOverlays = ({
 
         <JustSayNoPlayedOverlay
           isVisible={justSayNoPlayedOverlayData.isVisible}
-          onClose={() => setJustSayNoPlayedOverlayData({ isVisible: false, playingPlayerId: '', againstPlayerId: '', actionCard: null, justSayNoCard: null })}
+          onClose={() => setJustSayNoPlayedOverlayData({ isVisible: false, playerId: '', opponentId: '', againstCard: null, justSayNoCard: null })}
           overlayData={justSayNoPlayedOverlayData}
         />
 

@@ -17,7 +17,7 @@ const rents = {
     'black': [1, 2, 3, 4]
 }
 
-const handleRentColorSelection = (card, playerProperties, playerHand, actionsRemaining, socket, user, setRentAmount, setDoubleRentAmount, setShowActionAnimation, setPendingRentCard, setShowDoubleRentOverlay, onColorSelect) => {
+const handleRentColorSelection = (card, playerProperties, onColorSelect) => {
     // Create full-screen overlay
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
