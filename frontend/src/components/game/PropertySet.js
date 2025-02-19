@@ -3,7 +3,7 @@ import { HomeIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline';
 import { useDroppable } from '@dnd-kit/core';
 import { setRequirements } from '../../utils/gameUtils';
 
-const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
+const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, isCompact = false, className = '' }) => {
   // properties is already grouped by color, no need to reduce
   const propertyGroups = properties || {};
   const colorOrder = ['brown', 'mint', 'blue', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'black'];
@@ -86,7 +86,7 @@ const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
     const hotelCard = cards && cards.find(card => card.type === 'action' && card.name.toLowerCase() === 'hotel');
 
     return (
-      <div key={color} className="relative w-[40px] h-[60px] group">
+      <div key={color} className={`relative ${isCompact ? 'w-[34px] h-[51px]' : 'w-[40px] h-[60px]'} group`}>
         <div className={`w-full h-full rounded-sm border border-black/40 shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden`}> 
           <div className="flex flex-col h-full">
             {[...Array(requiredCards)].map((_, index) => {
@@ -133,15 +133,15 @@ const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
         </div>
         {/* Houses and Hotels */}
         {isComplete && (
-          <div className="absolute -top-2 -right-2 flex items-center space-x-1">
+          <div className={`absolute -top-2 -right-2 flex items-center space-x-1 ${isCompact ? 'scale-75 -top-1 -right-1' : ''}`}>
             {houseCard && (
               <div className="bg-white rounded-full p-0.5 shadow-md">
-                <HomeIcon className="w-3 h-3 text-green-600" />
+                <HomeIcon className={`${isCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-green-600`} />
               </div>
             )}
             {hotelCard && (
               <div className="bg-white rounded-full p-0.5 shadow-md">
-                <BuildingOffice2Icon className="w-3 h-3 text-red-600" />
+                <BuildingOffice2Icon className={`${isCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'} text-red-600`} />
               </div>
             )}
           </div>
@@ -150,16 +150,37 @@ const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
     );
   };
 
-  // Calculate what goes in the last row
-  const lastRowColors = [...colorOrder.slice(8)];
-  // Add colors that have overflow
-  Object.keys(overflowSets).forEach(color => {
-    lastRowColors.push(color);
-  });
+  // Split the colors into rows based on setsPerRow
+  const createRows = () => {
+    const rows = [];
+    const allColors = [...colorOrder]; // Get all colors
+    const overflowColors = Object.keys(overflowSets);
+    
+    // Add overflow colors if they're not already in the color order
+    overflowColors.forEach(color => {
+      if (!allColors.includes(color)) {
+        allColors.push(color);
+      }
+    });
+    
+    // Create rows of equal size based on setsPerRow
+    for (let i = 0; i < allColors.length; i += setsPerRow) {
+      const row = allColors.slice(i, i + setsPerRow);
+      // Pad the last row with null values if needed to maintain consistent width
+      if (row.length < setsPerRow && i + setsPerRow >= allColors.length) {
+        while (row.length < setsPerRow) {
+          row.push(null);
+        }
+      }
+      rows.push(row);
+    }
+    
+    return rows;
+  };
 
   return (
-    <div className={`inline-block ${isOpponent ? 'transform rotate-180' : ''}`}>
-      <div ref={setNodeRef} className="bg-white/90 rounded-lg shadow-lg p-3 relative property-set">
+    <div className={`inline-block`}>
+      <div ref={setNodeRef} className={`bg-white/90 rounded-lg shadow-lg p-3 relative property-set ${className}`}>
         {!isOpponent && isOver && (
           <div 
             className="absolute inset-0 bg-gradient-to-br from-emerald-500/30 via-emerald-400/20 to-emerald-300/10 backdrop-blur-sm rounded-lg flex items-center justify-center pointer-events-none z-50"
@@ -173,49 +194,33 @@ const PropertySet = ({ properties, isOpponent = false, onDrop }) => {
           </div>
         )}
         {/* Heading */}
-        <div className="flex items-center gap-2 mb-2">
+        {!isCompact && <div className="flex items-center gap-2 mb-2">
           <HomeIcon className="w-4 h-4 text-emerald-600" />
           <h3 className="font-semibold text-gray-700 text-sm">Property Portfolio</h3>
-        </div>
+        </div>}
 
         {/* Property Cards Grid */}
         <div className="flex flex-col gap-2">
-          {/* First row of 4 */}
-          <div className="flex gap-2 justify-start">
-            {colorOrder.slice(0, 4).map(color => 
-              renderPropertyCard(color, mainSets[color], setRequirements[color], colorStyles[color], lightColorStyles[color])
-            )}
-          </div>
-          {/* Second row of 4 */}
-          <div className="flex gap-2 justify-start">
-            {colorOrder.slice(4, 8).map(color => 
-              renderPropertyCard(color, mainSets[color], setRequirements[color], colorStyles[color], lightColorStyles[color])
-            )}
-          </div>
-          {/* Third row - base cards + overflow */}
-          <div className="flex gap-2 justify-start">
-            {/* Render base cards */}
-            {colorOrder.slice(8).map(color => 
-              renderPropertyCard(
-                color, 
-                mainSets[color], 
-                setRequirements[color], 
-                colorStyles[color], 
-                lightColorStyles[color]
-              )
-            )}
-            
-            {/* Render overflow cards by color */}
-            {Object.entries(overflowSets).map(([color, cards]) => 
-              renderPropertyCard(
-                `${color}-overflow`,
-                cards,
-                setRequirements[color],
-                colorStyles[color],
-                lightColorStyles[color]
-              )
-            )}
-          </div>
+          {createRows().map((rowColors, rowIndex) => (
+            <div key={rowIndex} className="flex gap-2 justify-start">
+              {rowColors.map((color, colIndex) => {
+                if (color === null) {
+                  // Render an empty space to maintain grid alignment
+                  return <div key={`empty-${colIndex}`} className={`w-[${isCompact ? '34' : '40'}px] h-[${isCompact ? '51' : '60'}px]`} />;
+                }
+                
+                // Check if this is an overflow card
+                const isOverflow = Object.keys(overflowSets).includes(color);
+                return renderPropertyCard(
+                  isOverflow ? `${color}-overflow` : color,
+                  isOverflow ? overflowSets[color] : mainSets[color],
+                  setRequirements[color],
+                  colorStyles[color],
+                  lightColorStyles[color]
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
     </div>

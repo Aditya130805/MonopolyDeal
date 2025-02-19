@@ -22,6 +22,7 @@ import { handleHotelPlacement } from './actions/HotelPlacement';
 import { handleRentColorSelection } from '../utils/rentActionHandler';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
 import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers, findJustSayNoInHand } from '../utils/gameUtils';
+import PlayerInfo from './game/PlayerInfo';
 
 const DraggableCard = memo(({ card, children }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -49,7 +50,7 @@ const DraggableCard = memo(({ card, children }) => {
 
 const TwoPlayerLayout = memo(({
   gameState, ItemTypes, handleCardDropBankWrapper, handleCardDropPropertyWrapper, handleCardDropActionWrapper,
-  DraggableCard, renderCardContent, user
+  DraggableCard, renderCardContent, user, onSkipTurn
 }) => {
   if (!gameState?.players?.length) return null;
   const player = gameState.players.find(p => p.id === user.unique_id);
@@ -57,18 +58,29 @@ const TwoPlayerLayout = memo(({
   if (!player || !opponent) return null;
 
   return (
-    <>
-      {/* Opponent's Area */}
-      <div className="w-full">
-        <BankAndCards
-          hand={opponent.hand}
-          bank={opponent.bank}
-          isOpponent={true}
-          ItemTypes={ItemTypes}
-          handleCardDrop={handleCardDropBankWrapper}
-          DraggableCard={DraggableCard}
-          renderCardContent={renderCardContent}
-        />
+    <div className="h-full flex flex-col justify-between">
+      {/* Top section with Turn Display and Opponent's Area */}
+      <div className="w-full relative">
+        {/* Turn Display at top left */}
+        <div className="absolute left-2 top-2 z-10">
+          <TurnDisplay 
+            gameState={gameState}
+            user={user}
+            onSkipTurn={onSkipTurn}
+          />
+        </div>
+
+        {/* Opponent's Area */}
+        <div className="w-full">
+          <BankAndCards
+            hand={opponent.hand}
+            bank={opponent.bank}
+            isOpponent={true}
+            ItemTypes={ItemTypes}
+            DraggableCard={DraggableCard}
+            renderCardContent={renderCardContent}
+          />
+        </div>
       </div>
 
       {/* Center Area with Property Sets */}
@@ -80,6 +92,8 @@ const TwoPlayerLayout = memo(({
             isOpponent={false}
             ItemTypes={ItemTypes}
             onDrop={(item) => handleCardDropPropertyWrapper(item.card)}
+            setsPerRow={4}
+            className="main-property-set"
           />
         </div>
 
@@ -99,49 +113,124 @@ const TwoPlayerLayout = memo(({
           <PropertySet 
             properties={opponent.properties}
             isOpponent={true}
+            setsPerRow={4}
           />
         </div>
       </div>
 
       {/* Player's Area */}
-      <div className="w-full">
-        <BankAndCards 
+      <div className="w-full" style={{ paddingBottom: '7.5rem' }}>
+        <BankAndCards
           hand={player.hand}
           bank={player.bank}
           isOpponent={false}
           ItemTypes={ItemTypes}
-          handleCardDrop={handleCardDropBankWrapper}
           DraggableCard={DraggableCard}
           renderCardContent={renderCardContent}
         />
       </div>
-    </>
+    </div>
+  );
+});
+
+const ThreePlayerLayout = memo(({
+  gameState, ItemTypes, handleCardDropActionWrapper,
+  DraggableCard, renderCardContent, user, onSkipTurn
+}) => {
+  if (!gameState?.players?.length) return null;
+  const player = gameState.players.find(p => p.id === user.unique_id);
+  const opponents = gameState.players.filter(p => p.id !== user.unique_id);
+  if (!player || opponents.length !== 2) return null;
+
+  return (
+    <div className="relative h-screen overflow-hidden">
+      {/* Top Opponents - Positioned absolutely */}
+      <div className="absolute top-2 left-4 w-72 z-10">
+        <PlayerInfo 
+          player={opponents[0]}
+          color="red"
+        />
+      </div>
+      
+      <div className="absolute top-2 right-4 w-72 z-10">
+        <PlayerInfo 
+          player={opponents[1]}
+          color="blue"
+        />
+      </div>
+
+      {/* Game Center with Turn Display */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center -translate-y-24">
+        <div className="mb-4">
+          <TurnDisplay 
+            gameState={gameState}
+            user={user}
+            onSkipTurn={onSkipTurn}
+          />
+        </div>
+        <GameCenter 
+          numCardsInDrawPile={gameState.deck_count}
+          lastAction={gameState.discard_pile ? gameState.discard_pile[gameState.discard_pile.length - 1] : null}
+          renderCardContent={renderCardContent}
+          ItemTypes={ItemTypes}
+          handleCardDrop={handleCardDropActionWrapper}
+        />
+      </div>
+
+      {/* Bottom Player - Fixed at bottom with more space */}
+      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full px-4">
+        <BankAndCards
+          hand={player.hand}
+          bank={player.bank}
+          properties={player.properties}
+          isOpponent={false}
+          DraggableCard={DraggableCard}
+          renderCardContent={renderCardContent}
+          isThreePlayer={true}
+        />
+      </div>
+    </div>
   );
 });
 
 const TurnDisplay = memo(({ 
   gameState, 
   user, 
-  onSkipTurn 
+  onSkipTurn,
+  className = ''
 }) => {
-  const currentTurnPlayerId = gameState.current_turn;
-  const currentTurnPlayer = gameState.players.find(p => p.id === currentTurnPlayerId);
-  const currentTurnPlayerName = currentTurnPlayer ? currentTurnPlayer.name : '';
+  const isUserTurn = gameState.current_turn === user.unique_id;
+  const currentPlayer = gameState.players.find(p => p.id === gameState.current_turn);
+  
+  if (!currentPlayer) return null;
 
   return (
-    <div className="absolute top-20 left-8" style={{ zIndex: 1000 }}>
-      <div className="flex items-center gap-3">
-        <div className={`text-lg font-semibold px-4 py-2 rounded-lg ${currentTurnPlayerId === user.unique_id ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-          {currentTurnPlayerId === user.unique_id ? "Your Turn" : `${currentTurnPlayerName}'s Turn`} #{4 - gameState.actions_remaining}
+    <div className={`flex flex-col items-center ${className}`}>
+      <div className={`
+        px-6 py-3 rounded-xl shadow-lg backdrop-blur-sm
+        ${isUserTurn ? 'bg-green-100/90 border-2 border-green-400' : 'bg-gray-100/90 border-2 border-gray-300'}
+        transform transition-all duration-300 hover:scale-105
+      `}>
+        <div className="flex items-center gap-3">
+          <div className="text-center">
+            <span className={`font-bold text-lg ${isUserTurn ? 'text-green-800' : 'text-gray-700'}`}>
+              {isUserTurn ? "Your Turn!" : `${currentPlayer.name}'s Turn`}
+            </span>
+            <span className={`ml-2 px-2 py-0.5 rounded-lg text-lg font-medium ${
+              isUserTurn ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700'
+            }`}>
+              #{4 - gameState.actions_remaining}
+            </span>
+          </div>
+          {isUserTurn && (
+            <button
+              onClick={onSkipTurn}
+              className="ml-2 px-3 py-1 bg-green-300 hover:bg-green-400 text-green-800 rounded-lg font-medium text-sm transition-colors"
+            >
+              Skip Turn
+            </button>
+          )}
         </div>
-        {currentTurnPlayerId === user.unique_id && (
-          <button 
-            onClick={onSkipTurn}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-gray-100 rounded-lg font-medium transition-colors"
-          >
-            Skip Turn
-          </button>
-        )}
       </div>
     </div>
   );
@@ -1219,23 +1308,30 @@ const MainGame = () => {
         />
         
         {/* Game Layout */}
-        <div className="flex flex-col justify-between h-[calc(100vh-4rem)] py-32 px-8 overflow-hidden bg-gray-200">
-          {/* Turn Display */}
-          <TurnDisplay 
-            gameState={gameState}
-            user={user}
-            onSkipTurn={handleSkipTurn}
-          />
-          <TwoPlayerLayout 
-            gameState={gameState}
-            ItemTypes={ItemTypes}
-            handleCardDropBankWrapper={handleCardDropBankWrapper}
-            handleCardDropPropertyWrapper={handleCardDropPropertyWrapper}
-            handleCardDropActionWrapper={handleCardDropActionWrapper}
-            DraggableCard={DraggableCard}
-            renderCardContent={renderCardContent}
-            user={user}
-          />
+        <div className="flex flex-col justify-between h-[calc(100vh-4rem)] px-4 overflow-hidden bg-gray-200">
+          {gameState.players.length === 2 ? (
+            <TwoPlayerLayout 
+              gameState={gameState}
+              ItemTypes={ItemTypes}
+              handleCardDropBankWrapper={handleCardDropBankWrapper}
+              handleCardDropPropertyWrapper={handleCardDropPropertyWrapper}
+              handleCardDropActionWrapper={handleCardDropActionWrapper}
+              DraggableCard={DraggableCard}
+              renderCardContent={renderCardContent}
+              user={user}
+              onSkipTurn={handleSkipTurn}
+            />
+          ) : (
+            <ThreePlayerLayout 
+              gameState={gameState}
+              ItemTypes={ItemTypes}
+              handleCardDropActionWrapper={handleCardDropActionWrapper}
+              DraggableCard={DraggableCard}
+              renderCardContent={renderCardContent}
+              user={user}
+              onSkipTurn={handleSkipTurn}
+            />
+          )}
         </div>
       </div>
     <DragOverlay dropAnimation={null}>

@@ -64,7 +64,7 @@ export const handleHousePlacement = (card, playerProperties, setError, socket, u
   
   // Function to update position
   const updatePosition = () => {
-    const propertySet = document.querySelector('.property-set');
+    const propertySet = document.querySelector('.main-property-set');
     if (!propertySet || !colorButtons) return;
     const rect = propertySet.getBoundingClientRect();
     colorButtons.style.position = 'fixed';
@@ -79,7 +79,7 @@ export const handleHousePlacement = (card, playerProperties, setError, socket, u
   
   // Add resize listener
   const resizeObserver = new ResizeObserver(updatePosition);
-  resizeObserver.observe(document.querySelector('.property-set'));
+  resizeObserver.observe(document.querySelector('.main-property-set'));
   window.addEventListener('resize', updatePosition);
   
   // Style the color buttons container
