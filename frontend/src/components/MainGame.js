@@ -243,7 +243,8 @@ const MainGame = () => {
   const { gameState, setGameState, setGameStateFromBackend } = useGameState();
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [userPlayer, setUserPlayer] = useState(null);
-  const [opponentId, setOpponentId] = useState('');
+  // const [opponentId, setOpponentId] = useState('');
+  const [opponentIds, setOpponentIds] = useState([]);
   const [errors, setErrors] = useState([]);
   const [showActionAnimation, setShowActionAnimation] = useState({ visible: false, action: null, onComplete: null });
   const [cardNotifications, setCardNotifications] = useState([]);
@@ -304,13 +305,13 @@ const MainGame = () => {
     isVisible: false, doubleRentAmount: 0, opponentId: ''
   });
   const [slyDealModalData, setSlyDealModalData] = useState({
-    isVisible: false, card: null, opponentId: ''
+    isVisible: false, card: null, opponentIds: []
   });
   const [forcedDealModalData, setForcedDealModalData] = useState({
-    isVisible: false, card: null, opponentId: ''
+    isVisible: false, card: null, opponentIds: []
   });
   const [dealBreakerModalData, setDealBreakerModalData] = useState({
-    isVisible: false, card: null, opponentId: ''
+    isVisible: false, card: null, opponentIds: []
   });
 
 
@@ -426,9 +427,12 @@ const MainGame = () => {
     
     // Find opponents and update their hands
     const opponents = state.players.filter(p => p.id !== user.unique_id);
-    const opponent = opponents[0]; // Since it's a 2-player game
-    if (opponent) {
-      setOpponentId(opponent.id);
+    // const opponent = opponents[0]; // Since it's a 2-player game
+    // if (opponent) {
+    //   setOpponentId(opponent.id);
+    // }
+    if (opponents) {
+      setOpponentIds(opponents.map(opponent => opponent.id));
     }
 
     // Handle winner or tie
@@ -738,7 +742,7 @@ const MainGame = () => {
   useEffect(() => {
     if (pendingSlyDealCard) {
       // Check if opponents have any properties at all
-      const opponentPlayers = getOpponentPlayers(gameState, userPlayer.id);
+      const opponentPlayers = gameState.players.filter(player => opponentIds.includes(player.id));
       let opponentsHaveProperties = false;
       for (const player of opponentPlayers) {
         if (Object.keys(player.properties).length > 0) {
@@ -792,7 +796,7 @@ const MainGame = () => {
       setSlyDealModalData({
         isVisible: true,
         card: pendingSlyDealCard,
-        opponentId: opponentId
+        opponentIds: opponentIds
       });
     }
   }, [pendingSlyDealCard]);
@@ -805,33 +809,38 @@ const MainGame = () => {
         return;
       }
 
-      const opponent = gameState.players.find(p => p.id === opponentId);
-
-      // Check if opponents have any properties at all
-      if (Object.keys(opponent.properties).length === 0) {
-        setError("Opponent doesn't have any properties!");
-        setPendingForcedDealCard(null);
+      // const opponent = gameState.players.find(p => p.id === opponentId);
+      const opponentPlayers = gameState.players.filter(player => opponentIds.includes(player.id));
+      let opponentsHaveProperties = false;
+      for (const player of opponentPlayers) {
+        if (Object.keys(player.properties).length > 0) {
+          opponentsHaveProperties = true;
+          break;
+        }
+      }
+      if (!opponentsHaveProperties) {
+        setError("Opponents don't have any properties!");
+        setPendingSlyDealCard(null);
         return;
       }
-
-      // Split opponent's properties into main and overflow sets
-      const { mainSets, overflowSets } = splitProperties(opponent.properties);
 
       // Check if there are any stealable properties
       let hasStealableProperties = false;
 
       // Check main sets for incomplete sets
-      for (const [color, cards] of Object.entries(mainSets)) {
-        const propertyCards = cards.filter(card => card.type === 'property');
-        if (propertyCards.length < setRequirements[color]) {
-          // If main set is incomplete, we can steal from it
-          hasStealableProperties = true;
-          break;
+      for (const player of opponentPlayers) {
+        // Split opponent's properties into main and overflow sets
+        const { mainSets, overflowSets } = splitProperties(player.properties);
+        for (const [color, cards] of Object.entries(mainSets)) {
+          const propertyCards = cards.filter(card => card.type === 'property');
+          if (propertyCards.length < setRequirements[color]) {
+            // If main set is incomplete, we can steal from it
+            hasStealableProperties = true;
+            break;
+          }
         }
-      }
-
-      // If no stealable properties in main sets, check overflow sets
-      if (!hasStealableProperties) {
+        if (hasStealableProperties) break;
+        // If no stealable properties in main sets, check overflow sets
         for (const [color, cards] of Object.entries(overflowSets)) {
           if (cards && cards.length > 0) {
             const propertyCards = cards.filter(card => card.type === 'property');
@@ -843,18 +852,19 @@ const MainGame = () => {
             }
           }
         }
+        if (hasStealableProperties) break;
       }
 
       if (!hasStealableProperties) {
-        setError("Opponent has no properties that can be stolen!");
+        setError("Opponents have no properties that can be stolen!");
         setPendingForcedDealCard(null);
         return;
       }
-
+      
       setForcedDealModalData({
         isVisible: true,
         card: pendingForcedDealCard,
-        opponentId: opponentId
+        opponentIds: opponentIds
       })
     }
   }, [pendingForcedDealCard]);
@@ -865,28 +875,34 @@ const MainGame = () => {
         const requiredCards = setRequirements[color] || 0;
         return cards.length >= requiredCards;
       };
-    
-      // Check if there are any complete sets
-      const opponent = gameState.players.find(p => p.id === opponentId);
-      const hasCompleteSets = Object.entries(opponent.properties).some(([color, cards]) => isCompleteSet(color, cards));    
-      
+
+      const opponentPlayers = gameState.players.filter(p => opponentIds.includes(p.id));
+
+      let hasCompleteSets = false;
+      for (const player of opponentPlayers) {
+        if (Object.entries(player.properties).some(([color, cards]) => isCompleteSet(color, cards))) {
+          hasCompleteSets = true;
+          break;
+        }    
+      }
       if (!hasCompleteSets) {
-        setError("Your opponent doesn't have any complete sets!");
+        setError("Opponents don't have any complete sets!");
         setPendingDealBreakerCard(null);
         return;
       }
-
+    
       setDealBreakerModalData({
         isVisible: true,
         card: pendingDealBreakerCard,
-        opponentId: opponentId
+        opponentIds: opponentIds
       });
     }
   }, [pendingDealBreakerCard]);
 
   // Handle sly deal property selection
   const handleSlyDealPropertySelectWrapper = (modalData, selectedProperty) => {
-    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+    // const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === selectedProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     const slyDealActionData = JSON.stringify({
@@ -914,7 +930,7 @@ const MainGame = () => {
 
   // Handle forced deal property selection
   const handleForcedDealSelectWrapper = (modalData, opponentProperty, userProperty) => {
-    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === opponentProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     const forcedDealActionData = JSON.stringify({
@@ -942,7 +958,7 @@ const MainGame = () => {
 
   // Handle deal breaker set selection
   const handleDealBreakerSetSelectWrapper = (modalData, selectedSet) => {
-    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+    const opponent = gameState.players.find(p => p.id === selectedSet.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     const dealBreakerActionData = JSON.stringify({
@@ -1272,7 +1288,7 @@ const MainGame = () => {
           slyDealModalOpen={slyDealModalData.isVisible}
           setSlyDealModalData={setSlyDealModalData}
           slyDealModalData={{
-            opponentId: slyDealModalData.opponentId,
+            opponentIds: slyDealModalData.opponentIds,
             card: slyDealModalData.card,
           }}
           handleSlyDealPropertySelect={handleSlyDealPropertySelectWrapper}
@@ -1280,7 +1296,7 @@ const MainGame = () => {
           forcedDealModalOpen={forcedDealModalData.isVisible}
           setForcedDealModalData={setForcedDealModalData}
           forcedDealModalData={{
-            opponentId: forcedDealModalData.opponentId,
+            opponentIds: forcedDealModalData.opponentIds,
             userId: user.unique_id,
             card: forcedDealModalData.card,
           }}
@@ -1289,7 +1305,7 @@ const MainGame = () => {
           dealBreakerModalOpen={dealBreakerModalData.isVisible}
           setDealBreakerModalData={setDealBreakerModalData}
           dealBreakerModalData={{
-            opponentId: dealBreakerModalData.opponentId,
+            opponentIds: dealBreakerModalData.opponentIds,
             card: dealBreakerModalData.card,
           }}
           handleDealBreakerPropertySetSelect={handleDealBreakerSetSelectWrapper}

@@ -13,10 +13,10 @@ const SlyDealModal = ({
 }) => {
   if (!modalData) return null;
 
-  const { gameState, setGameState } = useGameState();
+  const { gameState } = useGameState();
   
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+  const opponents = gameState.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
@@ -25,12 +25,12 @@ const SlyDealModal = ({
     }
   }, [isOpen]);
 
-  const handlePropertySelect = (property) => {
+  const handlePropertySelect = (property, opponent) => {
+    console.log("Opponent Sly Deal handlePropertySelect: ", opponent)
     if (selectedProperty?.id === property.id) {
       setSelectedProperty(null);
     } else {
-      // setSelectedProperty({ ...property, owner: { id: modalData.opponentId, name: modalData.opponentName } });
-      setSelectedProperty({ ...property, owner: { id: opponent.id, name: opponent.name } });
+      setSelectedProperty({ ...property, ownerId: opponent.id });
     }
   };
 
@@ -80,7 +80,7 @@ const SlyDealModal = ({
     return propertyCards.length >= requiredCards;
   };
 
-  const renderPropertyCard = (card, color, allCards) => {
+  const renderPropertyCard = (card, color, allCards, opponent) => {
     // Handle house and hotel cards
     if (card.type === 'action' && (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel')) {
       return (
@@ -123,7 +123,7 @@ const SlyDealModal = ({
         initial="unselected"
         animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
         whileHover={{ scale: 1.01 }}
-        onClick={() => handlePropertySelect(card)}
+        onClick={() => handlePropertySelect(card, opponent)}
         className={`cursor-pointer transition-all transform-gpu ${
           selectedProperty?.id === card.id 
             ? '' 
@@ -170,28 +170,27 @@ const SlyDealModal = ({
         {/* Content Area */}
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                  {/* {modalData.opponentName}'s Properties */}
-                  {opponent.name}'s Properties
-                </h3>
-                <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+            {opponents.map((opponent) => (
+              <div key={opponent.id} className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                    {opponent.name}'s Properties
+                  </h3>
+                  <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+                </div>
+                {Object.keys(opponent.properties).length > 0 ? (
+                  <div className="flex flex-wrap items-start gap-4">
+                    {Object.entries(opponent.properties).map(([color, cards]) => (
+                      cards.map((card, index) => renderPropertyCard(card, color, cards, opponent))
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                    No properties to steal
+                  </div>
+                )}
               </div>
-              {/* {Object.keys(modalData.opponentProperties).length > 0 ? ( */}
-              {Object.keys(opponent.properties).length > 0 ? (
-                <div className="flex flex-wrap items-start gap-4">
-                  {/* {Object.entries(modalData.opponentProperties).map(([color, cards]) => ( */}
-                  {Object.entries(opponent.properties).map(([color, cards]) => (
-                    cards.map((card, index) => renderPropertyCard(card, color, cards))
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
-                  No properties to steal
-                </div>
-              )}
-            </div>
+            ))}
           </div>
         </div>
 

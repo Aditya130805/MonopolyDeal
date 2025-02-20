@@ -15,7 +15,7 @@ const DealBreakerModal = ({
   const { gameState, setGameState } = useGameState();
 
   const [selectedSet, setSelectedSet] = useState(null);
-  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+  const opponents = gameState.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
@@ -24,11 +24,11 @@ const DealBreakerModal = ({
     }
   }, [isOpen]);
 
-  const handleSetSelect = (color, cards) => {
-    if (selectedSet?.color === color) {
+  const handleSetSelect = (color, cards, opponent) => {
+    if (selectedSet?.color === color && selectedSet?.ownerId === opponent.id) {
       setSelectedSet(null);
     } else {
-      setSelectedSet({ color, cards, owner: { id: opponent.id, name: opponent.name } });
+      setSelectedSet({ color, cards, ownerId: opponent.id });
     }
   };
 
@@ -127,13 +127,42 @@ const DealBreakerModal = ({
     return null;
   };
 
-  // Split properties into main and overflow sets
-  const { mainSets, overflowSets } = splitProperties(opponent.properties);
-
-  // Check if there are any complete sets in either main or overflow
-  const hasCompleteSets = Object.entries(mainSets).some(([color, cards]) => isCompleteSet(color, cards)) || Object.entries(overflowSets).some(([color, cards]) => isCompleteSet(color, cards));
-
-  if (!isOpen) return null;
+  const renderCompleteSet = (color, cards, opponent, prefix) => {
+    if (!isCompleteSet(color, cards)) return null;
+    
+    return (
+      <motion.div
+        key={`${prefix}-${color}-${opponent.id}`}
+        className="relative group"
+        variants={setVariants}
+        initial="unselected"
+        animate={selectedSet?.color === color && selectedSet?.ownerId === opponent.id ? "selected" : "unselected"}
+        whileHover={{ scale: 1.01 }}
+        onClick={() => handleSetSelect(color, cards, opponent)}
+      >
+        <div className="flex -space-x-20">
+          {cards.map((card, cardIndex) => (
+            <motion.div
+              key={`${card.id}-${cardIndex}`}
+              className={`transform transition-transform duration-200 ${
+                selectedSet?.color === color && selectedSet?.ownerId === opponent.id
+                  ? ''
+                  : selectedSet
+                    ? 'opacity-100 grayscale'
+                    : 'group-hover:-translate-y-1'
+              }`}
+              style={{
+                zIndex: cards.length - cardIndex,
+                marginLeft: cardIndex > 0 ? '-5rem' : '0'
+              }}
+            >
+              {renderCard(card)}
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <motion.div 
@@ -168,97 +197,54 @@ const DealBreakerModal = ({
         {/* Content Area */}
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                  {opponent.name}'s Complete Property Sets
-                </h3>
-                <div className="h-0.5 flex-1 bg-gradient-to-r from-red-200 to-transparent"></div>
-              </div>
-              {hasCompleteSets ? (
-                <div className="flex flex-wrap items-start gap-4">
-                  {/* Render main sets */}
-                  {Object.entries(mainSets).map(([color, cards]) => (
-                    isCompleteSet(color, cards) && (
-                      <motion.div
-                        key={`main-${color}`}
-                        className="relative group"
-                        variants={setVariants}
-                        initial="unselected"
-                        animate={selectedSet?.color === color ? "selected" : "unselected"}
-                        whileHover={{ scale: 1.01 }}
-                        onClick={() => handleSetSelect(color, cards)}
-                      >
-                        <div className="flex -space-x-20">
-                          {cards.map((card, cardIndex) => (
-                            <motion.div
-                              key={`${card.id}-${cardIndex}`}
-                              className={`transform transition-transform duration-200`}
-                              style={{
-                                zIndex: cards.length - cardIndex,
-                                marginLeft: cardIndex > 0 ? '-5rem' : '0'
-                              }}
-                            >
-                              {renderCard(card)}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )
-                  ))}
-                  
-                  {/* Render complete overflow sets */}
-                  {Object.entries(overflowSets).map(([color, cards]) => (
-                    isCompleteSet(color, cards) && (
-                      <motion.div
-                        key={`overflow-${color}`}
-                        className="relative group"
-                        variants={setVariants}
-                        initial="unselected"
-                        animate={selectedSet?.color === color ? "selected" : "unselected"}
-                        whileHover={{ scale: 1.01 }}
-                        onClick={() => handleSetSelect(color, cards)}
-                      >
-                        <div className="flex -space-x-20">
-                          {cards.map((card, cardIndex) => (
-                            <motion.div
-                              key={`${card.id}-${cardIndex}`}
-                              className={`transform transition-transform duration-200`}
-                              style={{
-                                zIndex: cards.length - cardIndex,
-                                marginLeft: cardIndex > 0 ? '-5rem' : '0'
-                              }}
-                            >
-                              {renderCard(card)}
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )
-                  ))}
+            {opponents.map((opponent) => {
+              // Split properties into main and overflow sets for each opponent
+              const { mainSets, overflowSets } = splitProperties(opponent.properties);
+              
+              // Check if this opponent has any complete sets
+              const hasCompleteSets = Object.entries(mainSets).some(([color, cards]) => isCompleteSet(color, cards)) || 
+                                    Object.entries(overflowSets).some(([color, cards]) => isCompleteSet(color, cards));
+
+              return (
+                <div key={opponent.id} className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
+                      {opponent.name}'s Complete Property Sets
+                    </h3>
+                    <div className="h-0.5 flex-1 bg-gradient-to-r from-red-200 to-transparent"></div>
+                  </div>
+                  {hasCompleteSets ? (
+                    <div className="flex flex-wrap items-start gap-4">
+                      {/* Render main and overflow sets */}
+                      {Object.entries(mainSets).map(([color, cards]) => renderCompleteSet(color, cards, opponent, 'main'))}
+                      {Object.entries(overflowSets).map(([color, cards]) => renderCompleteSet(color, cards, opponent, 'overflow'))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                      No complete property sets to steal
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-500 italic">No complete property sets available</p>
-              )}
-            </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex justify-end gap-3 shrink-0">
+        <div className="mt-4 flex justify-end gap-3 pt-3 border-t border-gray-200 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!selectedSet}
-            className={`px-4 py-2 rounded-lg text-white transition-colors ${
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
               selectedSet
-                ? 'bg-gradient-to-r from-red-600 to-red-400 hover:from-red-700 hover:to-red-500'
-                : 'bg-gray-400 cursor-not-allowed'
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-red-400 cursor-not-allowed'
             }`}
           >
             Steal Set

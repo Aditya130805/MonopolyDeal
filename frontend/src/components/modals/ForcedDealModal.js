@@ -30,7 +30,7 @@ const ForcedDealModal = ({
   const [selectedOpponentProperty, setSelectedOpponentProperty] = useState(null);
   const [selectedUserProperty, setSelectedUserProperty] = useState(null);
   const player = gameState.players.find(p => p.id === modalData.userId);
-  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+  const opponents = gameState.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
@@ -40,11 +40,11 @@ const ForcedDealModal = ({
     }
   }, [isOpen]);
 
-  const handleOpponentPropertySelect = (property) => {
+  const handleOpponentPropertySelect = (property, opponent) => {
     if (selectedOpponentProperty?.id === property.id) {
       setSelectedOpponentProperty(null);
     } else {
-      setSelectedOpponentProperty({ ...property, owner: { id: opponent.id, name: opponent.name } });
+      setSelectedOpponentProperty({ ...property, ownerId: opponent.id });
     }
   };
 
@@ -130,7 +130,7 @@ const ForcedDealModal = ({
     return propertyCards.length >= requiredCards;
   };
 
-  const renderPropertyCard = (card, color, allCards, isOpponentCard = true) => {
+  const renderPropertyCard = (card, color, allCards, isOpponentCard = true, opponent) => {
     // Handle house and hotel cards
     if (card.type === 'action' && (card.name.toLowerCase() === 'house' || card.name.toLowerCase() === 'hotel')) {
       return (
@@ -167,7 +167,7 @@ const ForcedDealModal = ({
     }
 
     const selectedProperty = isOpponentCard ? selectedOpponentProperty : selectedUserProperty;
-    const handleSelect = isOpponentCard ? handleOpponentPropertySelect : handleUserPropertySelect;
+    const handleSelect = isOpponentCard ? () => handleOpponentPropertySelect(card, opponent) : () => handleUserPropertySelect(card);
 
     return (
       <motion.div
@@ -176,7 +176,7 @@ const ForcedDealModal = ({
         initial="unselected"
         animate={selectedProperty?.id === card.id ? "selected" : "unselected"}
         whileHover={{ scale: 1.01 }}
-        onClick={() => handleSelect(card)}
+        onClick={handleSelect}
         className={`cursor-pointer transition-all transform-gpu ${
           selectedProperty?.id === card.id 
             ? '' 
@@ -238,26 +238,28 @@ const ForcedDealModal = ({
         {/* Content Area */}
         <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div className="space-y-6">
-            {/* Opponent Properties Section */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
-                  {opponent.name}'s Properties
-                </h3>
-                <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+            {/* Opponents' Properties */}
+            {opponents.map((opponent) => (
+              <div key={opponent.id} className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
+                    {opponent.name}'s Properties
+                  </h3>
+                  <div className="h-0.5 flex-1 bg-gradient-to-r from-purple-200 to-transparent"></div>
+                </div>
+                {Object.keys(opponent.properties).length > 0 ? (
+                  <div className="flex flex-wrap items-start gap-4">
+                    {Object.entries(opponent.properties).map(([color, cards]) => (
+                      cards.map((card, index) => renderPropertyCard(card, color, cards, true, opponent))
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
+                    No properties to swap
+                  </div>
+                )}
               </div>
-              {Object.keys(opponent.properties).length > 0 ? (
-                <div className="flex flex-wrap items-start gap-4">
-                  {Object.entries(opponent.properties).map(([color, cards]) => (
-                    cards.map((card, index) => renderPropertyCard(card, color, cards, true))
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 italic px-4 py-6 bg-gray-50 rounded-lg text-center">
-                  No properties to swap
-                </div>
-              )}
-            </div>
+            ))}
 
             {/* Divider */}
             <div className="flex items-center gap-4 my-8">
@@ -266,7 +268,7 @@ const ForcedDealModal = ({
               <div className="h-0.5 flex-1 bg-gradient-to-r from-transparent via-purple-200 to-transparent"></div>
             </div>
 
-            {/* User Properties Section */}
+            {/* User's Properties */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">
@@ -290,20 +292,20 @@ const ForcedDealModal = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex justify-end gap-4 shrink-0">
+        <div className="mt-4 flex justify-end gap-3 pt-3 border-t border-gray-200 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!selectedOpponentProperty || !selectedUserProperty}
-            className={`px-4 py-2 rounded-lg text-white transition-colors ${
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
               selectedOpponentProperty && selectedUserProperty
                 ? 'bg-purple-600 hover:bg-purple-700'
-                : 'bg-gray-400 cursor-not-allowed'
+                : 'bg-purple-400 cursor-not-allowed'
             }`}
           >
             Swap Properties
