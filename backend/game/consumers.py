@@ -147,14 +147,14 @@ class GameConsumer(AsyncWebsocketConsumer):
             game_state = GameConsumer.game_instances[self.room_id]
             # Display original action played notification
             await self.channel_layer.group_send(
-                self.game_group_name,
-                {
-                    'type': 'broadcast_card_played',
-                    'player_id': original_action_data['player'],
-                    'action': original_action_data['action'],
-                    'action_type': 'to_bank' if original_action_data['action'] == 'to_bank' else 'to_properties' if original_action_data['action'] == 'to_properties' else 'action',
-                    'card': original_action_data['card']
-                }
+            self.game_group_name,
+            {
+                'type': 'broadcast_card_played',
+                'player_id': original_action_data['player'],
+                'action': original_action_data['action'],
+                'action_type': 'to_bank' if original_action_data['action'] == 'to_bank' else 'to_properties' if original_action_data['action'] == 'to_properties' else 'action',
+                'card': original_action_data['card']
+            }
             )
             # Let everyone know player is making a choice to use just say no or not
             await self.channel_layer.group_send(
@@ -290,7 +290,12 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.play_its_your_birthday(game_state, player, card['id'])
             
         elif action == 'debt_collector':
-            await self.play_debt_collector(game_state, player, card['id'])
+            # print(data['targetPlayer'])
+            await self.play_debt_collector(game_state, player, data['targetPlayer'], card['id'])
+            
+        elif action == 'multicolor rent':
+            print(data, card)
+            await self.play_multicolor_rent(game_state, player, card['id'], data.get('rentAmount'), data.get('targetPlayer'))
             
         elif action == 'rent':
             await self.play_rent(game_state, player, card, data.get('rentAmount'))
@@ -344,18 +349,22 @@ class GameConsumer(AsyncWebsocketConsumer):
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
         if card_to_play:
             player.hand.remove(card_to_play)
+            # Get list of players who need to pay
+            players_to_pay = [p.id for p in game_state.players if p.id != player.id]
             await self.channel_layer.group_send(
                 self.game_group_name,
                 {
                     'type': 'broadcast_rent_request',
                     'amount': 2,  # It's Your Birthday cards request 2M
                     'rent_type': "it's your birthday",
-                    'recipient_id': player.id
+                    'recipient_id': player.id,
+                    'players_to_pay': players_to_pay,  # Add list of players who need to pay
+                    'total_players': len(players_to_pay)  # Add total number of players who need to pay
                 }
             )
             game_state.discard_pile.append(card_to_play)
-    
-    async def play_debt_collector(self, game_state, player, card_id):
+
+    async def play_debt_collector(self, game_state, player, target_player_id, card_id):
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
         if card_to_play:
             player.hand.remove(card_to_play)
@@ -365,7 +374,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'type': 'broadcast_rent_request',
                     'amount': 5,  # Debt Collector cards request 5M
                     'rent_type': "debt collector",
-                    'recipient_id': player.id
+                    'recipient_id': player.id,
+                    'target_player_id': target_player_id or None
                 }
             )
             game_state.discard_pile.append(card_to_play)
@@ -392,6 +402,24 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
         game_state.discard_pile.append(rent_card_to_play)
         game_state.discard_pile.append(double_the_rent_card_to_play)
+        
+    async def play_multicolor_rent(self, game_state, player, card_id, rent_amount, target_player_id):
+        """Handle multicolor rent card play"""
+        card_to_play = next((c for c in player.hand if c.id == card_id), None)
+        if not card_to_play:
+            return
+        player.hand.remove(card_to_play)
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_rent_request',
+                'amount': rent_amount,
+                'rent_type': "multicolor rent",
+                'recipient_id': player.id,
+                'target_player_id': target_player_id or None
+            }
+        )
+        game_state.discard_pile.append(card_to_play)
     
     async def play_rent(self, game_state, player, card, rent_amount):
         """Handle rent card play"""
@@ -835,7 +863,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'type': 'rent_request',
                 'amount': event['amount'],
                 'rent_type': event['rent_type'],
-                'recipient_id': event['recipient_id']
+                'recipient_id': event['recipient_id'],
+                'target_player_id': event.get('target_player_id', None),
+                'players_to_pay': event.get('players_to_pay', None),
+                'total_players': event.get('total_players', None)
             }))
         except Exception as e:
             print(f"Error in broadcast_rent_request: {e}")

@@ -63,35 +63,45 @@ const GameModals = ({
           modalData={rentModalData}
           onPaymentSubmit={handleRentPayment}
         />
+      </Suspense>
 
+      <Suspense fallback={<LoadingFallback />}>
         <DoubleRentModal
           isOpen={doubleRentModalOpen}
           onClose={() => setDoubleRentModalData(prev => ({ ...prev, isVisible: false }))}
           modalData={doubleRentModalData}
           onResponse={handleDoubleRentResponse}
         />
+      </Suspense>
 
+      <Suspense fallback={<LoadingFallback />}>
         <SlyDealModal
           isOpen={slyDealModalOpen}
           onClose={() => setSlyDealModalData(prev => ({ ...prev, isVisible: false }))}
           modalData={slyDealModalData}
           onPropertySelect={handleSlyDealPropertySelect}
         />
+      </Suspense>
 
+      <Suspense fallback={<LoadingFallback />}>
         <ForcedDealModal
           isOpen={forcedDealModalOpen}
           onClose={() => setForcedDealModalData(prev => ({ ...prev, isVisible: false }))}
           modalData={forcedDealModalData}
           onPropertySelect={handleForcedDealPropertySelect}
         />
+      </Suspense>
 
+      <Suspense fallback={<LoadingFallback />}>
         <DealBreakerModal
           isOpen={dealBreakerModalOpen}
           onClose={() => setDealBreakerModalData(prev => ({ ...prev, isVisible: false }))}
           modalData={dealBreakerModalData}
           onPropertySetSelect={handleDealBreakerPropertySetSelect}
         />
+      </Suspense>
 
+      <Suspense fallback={<LoadingFallback />}>
         <JustSayNoModal
           isOpen={justSayNoModalOpen}
           onClose={() => setJustSayNoModalData(prev => ({ ...prev, isVisible: false }))}

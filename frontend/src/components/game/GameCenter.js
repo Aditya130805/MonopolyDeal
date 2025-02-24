@@ -18,7 +18,7 @@ const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleC
   );
 
   const renderActionPile = (lastAction) => (
-    <div className="relative">
+    <div className="relative action-pile-container">
       <div className="w-[140px] h-[190px] bg-white border-gray-700 rounded-lg shadow-md flex flex-col justify-center items-center">
         {lastAction ? (
           <ActionCard

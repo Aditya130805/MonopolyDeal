@@ -30,18 +30,13 @@ const handleRentColorSelection = (card, playerProperties, onColorSelect) => {
     document.body.appendChild(overlay);
 
     const colorButtons = document.createElement('div');
-
-    console.log("Player properties:", playerProperties);
     
     // Function to update position
     const updatePosition = () => {
-        // Find the action pile in the game center
-        const actionPiles = document.querySelectorAll('.relative');
-        const actionPile = Array.from(actionPiles).find(el => {
-            const actionCard = el.querySelector('.w-\\[140px\\].h-\\[190px\\]');
-            return actionCard !== null;
-        });
+        // Find the action pile using a dedicated class
+        const actionPile = document.querySelector('.action-pile-container');
         if (!actionPile || !colorButtons) return;
+        
         const rect = actionPile.getBoundingClientRect();
         colorButtons.style.position = 'fixed';
         colorButtons.style.top = rect.top + 'px';
@@ -55,11 +50,7 @@ const handleRentColorSelection = (card, playerProperties, onColorSelect) => {
     
     // Add resize listener
     const resizeObserver = new ResizeObserver(updatePosition);
-    const actionPiles = document.querySelectorAll('.relative');
-    const actionPile = Array.from(actionPiles).find(el => {
-        const actionCard = el.querySelector('.w-\\[140px\\].h-\\[190px\\]');
-        return actionCard !== null;
-    });
+    const actionPile = document.querySelector('.action-pile-container');
     if (actionPile) {
         resizeObserver.observe(actionPile);
     }

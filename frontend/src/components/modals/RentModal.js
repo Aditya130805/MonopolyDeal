@@ -11,29 +11,34 @@ const RentModal = ({
   modalData, 
   onPaymentSubmit 
 }) => {
-  if (!modalData || !isOpen) return null;
-
   const { gameState, setGameState } = useGameState();
-  const amountDue = modalData.amountDue;
-  const rentType = modalData.rentType;
-  const player = gameState.players.find(p => p.id === modalData.userId);
-  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
-
   const [selectedCards, setSelectedCards] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
   const [hasSelectedAll, setHasSelectedAll] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && modalData && gameState.players) {
       setSelectedCards([]);
       setTotalSelected(0);
       
-      // If there are no selectable cards at all, set hasSelectedAll to true
-      const allCards = [...player.bank, ...Object.values(player.properties).flat()];
-      const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
-      setHasSelectedAll(nonWildCards.length === 0);
+      const player = gameState.players.find(p => p.id === modalData.userId);
+      if (player) {
+        // If there are no selectable cards at all, set hasSelectedAll to true
+        const allCards = [...player.bank, ...Object.values(player.properties).flat()];
+        const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
+        setHasSelectedAll(nonWildCards.length === 0);
+      }
     }
-  }, [isOpen, player.bank, player.properties]);
+  }, [isOpen, modalData, gameState.players]);
+
+  if (!modalData || !isOpen || !gameState.players) return null;
+
+  const amountDue = modalData.amountDue;
+  const rentType = modalData.rentType;
+  const player = gameState.players.find(p => p.id === modalData.userId);
+  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+
+  if (!player || !opponent) return null;
 
   const handleCardSelect = (card) => {
     // Don't allow selecting completely wild property cards
@@ -71,8 +76,6 @@ const RentModal = ({
     onPaymentSubmit(modalData, selectedCards);
     onClose();
   };
-
-  if (!isOpen) return null;
 
   const cardVariants = {
     unselected: { 

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const RentCollectionOverlay = ({ isVisible, onClose, overlayData }) => {
   return (
     <AnimatePresence mode="wait" onExitComplete={onClose}>
-      {isVisible && overlayData && (
+      {isVisible && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -49,11 +49,10 @@ const RentCollectionOverlay = ({ isVisible, onClose, overlayData }) => {
               transition={{
                 duration: 1.5,
                 repeat: Infinity,
-                ease: "easeInOut"
               }}
-              className="text-white text-xl font-bold"
+              className="text-white text-xl font-semibold"
             >
-              Collecting Rent...
+              {overlayData?.message || "Collecting Rent..."}
             </motion.p>
           </div>
         </motion.div>

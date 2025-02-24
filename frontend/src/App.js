@@ -15,6 +15,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 import { GameStateProvider } from './contexts/GameStateContext';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { WebSocketMessageQueueProvider } from './contexts/WebSocketMessageQueue';
 import './App.css';
 
 function App() {
@@ -42,8 +43,9 @@ function AppContent() {
   return (
       <DndProvider backend={HTML5Backend}>
         <WebSocketProvider playerId={playerId}> 
-            <GameStateProvider>
-              <div className="App">
+            <WebSocketMessageQueueProvider>
+              <GameStateProvider>
+                <div className="App">
           <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/how-to-play" element={<HowToPlay />} />
@@ -103,6 +105,7 @@ function AppContent() {
             </Routes>
           </div>
         </GameStateProvider>
+        </WebSocketMessageQueueProvider>
         </WebSocketProvider>
       </DndProvider>
   );
