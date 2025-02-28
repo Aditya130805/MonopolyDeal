@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
-const OpponentSelectionModal = ({ isVisible, opponentIds, type, onSelect, onCancel }) => {
-    const { gameState } = useGameState();
+const OpponentSelectionModal = ({ isVisible, gameState, opponentIds, type, onSelect, onCancel }) => {
+    // const { gameState } = useGameState();
     if (!isVisible) return null;
 
     const isDebtCollector = type === 'debt_collector';

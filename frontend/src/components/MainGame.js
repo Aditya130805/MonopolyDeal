@@ -268,6 +268,13 @@ const MainGame = () => {
   const [pendingSlyDealCard, setPendingSlyDealCard] = useState(null);
   const [pendingForcedDealCard, setPendingForcedDealCard] = useState(null);
   const [pendingDealBreakerCard, setPendingDealBreakerCard] = useState(null);
+  const [pendingJustSayNoChoiceData, setPendingJustSayNoChoiceData] = useState(null);
+  const [pendingJustSayNoResponseData, setPendingJustSayNoResponseData] = useState(null);
+  const [pendingRentRequestData, setPendingRentRequestData] = useState(null);
+  const [pendingRentPaidData, setPendingRentPaidData] = useState(null);
+  const [pendingPropertyStealData, setPendingPropertyStealData] = useState(null);
+  const [pendingPropertySwapData, setPendingPropertySwapData] = useState(null);
+  const [pendingDealBreakerData, setPendingDealBreakerData] = useState(null);
 
   ////////// OVERLAY DATA VARS
   const [winnerOverlayData, setWinnerOverlayData] = useState({ 
@@ -280,46 +287,47 @@ const MainGame = () => {
     isVisible: false 
   });
   const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({ 
-    isVisible: false, playerId: "" 
+    isVisible: false, gameState: null, playerId: "" 
   });
   const [justSayNoPlayedOverlayData, setJustSayNoPlayedOverlayData] = useState({
-    isVisible: false, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
+    isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
   });
   const [paymentSuccessfulOverlayData, setPaymentSuccessfulOverlayData] = useState({
-    isVisible: false, playerId: '', targetId: '', selectedCards: []
+    isVisible: false, gameState: null, playerId: '', targetId: '', selectedCards: []
   });
   const [propertyStealOverlayData, setPropertyStealOverlayData] = useState({
-    isVisible: false, property: null, stealerId: '', targetId: ''
+    isVisible: false, gameState: null, property: null, stealerId: '', targetId: ''
   });
   const [propertySwapOverlayData, setPropertySwapOverlayData] = useState({
-    isVisible: false, property1: null, property2: null, player1Id: '', player2Id: ''
+    isVisible: false, gameState: null, property1: null, property2: null, player1Id: '', player2Id: ''
   });
   const [dealBreakerOverlayData, setDealBreakerOverlayData] = useState({
-    isVisible: false, stealerId: '', targetId: '', color: '', propertySet: []
+    isVisible: false, gameState: null, stealerId: '', targetId: '', color: '', propertySet: []
   });
 
   ////////// MODAL DATA VARS
   const [justSayNoModalData, setJustSayNoModalData] = useState({
-    isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+    isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
   });
   const [rentModalData, setRentModalData] = useState({
-    isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null
+    isVisible: false, gameState: null, opponentId: null, userId: null, amountDue: 0, rentType: null
   });
   const [doubleRentModalData, setDoubleRentModalData] = useState({
-    isVisible: false, doubleRentAmount: 0, opponentId: ''
+    isVisible: false, doubleRentAmount: 0, opponentIds: ''
   });
   const [slyDealModalData, setSlyDealModalData] = useState({
-    isVisible: false, card: null, opponentIds: []
+    isVisible: false, gameState: null, card: null, opponentIds: []
   });
   const [forcedDealModalData, setForcedDealModalData] = useState({
-    isVisible: false, card: null, opponentIds: []
+    isVisible: false, gameState: null, card: null, opponentIds: []
   });
   const [dealBreakerModalData, setDealBreakerModalData] = useState({
-    isVisible: false, card: null, opponentIds: []
+    isVisible: false, gameState: null, card: null, opponentIds: []
   });
 
   const [opponentSelectionModalData, setOpponentSelectionModalData] = useState({
     isVisible: false,
+    gameState: null,
     opponentIds: [],
     type: '',
     onSelect: null,
@@ -385,101 +393,6 @@ const MainGame = () => {
     setCardNotifications(prev => [...prev, newNotification]);
   };
 
-  const handleRentRequest = (data) => {
-    console.log("Rent Request: ", data.rent_type)
-    if (data.players_to_pay) {
-      // Initialize the payment tracker for multi-player rent
-      setRentPaymentTracker({
-        totalPlayers: data.total_players,
-        playersPaid: new Set(),
-      });
-    }
-    if (data.recipient_id !== user.unique_id) {
-      if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") { 
-        if (data.target_player_id === user.unique_id) {
-          setRentModalData(prev => ({ ...prev, isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type}))
-        } else {
-          // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
-        }
-      } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
-        setRentModalData(prev => ({ ...prev, isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type}))
-      }
-    } else {
-      // Show rent animation first for the player who played the rent card
-      setShowActionAnimation({
-        visible: true,
-        action: data.rent_type === "it's your birthday" ? 'Birthday Request' :
-                data.rent_type === "debt collector" ? 'Debt Request' :
-                data.rent_type === "double_the_rent" ? 'Double Rent Request' :
-                'Rent Request'
-      });
-      // Wait 2 seconds then start transitioning
-      rentCollectionTimeoutRef.current = setTimeout(() => {
-        // Hide action animation (will trigger fade out)
-        setShowActionAnimation(prev => ({ ...prev, visible: false }));
-        // Show rent collection overlay
-        setRentCollectionOverlayData({ isVisible: true })
-      }, 2000);
-    }
-  };
-
-  const handleRentPaid = (data) => {
-    console.log("gameState.players 2: ", gameState)
-    // Only clear rent modal if the current user is the one who paid
-    if (data.player_id === user.unique_id) {
-      setRentModalData(prev => ({ ...prev, isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null}));
-    }
-
-    // Update the payment tracker
-    setRentPaymentTracker(prev => {
-      const newPlayersPaid = new Set(prev.playersPaid);
-      newPlayersPaid.add(data.player_id);
-      
-      // Only clear the collection overlay if everyone has paid
-      if (newPlayersPaid.size >= prev.totalPlayers) {
-        // Clear any pending timeout for rent collection overlay
-        if (rentCollectionTimeoutRef.current) {
-          clearTimeout(rentCollectionTimeoutRef.current);
-          rentCollectionTimeoutRef.current = null;
-        }
-        setRentCollectionOverlayData({ isVisible: false });
-        return { playersPaid: new Set(), totalPlayers: 0 };
-      } else {
-        // Check if the current user has paid
-        if (newPlayersPaid.has(user.unique_id)) {
-          // Show waiting overlay with names of players who haven't paid
-          // Get the current players from gameState
-          console.log("newPlayersPaid: ", newPlayersPaid)
-          console.log("gameState.players: ", gameState.players)
-          const unpaidPlayerIds = gameState.players
-            .filter(player => !newPlayersPaid.has(player.id))
-            .map(player => player.name)
-            .join(", ");
-
-          if (unpaidPlayerIds) {
-            setRentCollectionOverlayData({
-              isVisible: true,
-              message: `Waiting for players to pay: ${unpaidPlayerIds}`
-            });
-          }
-        }
-        return { ...prev, playersPaid: newPlayersPaid };
-      }
-    });
-    
-    setPaymentSuccessfulOverlayData({
-      isVisible: true,
-      playerId: data.player_id,
-      targetId: data.recipient_id,
-      selectedCards: data.selected_cards
-    });
-    
-    // Hide overlay after 2 seconds
-    setTimeout(() => {
-      setPaymentSuccessfulOverlayData({ isVisible: false, playerId: '', targetId: '', selectedCards: []})
-    }, 2000);
-  };
-
   const handleGameUpdate = (data) => {
     const state = data.state;
     console.log(state)
@@ -516,80 +429,11 @@ const MainGame = () => {
 
       switch (data.type) {
         case 'just_say_no_response':
-          setJustSayNoChoiceWaitingOverlayData({
-            isVisible: false,
-            playerId: ""
-          })
-          setJustSayNoModalData({
-            isVisible: false,
-            playerId: "",
-            opponentId: "",
-            againstCard: null,
-            againstRentCard: null,
-            card: null,
-            data: null
-          });
-          if (data.playJustSayNo) {
-            setJustSayNoPlayedOverlayData({
-              isVisible: true,
-              playerId: data.playerId,
-              opponentId: data.opponentId,
-              againstCard: data.againstCard,
-              justSayNoCard: data.card
-            })
-
-            // Hide the overlay after 3 seconds
-            setTimeout(() => {
-              setJustSayNoPlayedOverlayData({
-                isVisible: false,
-                playerId: "",
-                opponentId: "",
-                againstCard: null,
-                justSayNoCard: null
-              })
-            }, 3000);
-          }
+          setPendingJustSayNoResponseData(data);
           break;
 
         case 'just_say_no_choice':
-          setJustSayNoPlayedOverlayData({
-            isVisible: false,
-            playerId: "",
-            opponentId: "",
-            againstCard: null,
-            justSayNoCard: null
-          })
-          
-          if (data.playerId === user.unique_id) {
-            setJustSayNoModalData({
-              isVisible: true,
-              playerId: data.playerId,
-              opponentId: data.opponentId,
-              againstCard: data.againstCard,
-              againstRentCard: data.againstRentCard,
-              card: data.card,
-              data: data.data
-            });
-            setJustSayNoChoiceWaitingOverlayData({
-              isVisible: false,
-              playerId: ""
-            });
-          } else {
-            setJustSayNoChoiceWaitingOverlayData({
-              isVisible: true,
-              playerId: data.playerId
-            });
-            // Clear the modal when showing waiting overlay
-            setJustSayNoModalData({
-              isVisible: false,
-              playerId: "",
-              opponentId: "",
-              againstCard: null,
-              againstRentCard: null,
-              card: null,
-              data: null
-            });
-          }
+          setPendingJustSayNoChoiceData(data);
           break;
 
         case 'card_played':
@@ -597,40 +441,23 @@ const MainGame = () => {
           break;
 
         case 'rent_request':
-          handleRentRequest(data);
+          setPendingRentRequestData(data);
           break;
 
         case 'rent_paid':
-          handleRentPaid(data);
+          setPendingRentPaidData(data);
           break;
 
         case 'property_stolen':
-          setPropertyStealOverlayData({
-            isVisible: true,
-            property: data.property,
-            stealerId: data.player_id,
-            targetId: data.target_id,
-          })
+          setPendingPropertyStealData(data);
           break;
 
         case 'property_swap':
-          setPropertySwapOverlayData({
-            isVisible: true,
-            property1: data.property1,
-            property2: data.property2,
-            player1Id: data.player1_id,
-            player2Id: data.player2_id
-          });
+          setPendingPropertySwapData(data);
           break;
 
         case 'deal_breaker_overlay':
-          setDealBreakerOverlayData({
-            isVisible: true,
-            stealerId: data.stealerId,
-            targetId: data.targetId,
-            color: data.color,
-            propertySet: data.property_set
-          })
+          setPendingDealBreakerData(data);
           break;
 
         case 'game_update':
@@ -657,13 +484,13 @@ const MainGame = () => {
       handleHousePlacement(pendingHouseCard, userPlayer.properties, setError, socket, user);
       setPendingHouseCard(null);
     }
-  }, [pendingHouseCard]);
+  }, [pendingHouseCard, gameState]);
   useEffect(() => {
     if (pendingHotelCard) {
       handleHotelPlacement(pendingHotelCard, userPlayer.properties, setError, socket, user);
       setPendingHotelCard(null);
     }
-  }, [pendingHotelCard])
+  }, [pendingHotelCard, gameState])
   useEffect(() => {
     if (pendingPassGoCard) {
       if (2 - 1 + userPlayer.hand.length - (gameState.actions_remaining - 1) > 7) {
@@ -682,7 +509,7 @@ const MainGame = () => {
       }));
       setPendingPassGoCard(null);
     }
-  }, [pendingPassGoCard]);
+  }, [pendingPassGoCard, gameState]);
   useEffect(() => {
     if (pendingItsYourBirthdayCard) {
       // const opponent = gameState.players.find(p => p.id === opponentId);
@@ -712,11 +539,12 @@ const MainGame = () => {
       }
       setPendingItsYourBirthdayCard(null);
     }
-  }, [pendingItsYourBirthdayCard]);
+  }, [pendingItsYourBirthdayCard, gameState]);
   useEffect(() => {
     if (pendingDebtCollectorCard) {
       setOpponentSelectionModalData({
         isVisible: true,
+        gameState: gameState,
         opponentIds: opponentIds,
         type: 'debt_collector',
         onSelect: (selectedOpponentId) => {
@@ -754,7 +582,7 @@ const MainGame = () => {
         }
       });
     }
-  }, [pendingDebtCollectorCard]);
+  }, [pendingDebtCollectorCard, gameState]);
   useEffect(() => {
     if (pendingRentCard) {
       let hasMatchingProperties = false;
@@ -788,7 +616,7 @@ const MainGame = () => {
         handleRentColorSelection(pendingRentCard, userPlayer.properties, handleRentColorForMulticolor);
       }
     }
-  }, [pendingRentCard]);
+  }, [pendingRentCard, gameState]);
   useEffect(() => {
     if (pendingSlyDealCard) {
       // Check if opponents have any properties at all
@@ -845,11 +673,12 @@ const MainGame = () => {
 
       setSlyDealModalData({
         isVisible: true,
+        gameState: gameState,
         card: pendingSlyDealCard,
-        opponentIds: opponentIds
+        opponentIds: opponentIds,
       });
     }
-  }, [pendingSlyDealCard]);
+  }, [pendingSlyDealCard, gameState]);
   useEffect(() => {
     if (pendingForcedDealCard) {
       // Check if player has any properties to swap
@@ -913,11 +742,12 @@ const MainGame = () => {
       
       setForcedDealModalData({
         isVisible: true,
+        gameState: gameState,
         card: pendingForcedDealCard,
         opponentIds: opponentIds
       })
     }
-  }, [pendingForcedDealCard]);
+  }, [pendingForcedDealCard, gameState]);
   useEffect(() => {
     if (pendingDealBreakerCard) { 
       const isCompleteSet = (color, cards) => {
@@ -943,22 +773,212 @@ const MainGame = () => {
     
       setDealBreakerModalData({
         isVisible: true,
+        gameState: gameState,
         card: pendingDealBreakerCard,
         opponentIds: opponentIds
       });
     }
-  }, [pendingDealBreakerCard]);
+  }, [pendingDealBreakerCard, gameState]);
+  useEffect(() => {
+    if (!pendingJustSayNoChoiceData) return;
+    const data = pendingJustSayNoChoiceData;
+    // setJustSayNoPlayedOverlayData({ 
+    //   isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null 
+    // })
+    if (data.playerId === user.unique_id) {
+      setJustSayNoModalData({
+        isVisible: true, gameState: gameState, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, againstRentCard: data.againstRentCard, card: data.card, data: data.data
+      });
+      setJustSayNoChoiceWaitingOverlayData({
+        isVisible: false, gameState: null, playerId: ""
+      });
+    } else {
+      setJustSayNoChoiceWaitingOverlayData({
+        isVisible: true, gameState: gameState, playerId: data.playerId
+      });
+      setJustSayNoModalData({
+        isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+      });
+    }
+    setPendingJustSayNoChoiceData(null);
+  }, [pendingJustSayNoChoiceData, gameState])
+  useEffect(() => {
+    if (!pendingJustSayNoResponseData) return;
+    const data = pendingJustSayNoResponseData;
+    setJustSayNoChoiceWaitingOverlayData({
+      isVisible: false, gameState: null, playerId: ""
+    })
+    setJustSayNoModalData({
+      isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+    });
+    if (data.playJustSayNo) {
+      setTimeout(() => {
+        setJustSayNoPlayedOverlayData({
+          isVisible: true, gameState: gameState, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, justSayNoCard: data.card
+        })
+      }, 0);
+      // Hide the overlay after 3 seconds
+      setTimeout(() => {
+        setJustSayNoPlayedOverlayData({
+          isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
+        })
+      }, 3000);
+    }
+    setPendingJustSayNoResponseData(null);
+  }, [pendingJustSayNoResponseData, gameState]);
+  useEffect(() => {
+    if (!pendingRentRequestData) return;
+    const data = pendingRentRequestData;
+    console.log("Rent Request: ", data.rent_type)
+    if (data.players_to_pay) {
+      console.log("Multi-player rent")
+      // Initialize the payment tracker for multi-player rent
+      setRentPaymentTracker({
+        totalPlayers: data.total_players,
+        playersPaid: new Set(),
+      });
+    }
+    if (data.recipient_id !== user.unique_id) {
+      if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
+        console.log("Debt collector or multicolor rent")
+        if (data.target_player_id === user.unique_id) {
+          console.log("Target player is the current user")
+          setRentModalData({ isVisible: true, gameState: gameState, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+        } else {
+          // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
+        }
+      } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
+        setRentModalData({ isVisible: true, gameState: gameState, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+      }
+    } else {
+      // Show rent animation first for the player who played the rent card
+      setShowActionAnimation({
+        visible: true,
+        action: data.rent_type === "it's your birthday" ? 'Birthday Request' :
+                data.rent_type === "debt collector" ? 'Debt Request' :
+                data.rent_type === "double_the_rent" ? 'Double Rent Request' :
+                'Rent Request'
+      });
+      // Wait 2 seconds then start transitioning
+      rentCollectionTimeoutRef.current = setTimeout(() => {
+        // Hide action animation (will trigger fade out)
+        setShowActionAnimation(prev => ({ ...prev, visible: false }));
+        // Show rent collection overlay
+        setRentCollectionOverlayData({ isVisible: true })
+      }, 2000);
+    }
+    setPendingRentRequestData(null);
+  }, [pendingRentRequestData, gameState])
+  useEffect(() => {
+    if (!pendingRentPaidData) return;
+    const data = pendingRentPaidData;
+    console.log("gameState.players 2: ", gameState)
+    // Only clear rent modal if the current user is the one who paid
+    if (data.player_id === user.unique_id) {
+      setRentModalData({ isVisible: false, gameState: null, opponentId: null, userId: null, amountDue: 0, rentType: null });
+    }
+
+    // Update the payment tracker
+    setRentPaymentTracker(prev => {
+      const newPlayersPaid = new Set(prev.playersPaid);
+      newPlayersPaid.add(data.player_id);
+      
+      // Only clear the collection overlay if everyone has paid
+      if (newPlayersPaid.size >= prev.totalPlayers) {
+        // Clear any pending timeout for rent collection overlay
+        if (rentCollectionTimeoutRef.current) {
+          clearTimeout(rentCollectionTimeoutRef.current);
+          rentCollectionTimeoutRef.current = null;
+        }
+        setRentCollectionOverlayData({ isVisible: false });
+        return { playersPaid: new Set(), totalPlayers: 0 };
+      } else {
+        // Check if the current user has paid
+        if (newPlayersPaid.has(user.unique_id)) {
+          // Show waiting overlay with names of players who haven't paid
+          // Get the current players from gameState
+          console.log("newPlayersPaid: ", newPlayersPaid)
+          console.log("gameState.players: ", gameState.players)
+          const unpaidPlayerIds = gameState.players
+            .filter(player => !newPlayersPaid.has(player.id))
+            .map(player => player.id)
+            .join(", ");
+
+          if (unpaidPlayerIds) {
+            setRentCollectionOverlayData({
+              isVisible: true,
+              message: `Waiting for players to pay: ${unpaidPlayerIds}`
+            });
+          }
+        }
+        return { ...prev, playersPaid: newPlayersPaid };
+      }
+    });
+    
+    setPaymentSuccessfulOverlayData({
+      isVisible: true,
+      gameState: gameState,
+      playerId: data.player_id,
+      targetId: data.recipient_id,
+      selectedCards: data.selected_cards
+    });
+    
+    // Hide overlay after 2 seconds
+    setTimeout(() => {
+      setPaymentSuccessfulOverlayData({ isVisible: false, gameState: null, playerId: '', targetId: '', selectedCards: []})
+    }, 2000);
+    setPendingRentPaidData(null);
+  }, [pendingRentPaidData, gameState])
+  useEffect(() => {
+    if (!pendingPropertyStealData) return;
+    const data = pendingPropertyStealData;
+    setPropertyStealOverlayData({
+      isVisible: true,
+      gameState: gameState,
+      property: data.property,
+      stealerId: data.player_id,
+      targetId: data.target_id,
+    })
+    setPendingPropertyStealData(null);
+  }, [pendingPropertyStealData, gameState])
+  useEffect(() => {
+    if (!pendingPropertySwapData) return;
+    const data = pendingPropertySwapData;
+    setPropertySwapOverlayData({
+      isVisible: true,
+      gameState: gameState,
+      property1: data.property1,
+      property2: data.property2,
+      player1Id: data.player1_id,
+      player2Id: data.player2_id
+    });
+    setPendingPropertySwapData(null);
+  }, [pendingPropertySwapData, gameState])
+  useEffect(() => {
+    if (!pendingDealBreakerData) return;
+    const data = pendingDealBreakerData;
+    setDealBreakerOverlayData({
+      isVisible: true,
+      gameState: gameState,
+      stealerId: data.stealerId,
+      targetId: data.targetId,
+      color: data.color,
+      propertySet: data.property_set
+    })
+    setPendingDealBreakerData(null);
+  }, [pendingDealBreakerData, gameState])
 
   // Handle sly deal property selection
   const handleSlyDealPropertySelectWrapper = (modalData, selectedProperty) => {
     // const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === selectedProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     const slyDealActionData = JSON.stringify({
       action: 'sly_deal',
       player: user.unique_id,
-      card: pendingSlyDealCard,
+      card: card,
       target_property: selectedProperty
     });
     if (justSayNoCard) {
@@ -980,13 +1000,14 @@ const MainGame = () => {
 
   // Handle forced deal property selection
   const handleForcedDealSelectWrapper = (modalData, opponentProperty, userProperty) => {
+    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === opponentProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     const forcedDealActionData = JSON.stringify({
       action: 'forced_deal',
       player: user.unique_id,
-      card: pendingForcedDealCard,
+      card: card,
       target_property: opponentProperty,
       user_property: userProperty
     });
@@ -1008,6 +1029,7 @@ const MainGame = () => {
 
   // Handle deal breaker set selection
   const handleDealBreakerSetSelectWrapper = (modalData, selectedSet) => {
+    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === selectedSet.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
@@ -1037,7 +1059,7 @@ const MainGame = () => {
 
   // Handle double rent response
   const handleDoubleRentResponseWrapper = (modalData, useDoubleRent) => {
-    setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentId: '' });
+    setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentIds: '' });
     const opponent = gameState.players.find(p => p.id === modalData.opponentId);
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
     
@@ -1211,7 +1233,7 @@ const MainGame = () => {
     setErrors(prev => [...prev, newError]);
   };
 
-  const handleRentColorSelect = useCallback((color, rentAmount) => {
+  const handleRentColorSelect = useCallback((card, color, rentAmount) => {
     console.log("Color:", color, "Rent Amount:", rentAmount);
     setRentAmount(rentAmount);
 
@@ -1242,7 +1264,7 @@ const MainGame = () => {
         const rentActionData = JSON.stringify({
           'action': 'rent',
           'player': userPlayer.id,
-          'card': pendingRentCard,
+          'card': card,
           'rentColor': color,
           'rentAmount': rentAmount,
           'targetPlayer': opponent.id
@@ -1254,10 +1276,11 @@ const MainGame = () => {
             playerId: opponent.id,
             opponentId: userPlayer.id,
             card: justSayNoCard,
-            againstCard: pendingRentCard,
+            againstCard: card,
             data: rentActionData
           }));
         } else {
+          console.log("Sending rent action")
           socket.send(rentActionData);
         }
       });
@@ -1272,7 +1295,7 @@ const MainGame = () => {
     }
   }, [gameState, socket]);
 
-  const handleRentColorForMulticolor = (color, rentAmount) => {
+  const handleRentColorForMulticolor = (card, color, rentAmount) => {
     setRentAmount(rentAmount);
     // Show opponent selection after color is chosen
     const opponentIds = gameState.players
@@ -1281,6 +1304,7 @@ const MainGame = () => {
     
     setOpponentSelectionModalData({
       isVisible: true,
+      gameState: gameState,
       opponentIds: opponentIds,
       type: 'multicolor rent',
       onSelect: (selectedOpponentId) => {
@@ -1288,7 +1312,7 @@ const MainGame = () => {
         const multicolorRentActionData = JSON.stringify({
           'action': 'multicolor rent',
           'player': userPlayer.id,
-          'card': pendingRentCard,
+          'card': card,
           'rentColor': color,
           'rentAmount': rentAmount,
           'targetPlayer': selectedOpponentId
@@ -1415,6 +1439,7 @@ const MainGame = () => {
           rentModalOpen={rentModalData.isVisible}
           setRentModalData={setRentModalData}
           rentModalData={{
+            gameState: rentModalData.gameState,
             opponentId: rentModalData.opponentId,
             userId: rentModalData.userId,
             amountDue: rentModalData.amountDue,
@@ -1426,13 +1451,14 @@ const MainGame = () => {
           setDoubleRentModalData={setDoubleRentModalData}
           doubleRentModalData={{
             doubleRentAmount: doubleRentModalData.doubleRentAmount,
-            opponentId: doubleRentModalData.opponentId,
+            opponentIds: doubleRentModalData.opponentIds,
           }}
           handleDoubleRentResponse={handleDoubleRentResponseWrapper}
           
           slyDealModalOpen={slyDealModalData.isVisible}
           setSlyDealModalData={setSlyDealModalData}
           slyDealModalData={{
+            gameState: slyDealModalData.gameState,
             opponentIds: slyDealModalData.opponentIds,
             card: slyDealModalData.card,
           }}
@@ -1441,6 +1467,7 @@ const MainGame = () => {
           forcedDealModalOpen={forcedDealModalData.isVisible}
           setForcedDealModalData={setForcedDealModalData}
           forcedDealModalData={{
+            gameState: forcedDealModalData.gameState,
             opponentIds: forcedDealModalData.opponentIds,
             userId: user.unique_id,
             card: forcedDealModalData.card,
@@ -1450,6 +1477,7 @@ const MainGame = () => {
           dealBreakerModalOpen={dealBreakerModalData.isVisible}
           setDealBreakerModalData={setDealBreakerModalData}
           dealBreakerModalData={{
+            gameState: dealBreakerModalData.gameState,
             opponentIds: dealBreakerModalData.opponentIds,
             card: dealBreakerModalData.card,
           }}
@@ -1458,6 +1486,7 @@ const MainGame = () => {
           justSayNoModalOpen={justSayNoModalData.isVisible}
           setJustSayNoModalData={setJustSayNoModalData}
           justSayNoModalData={{
+            gameState: justSayNoModalData.gameState,
             playerId: justSayNoModalData.playerId,
             opponentId: justSayNoModalData.opponentId,
             againstCard: justSayNoModalData.againstCard,
@@ -1508,6 +1537,7 @@ const MainGame = () => {
     </DragOverlay>
     <OpponentSelectionModal
       isVisible={opponentSelectionModalData.isVisible}
+      gameState={opponentSelectionModalData.gameState}
       opponentIds={opponentSelectionModalData.opponentIds}
       type={opponentSelectionModalData.type}
       onSelect={opponentSelectionModalData.onSelect}

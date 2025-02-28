@@ -1,18 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ActionCard from '../cards/ActionCard';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
 const JustSayNoPlayedOverlay = ({ isVisible, onClose, overlayData }) => {
-  const { gameState } = useGameState();
+  // const { gameState } = useGameState();
+  const gameState = overlayData?.gameState;
   
   const playerId = overlayData?.playerId;
   const opponentId = overlayData?.opponentId;
   const againstCard = overlayData?.againstCard;
   const justSayNoCard = overlayData?.justSayNoCard;
   
-  const player = gameState.players.find(p => p.id === playerId);
-  const opponent = gameState.players.find(p => p.id === opponentId);
+  const player = gameState?.players.find(p => p.id === playerId);
+  const opponent = gameState?.players.find(p => p.id === opponentId);
   const playingPlayerName = player?.name;
   const againstPlayerName = opponent?.name;
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MoneyCard from '../cards/MoneyCard';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
 const RentModal = ({ 
   isOpen, 
@@ -11,17 +11,18 @@ const RentModal = ({
   modalData, 
   onPaymentSubmit 
 }) => {
-  const { gameState, setGameState } = useGameState();
+  // const { gameState, setGameState } = useGameState();
+  const gameState = modalData.gameState;
   const [selectedCards, setSelectedCards] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
   const [hasSelectedAll, setHasSelectedAll] = useState(false);
 
   useEffect(() => {
-    if (isOpen && modalData && gameState.players) {
+    if (isOpen && modalData && gameState) {
       setSelectedCards([]);
       setTotalSelected(0);
       
-      const player = gameState.players.find(p => p.id === modalData.userId);
+      const player = gameState?.players.find(p => p.id === modalData.userId);
       if (player) {
         // If there are no selectable cards at all, set hasSelectedAll to true
         const allCards = [...player.bank, ...Object.values(player.properties).flat()];
@@ -29,9 +30,9 @@ const RentModal = ({
         setHasSelectedAll(nonWildCards.length === 0);
       }
     }
-  }, [isOpen, modalData, gameState.players]);
+  }, [isOpen, modalData, gameState]);
 
-  if (!modalData || !isOpen || !gameState.players) return null;
+  if (!modalData || !isOpen || !gameState) return null;
 
   const amountDue = modalData.amountDue;
   const rentType = modalData.rentType;

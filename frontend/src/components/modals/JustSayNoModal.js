@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ActionCard from '../cards/ActionCard';
 import PropertyCard from '../cards/PropertyCard';
 import { useWebSocket } from '../../contexts/WebSocketContext';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
 const JustSayNoModal = ({ isOpen, onClose, modalData, onResponse }) => {
   const { socket } = useWebSocket();
-  const { gameState } = useGameState();
-  const player = gameState.players.find(p => p.id === modalData.playerId);
-  const opponent = gameState.players.find(p => p.id === modalData.opponentId);
+  // const { gameState } = useGameState();
+  const gameState = modalData.gameState;
+  const player = gameState?.players.find(p => p.id === modalData.playerId);
+  const opponent = gameState?.players.find(p => p.id === modalData.opponentId);
 
   const handleResponse = (playJustSayNo) => {
     if (socket) {

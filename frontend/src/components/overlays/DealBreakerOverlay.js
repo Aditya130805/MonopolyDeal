@@ -2,19 +2,20 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 import { colorMap } from '../../utils/gameUtils';
 
 const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
-  const { gameState } = useGameState();
+  // const { gameState } = useGameState();
+  const gameState = overlayData?.gameState;
   
   const stealerId = overlayData?.stealerId;
   const targetId = overlayData?.targetId;
   const color = overlayData?.color;
   const propertySet = overlayData?.propertySet || [];
   
-  const stealerName = gameState.players.find(p => p.id === stealerId)?.name;
-  const targetName = gameState.players.find(p => p.id === targetId)?.name;
+  const stealerName = gameState?.players.find(p => p.id === stealerId)?.name;
+  const targetName = gameState?.players.find(p => p.id === targetId)?.name;
 
   useEffect(() => {
     if (isVisible) {

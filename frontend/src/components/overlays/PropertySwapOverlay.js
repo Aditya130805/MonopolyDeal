@@ -2,19 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import { useAuth } from '../../contexts/AuthContext';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 import { colorMap, getPropertyWithDefaults } from '../../utils/gameUtils';
 
 const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   const { user } = useAuth();
-  const { gameState } = useGameState();
+  // const { gameState } = useGameState();
+  const gameState = overlayData?.gameState;
   
   const property1 = overlayData?.property1;
   const property2 = overlayData?.property2;
   const player1Id = overlayData?.player1Id;
   const player2Id = overlayData?.player2Id;
-  const player1Name = gameState.players.find(p => p.id === player1Id)?.name;
-  const player2Name = gameState.players.find(p => p.id === player2Id)?.name;
+  const player1Name = gameState?.players.find(p => p.id === player1Id)?.name;
+  const player2Name = gameState?.players.find(p => p.id === player2Id)?.name;
 
   useEffect(() => {
     if (isVisible) {

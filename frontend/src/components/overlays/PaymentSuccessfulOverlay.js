@@ -3,17 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
 import MoneyCard from '../cards/MoneyCard';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
 const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
-  const { gameState } = useGameState();
-  
+  // const { gameState } = useGameState();
+  const gameState = overlayData?.gameState;
   const playerId = overlayData?.playerId;
   const targetId = overlayData?.targetId;
   const selectedCards = overlayData?.selectedCards || [];
   
-  const player = gameState.players.find(p => p.id === playerId);
-  const target = gameState.players.find(p => p.id === targetId);
+  const player = gameState?.players.find(p => p.id === playerId);
+  const target = gameState?.players.find(p => p.id === targetId);
 
   const colorStyle = {
     bg: '#4A5568',

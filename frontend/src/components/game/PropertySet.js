@@ -155,24 +155,32 @@ const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, i
     const rows = [];
     const allColors = [...colorOrder]; // Get all colors
     const overflowColors = Object.keys(overflowSets);
+    const seenColors = new Set();
     
     // Add overflow colors if they're not already in the color order
     overflowColors.forEach(color => {
-      if (!allColors.includes(color)) {
-        allColors.push(color);
-      }
+      allColors.push(color);
     });
     
     // Create rows of equal size based on setsPerRow
     for (let i = 0; i < allColors.length; i += setsPerRow) {
-      const row = allColors.slice(i, i + setsPerRow);
-      // Pad the last row with null values if needed to maintain consistent width
-      if (row.length < setsPerRow && i + setsPerRow >= allColors.length) {
-        while (row.length < setsPerRow) {
-          row.push(null);
-        }
-      }
-      rows.push(row);
+      const rowColors = allColors.slice(i, i + setsPerRow);
+      rows.push(
+        <div key={i} className="flex gap-2">
+          {rowColors.map(color => {
+            const isOverflow = seenColors.has(color);
+            seenColors.add(color);
+            
+            return renderPropertyCard(
+              isOverflow ? `${color}-overflow` : color,
+              isOverflow ? overflowSets[color] : mainSets[color],
+              setRequirements[color],
+              colorStyles[color],
+              lightColorStyles[color]
+            );
+          })}
+        </div>
+      );
     }
     
     return rows;
@@ -201,26 +209,7 @@ const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, i
 
         {/* Property Cards Grid */}
         <div className="flex flex-col gap-2">
-          {createRows().map((rowColors, rowIndex) => (
-            <div key={rowIndex} className="flex gap-2 justify-start">
-              {rowColors.map((color, colIndex) => {
-                if (color === null) {
-                  // Render an empty space to maintain grid alignment
-                  return <div key={`empty-${colIndex}`} className={`w-[${isCompact ? '34' : '40'}px] h-[${isCompact ? '51' : '60'}px]`} />;
-                }
-                
-                // Check if this is an overflow card
-                const isOverflow = Object.keys(overflowSets).includes(color);
-                return renderPropertyCard(
-                  isOverflow ? `${color}-overflow` : color,
-                  isOverflow ? overflowSets[color] : mainSets[color],
-                  setRequirements[color],
-                  colorStyles[color],
-                  lightColorStyles[color]
-                );
-              })}
-            </div>
-          ))}
+          {createRows()}
         </div>
       </div>
     </div>

@@ -63,21 +63,21 @@ const GameOverlays = ({
         {/* Done */}
         <PropertyStealOverlay
           isVisible={propertyStealOverlayData.isVisible}
-          onClose={() => setPropertyStealOverlayData(prev => ({ ...prev, isVisible: false, property: null, stealerId: "", targetId: "" }))}
+          onClose={() => setPropertyStealOverlayData(prev => ({ ...prev, isVisible: false, gameState: null, property: null, stealerId: "", targetId: "" }))}
           overlayData={propertyStealOverlayData}
         />
 
         {/* Done */}
         <PropertySwapOverlay
           isVisible={propertySwapOverlayData.isVisible}
-          onClose={() => setPropertySwapOverlayData({ isVisible: false, property1: null, property2: null, player1Id: "", player2Id: "" })}
+          onClose={() => setPropertySwapOverlayData({ isVisible: false, gameState: null, property1: null, property2: null, player1Id: "", player2Id: "" })}
           overlayData={propertySwapOverlayData}
         />
 
         {/* Done */}
         <DealBreakerOverlay
           isVisible={dealBreakerOverlayData.isVisible}
-          onClose={() => setDealBreakerOverlayData({ isVisible: false, stealerId: '', targetId: '', color: '', propertySet: [] })}
+          onClose={() => setDealBreakerOverlayData({ isVisible: false, gameState: null, stealerId: '', targetId: '', color: '', propertySet: [] })}
           overlayData={dealBreakerOverlayData}
         />
 
@@ -98,7 +98,7 @@ const GameOverlays = ({
         {/* Done */}
         <JustSayNoChoiceWaitingOverlay
           isVisible={justSayNoChoiceWaitingOverlayData.isVisible}
-          onClose={() => setJustSayNoChoiceWaitingOverlayData({ isVisible: false, playerId: '' })}
+          onClose={() => setJustSayNoChoiceWaitingOverlayData({ isVisible: false, gameState: null, playerId: '' })}
           overlayData={justSayNoChoiceWaitingOverlayData}
         />
 

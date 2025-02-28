@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import { useAuth } from '../../contexts/AuthContext';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 import { colorMap, getPropertyWithDefaults } from '../../utils/gameUtils';
 
 const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
   const { user } = useAuth();
-  const { gameState } = useGameState();
+  // const { gameState } = useGameState();
+  const gameState = overlayData?.gameState;
 
   const property = overlayData?.property;  // The actual property object
   const stealerId = overlayData?.stealerId;
   const targetId = overlayData?.targetId;
-  const stealerName = gameState.players.find(p => p.id === stealerId)?.name;
-  const targetName = gameState.players.find(p => p.id === targetId)?.name;
+  const stealerName = gameState?.players.find(p => p.id === stealerId)?.name;
+  const targetName = gameState?.players.find(p => p.id === targetId)?.name;
 
   useEffect(() => {
     if (isVisible) {

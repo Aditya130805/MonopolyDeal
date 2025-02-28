@@ -139,7 +139,7 @@ const handleRentColorSelection = (card, playerProperties, onColorSelect) => {
         
         section.onclick = () => {
             section.style.opacity = '1';
-            onColorSelect(color, rentAmounts[color]);
+            onColorSelect(card, color, rentAmounts[color]);
             resizeObserver.disconnect();
             window.removeEventListener('resize', updatePosition);
             document.body.removeChild(colorButtons);

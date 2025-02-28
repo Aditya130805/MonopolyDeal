@@ -263,6 +263,8 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def handle_action_with_notification(self, data, action, card, player_id):
         game_state = GameConsumer.game_instances[self.room_id]
         player = next((p for p in game_state.players if p.id == player_id), None)
+        if action=='rent':
+            print(data, action, card, player_id, player)
         
         # Send card played notification before handling the action
         if card:  # Only send if there's a card being played

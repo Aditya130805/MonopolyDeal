@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
 import { setRequirements, splitProperties } from '../../utils/gameUtils';
-import { useGameState } from '../../contexts/GameStateContext';
+// import { useGameState } from '../../contexts/GameStateContext';
 
 const SlyDealModal = ({ 
   isOpen, 
@@ -13,10 +13,11 @@ const SlyDealModal = ({
 }) => {
   if (!modalData) return null;
 
-  const { gameState } = useGameState();
+  // const { gameState } = useGameState();
+  const gameState = modalData.gameState;
   
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const opponents = gameState.players.filter(p => modalData.opponentIds.includes(p.id));
+  const opponents = gameState?.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
