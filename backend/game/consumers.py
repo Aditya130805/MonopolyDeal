@@ -263,8 +263,6 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def handle_action_with_notification(self, data, action, card, player_id):
         game_state = GameConsumer.game_instances[self.room_id]
         player = next((p for p in game_state.players if p.id == player_id), None)
-        if action=='rent':
-            print(data, action, card, player_id, player)
         
         # Send card played notification before handling the action
         if card:  # Only send if there's a card being played
@@ -431,6 +429,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         player.hand.remove(card_to_play)
         opponent = next((p for p in game_state.players if p.id != player.id), None)
         # Send rent request
+        players_to_pay = [p.id for p in game_state.players if p.id != player.id]
         await self.channel_layer.group_send(
             self.game_group_name,
             {
@@ -438,7 +437,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'player_id': str(opponent.id),
                 'amount': rent_amount,
                 'rent_type': "rent",
-                'recipient_id': str(player.id)
+                'recipient_id': str(player.id),
+                'players_to_pay': players_to_pay,
+                'total_players': len(players_to_pay)
             }
         )
         game_state.discard_pile.append(card_to_play)

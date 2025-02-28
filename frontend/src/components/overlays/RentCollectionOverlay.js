@@ -52,7 +52,7 @@ const RentCollectionOverlay = ({ isVisible, onClose, overlayData }) => {
               }}
               className="text-white text-xl font-semibold"
             >
-              {overlayData?.message || "Collecting Rent..."}
+              {overlayData.message}
             </motion.p>
           </div>
         </motion.div>

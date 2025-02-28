@@ -284,7 +284,7 @@ const MainGame = () => {
     isVisible: false 
   });
   const [rentCollectionOverlayData, setRentCollectionOverlayData] = useState({ 
-    isVisible: false 
+    isVisible: false, message: ""
   });
   const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({ 
     isVisible: false, gameState: null, playerId: "" 
@@ -395,7 +395,6 @@ const MainGame = () => {
 
   const handleGameUpdate = (data) => {
     const state = data.state;
-    console.log(state)
     setGameState(setGameStateFromBackend(state));
     
     // Use state directly instead of gameState since it's the new data
@@ -423,7 +422,6 @@ const MainGame = () => {
   };
 
   const handleWebSocketMessage = (event) => {
-    console.log("gameState:", gameState);
     try {
       const data = JSON.parse(event.data);
 
@@ -605,11 +603,9 @@ const MainGame = () => {
         setPendingRentCard(null);
         return;
       }
-      console.log("Rent type", pendingRentCard.name)
       // Handle different rent types
-      if (pendingRentCard.name.toLowerCase() === 'rent') { // Regular rent with two colors
+      if (pendingRentCard.name.toLowerCase() === 'rent') {
         // Everyone pays - proceed directly to rent calculation
-        console.log("Everyone pays");
         handleRentColorSelection(pendingRentCard, userPlayer.properties, handleRentColorSelect);
       } else if (pendingRentCard.name.toLowerCase() === 'multicolor rent') { //Multicolor rent
         // Show color selection first, using our new handler that will then show opponent selection
@@ -782,9 +778,9 @@ const MainGame = () => {
   useEffect(() => {
     if (!pendingJustSayNoChoiceData) return;
     const data = pendingJustSayNoChoiceData;
-    // setJustSayNoPlayedOverlayData({ 
-    //   isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null 
-    // })
+    setJustSayNoPlayedOverlayData({ 
+      isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null 
+    })
     if (data.playerId === user.unique_id) {
       setJustSayNoModalData({
         isVisible: true, gameState: gameState, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, againstRentCard: data.againstRentCard, card: data.card, data: data.data
@@ -792,9 +788,16 @@ const MainGame = () => {
       setJustSayNoChoiceWaitingOverlayData({
         isVisible: false, gameState: null, playerId: ""
       });
-    } else {
+    } else if (data.opponentId === user.unique_id) {
       setJustSayNoChoiceWaitingOverlayData({
         isVisible: true, gameState: gameState, playerId: data.playerId
+      });
+      setJustSayNoModalData({
+        isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+      });
+    } else {
+      setJustSayNoChoiceWaitingOverlayData({
+        isVisible: false, gameState: null, playerId: ""
       });
       setJustSayNoModalData({
         isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
@@ -829,9 +832,8 @@ const MainGame = () => {
   useEffect(() => {
     if (!pendingRentRequestData) return;
     const data = pendingRentRequestData;
-    console.log("Rent Request: ", data.rent_type)
     if (data.players_to_pay) {
-      console.log("Multi-player rent")
+      console.log("Total paying players: ", data.total_players);
       // Initialize the payment tracker for multi-player rent
       setRentPaymentTracker({
         totalPlayers: data.total_players,
@@ -840,9 +842,7 @@ const MainGame = () => {
     }
     if (data.recipient_id !== user.unique_id) {
       if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
-        console.log("Debt collector or multicolor rent")
         if (data.target_player_id === user.unique_id) {
-          console.log("Target player is the current user")
           setRentModalData({ isVisible: true, gameState: gameState, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
         } else {
           // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
@@ -864,7 +864,7 @@ const MainGame = () => {
         // Hide action animation (will trigger fade out)
         setShowActionAnimation(prev => ({ ...prev, visible: false }));
         // Show rent collection overlay
-        setRentCollectionOverlayData({ isVisible: true })
+        setRentCollectionOverlayData({ isVisible: true, message: "Collecting rent..." })
       }, 2000);
     }
     setPendingRentRequestData(null);
@@ -872,9 +872,9 @@ const MainGame = () => {
   useEffect(() => {
     if (!pendingRentPaidData) return;
     const data = pendingRentPaidData;
-    console.log("gameState.players 2: ", gameState)
     // Only clear rent modal if the current user is the one who paid
     if (data.player_id === user.unique_id) {
+      console.log("Clearing rent modal")
       setRentModalData({ isVisible: false, gameState: null, opponentId: null, userId: null, amountDue: 0, rentType: null });
     }
 
@@ -884,30 +884,36 @@ const MainGame = () => {
       newPlayersPaid.add(data.player_id);
       
       // Only clear the collection overlay if everyone has paid
+      console.log("Players paid: ", newPlayersPaid.size, "Total players: ", prev.totalPlayers);
       if (newPlayersPaid.size >= prev.totalPlayers) {
         // Clear any pending timeout for rent collection overlay
         if (rentCollectionTimeoutRef.current) {
           clearTimeout(rentCollectionTimeoutRef.current);
           rentCollectionTimeoutRef.current = null;
         }
-        setRentCollectionOverlayData({ isVisible: false });
+        setRentCollectionOverlayData({ isVisible: false, message: "" });
         return { playersPaid: new Set(), totalPlayers: 0 };
       } else {
         // Check if the current user has paid
         if (newPlayersPaid.has(user.unique_id)) {
+          console.log("User has paid");
           // Show waiting overlay with names of players who haven't paid
           // Get the current players from gameState
-          console.log("newPlayersPaid: ", newPlayersPaid)
-          console.log("gameState.players: ", gameState.players)
           const unpaidPlayerIds = gameState.players
             .filter(player => !newPlayersPaid.has(player.id))
+            .filter(player => player.id !== data.recipient_id)
             .map(player => player.id)
+            .join(", ");
+          const unpaidPlayerNames = gameState.players
+            .filter(player => !newPlayersPaid.has(player.id))
+            .filter(player => player.id !== data.recipient_id)
+            .map(player => player.name)
             .join(", ");
 
           if (unpaidPlayerIds) {
             setRentCollectionOverlayData({
               isVisible: true,
-              message: `Waiting for players to pay: ${unpaidPlayerIds}`
+              message: `Waiting for player(s) to pay: ${unpaidPlayerNames}`
             });
           }
         }
@@ -1234,14 +1240,11 @@ const MainGame = () => {
   };
 
   const handleRentColorSelect = useCallback((card, color, rentAmount) => {
-    console.log("Color:", color, "Rent Amount:", rentAmount);
     setRentAmount(rentAmount);
 
     const hasDoubleRentCard = userPlayer.hand.some(card => 
       card.type === 'action' && card.name.toLowerCase() === 'double the rent'
     );
-
-    console.log("Has Double Rent Card:", hasDoubleRentCard, "Actions Remaining:", gameState.actions_remaining);
 
     if (hasDoubleRentCard && gameState.actions_remaining > 1) {
       setDoubleRentAmount(rentAmount * 2);
@@ -1280,7 +1283,6 @@ const MainGame = () => {
             data: rentActionData
           }));
         } else {
-          console.log("Sending rent action")
           socket.send(rentActionData);
         }
       });
@@ -1463,6 +1465,7 @@ const MainGame = () => {
             card: slyDealModalData.card,
           }}
           handleSlyDealPropertySelect={handleSlyDealPropertySelectWrapper}
+          setPendingSlyDealCard={setPendingSlyDealCard}
           
           forcedDealModalOpen={forcedDealModalData.isVisible}
           setForcedDealModalData={setForcedDealModalData}
@@ -1473,6 +1476,7 @@ const MainGame = () => {
             card: forcedDealModalData.card,
           }}
           handleForcedDealPropertySelect={handleForcedDealSelectWrapper}
+          setPendingForcedDealCard={setPendingForcedDealCard}
           
           dealBreakerModalOpen={dealBreakerModalData.isVisible}
           setDealBreakerModalData={setDealBreakerModalData}
@@ -1482,6 +1486,7 @@ const MainGame = () => {
             card: dealBreakerModalData.card,
           }}
           handleDealBreakerPropertySetSelect={handleDealBreakerSetSelectWrapper}
+          setPendingDealBreakerCard={setPendingDealBreakerCard}
 
           justSayNoModalOpen={justSayNoModalData.isVisible}
           setJustSayNoModalData={setJustSayNoModalData}

@@ -35,18 +35,21 @@ const GameModals = ({
   slyDealModalData,
   setSlyDealModalData,
   handleSlyDealPropertySelect,
+  setPendingSlyDealCard,
   
   // Forced Deal Modal props
   forcedDealModalOpen,
   setForcedDealModalData,
   forcedDealModalData,
   handleForcedDealPropertySelect,
+  setPendingForcedDealCard,
   
   // Deal Breaker Modal props
   dealBreakerModalOpen,
   setDealBreakerModalData,
   dealBreakerModalData,
   handleDealBreakerPropertySetSelect,
+  setPendingDealBreakerCard,
   
   // Just Say No Modal props
   justSayNoModalOpen,
@@ -77,7 +80,10 @@ const GameModals = ({
       <Suspense fallback={<LoadingFallback />}>
         <SlyDealModal
           isOpen={slyDealModalOpen}
-          onClose={() => setSlyDealModalData(prev => ({ ...prev, isVisible: false }))}
+          onClose={() => {
+            setSlyDealModalData(prev => ({ ...prev, isVisible: false })); 
+            setPendingSlyDealCard(null)
+          }}
           modalData={slyDealModalData}
           onPropertySelect={handleSlyDealPropertySelect}
         />
@@ -86,7 +92,10 @@ const GameModals = ({
       <Suspense fallback={<LoadingFallback />}>
         <ForcedDealModal
           isOpen={forcedDealModalOpen}
-          onClose={() => setForcedDealModalData(prev => ({ ...prev, isVisible: false }))}
+          onClose={() => {
+            setForcedDealModalData(prev => ({ ...prev, isVisible: false })); 
+            setPendingForcedDealCard(null);
+          }}
           modalData={forcedDealModalData}
           onPropertySelect={handleForcedDealPropertySelect}
         />
@@ -95,7 +104,10 @@ const GameModals = ({
       <Suspense fallback={<LoadingFallback />}>
         <DealBreakerModal
           isOpen={dealBreakerModalOpen}
-          onClose={() => setDealBreakerModalData(prev => ({ ...prev, isVisible: false }))}
+          onClose={() => {
+            setDealBreakerModalData(prev => ({ ...prev, isVisible: false })); 
+            setPendingDealBreakerCard(null);
+          }}
           modalData={dealBreakerModalData}
           onPropertySetSelect={handleDealBreakerPropertySetSelect}
         />

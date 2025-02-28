@@ -54,7 +54,7 @@ const OpponentSelectionModal = ({ isVisible, gameState, opponentIds, type, onSel
             >
                 {backgroundEmojis.repeat(10).split(' ').map((emoji, i) => (
                 <motion.span
-                    key={i}
+                    key={`${emoji}-${i}-${Date.now()}`}
                     animate={{
                     y: [0, -10, 0],
                     rotate: [-5, 5, -5],
