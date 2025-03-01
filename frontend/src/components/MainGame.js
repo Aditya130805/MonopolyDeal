@@ -180,7 +180,7 @@ const ThreePlayerLayout = memo(({
       </div>
 
       {/* Bottom Player - Fixed at bottom with more space */}
-      <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 w-full px-4">
+      <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-full px-4">
         <BankAndCards
           hand={player.hand}
           bank={player.bank}
