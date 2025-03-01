@@ -60,9 +60,9 @@ const TwoPlayerLayout = memo(({
   if (!player || !opponent) return null;
 
   return (
-    <div className="h-full flex flex-col justify-between">
+    <div className="h-full flex flex-col items-center justify-center relative">
       {/* Top section with Turn Display and Opponent's Area */}
-      <div className="w-full relative">
+      <div className="w-full absolute top-0">
         {/* Turn Display at top left */}
         <div className="absolute left-2 top-2 z-10">
           <TurnDisplay 
@@ -73,7 +73,7 @@ const TwoPlayerLayout = memo(({
         </div>
 
         {/* Opponent's Area */}
-        <div className="w-full">
+        <div className="w-full absolute -top-9">
           <BankAndCards
             hand={opponent.hand}
             bank={opponent.bank}
@@ -121,7 +121,7 @@ const TwoPlayerLayout = memo(({
       </div>
 
       {/* Player's Area */}
-      <div className="w-full" style={{ paddingBottom: '7.5rem' }}>
+      <div className="absolute -bottom-9 w-full">
         <BankAndCards
           hand={player.hand}
           bank={player.bank}
@@ -180,7 +180,7 @@ const ThreePlayerLayout = memo(({
       </div>
 
       {/* Bottom Player - Fixed at bottom with more space */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full px-4">
+      <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 w-full px-4">
         <BankAndCards
           hand={player.hand}
           bank={player.bank}

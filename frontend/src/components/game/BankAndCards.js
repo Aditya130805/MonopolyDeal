@@ -141,7 +141,7 @@ const BankAndCards = ({
   const renderFullBank = () => (
     <div 
       ref={!isOpponent ? setBankRef : null}
-      className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180 mt-14' : 'mt-9'} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-100`}
+      className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180' : ''} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-100`}
     >
       {!isOpponent && isBankOver && (
         <div 
@@ -193,7 +193,7 @@ const BankAndCards = ({
   );
 
   return (
-    <div className={`flex items-center ${isOpponent ? 'gap-12 flex-row-reverse' : 'gap-16'} ${!isOpponent && '-mb-36'} w-full`} style={isOpponent ? { marginTop: '-4.3rem' } : {}}>
+    <div className={`flex items-center ${isOpponent ? 'gap-12 flex-row-reverse' : 'gap-16'} w-full`}>
       {/* Conditional Bank and Property Set Rendering */}
       {isThreePlayer ? (
         <div className="flex gap-4 mr-8">
