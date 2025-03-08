@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const setRequirements = {
   'brown': 2,
@@ -25,44 +25,89 @@ const ForcedDealModal = ({
 }) => {
   if (!modalData) return null;
 
-  // const { gameState, setGameState } = useGameState();
-  const gameState = modalData.gameState;
+  const { gameState } = useGameState();
   if (isOpen) {
     console.log("Forced Deal gameState: ", gameState);
   }
   
   const [selectedOpponentProperty, setSelectedOpponentProperty] = useState(null);
   const [selectedUserProperty, setSelectedUserProperty] = useState(null);
+  
+  // Use refs to preserve state across re-renders caused by card notifications
+  const selectedOpponentPropertyRef = useRef(null);
+  const selectedUserPropertyRef = useRef(null);
   const player = gameState?.players.find(p => p.id === modalData.userId);
   const opponents = gameState?.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedOpponentProperty(null);
-      setSelectedUserProperty(null);
+      // Only reset state if this is a new modal session
+      const isNewSession = 
+        !selectedOpponentPropertyRef.current || 
+        (modalData.opponentIds.join(',') !== selectedOpponentPropertyRef.current.opponentIds);
+      
+      if (isNewSession) {
+        // Reset state for new session
+        setSelectedOpponentProperty(null);
+        setSelectedUserProperty(null);
+        selectedOpponentPropertyRef.current = {
+          property: null,
+          opponentIds: modalData.opponentIds.join(',')
+        };
+        selectedUserPropertyRef.current = null;
+      } else {
+        // Restore state from refs for the same session
+        setSelectedOpponentProperty(selectedOpponentPropertyRef.current.property);
+        setSelectedUserProperty(selectedUserPropertyRef.current);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, modalData]);
 
   const handleOpponentPropertySelect = (property, opponent) => {
+    let newSelectedOpponentProperty;
+    
     if (selectedOpponentProperty?.id === property.id) {
+      newSelectedOpponentProperty = null;
       setSelectedOpponentProperty(null);
     } else {
-      setSelectedOpponentProperty({ ...property, ownerId: opponent.id });
+      newSelectedOpponentProperty = { ...property, ownerId: opponent.id };
+      setSelectedOpponentProperty(newSelectedOpponentProperty);
     }
+    
+    // Update ref to preserve state
+    selectedOpponentPropertyRef.current = {
+      property: newSelectedOpponentProperty,
+      opponentIds: modalData.opponentIds.join(',')
+    };
   };
 
   const handleUserPropertySelect = (property) => {
+    let newSelectedUserProperty;
+    
     if (selectedUserProperty?.id === property.id) {
+      newSelectedUserProperty = null;
       setSelectedUserProperty(null);
     } else {
-      setSelectedUserProperty(property);
+      newSelectedUserProperty = property;
+      setSelectedUserProperty(newSelectedUserProperty);
     }
+    
+    // Update ref to preserve state
+    selectedUserPropertyRef.current = newSelectedUserProperty;
   };
 
   const handleSubmit = () => {
     if (selectedOpponentProperty && selectedUserProperty) {
       onPropertySelect(modalData, selectedOpponentProperty, selectedUserProperty);
+      
+      // Reset refs when properties are selected
+      selectedOpponentPropertyRef.current = {
+        property: null,
+        opponentIds: ''
+      };
+      selectedUserPropertyRef.current = null;
+      
       onClose();
     }
   };

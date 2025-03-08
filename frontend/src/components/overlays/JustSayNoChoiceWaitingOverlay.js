@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const JustSayNoChoiceWaitingOverlay = ({ isVisible, onClose, overlayData }) => {
-  // const { gameState } = useGameState();
-  const gameState = overlayData?.gameState;
+  const { gameState } = useGameState();
   
   const playerId = overlayData?.playerId;
   const player = gameState?.players.find(p => p.id === playerId);

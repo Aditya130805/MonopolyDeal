@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import { useAuth } from '../../contexts/AuthContext';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 import { colorMap, getPropertyWithDefaults } from '../../utils/gameUtils';
 
 const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   const { user } = useAuth();
-  // const { gameState } = useGameState();
-  const gameState = overlayData?.gameState;
+  const { gameState } = useGameState();
   
   const property1 = overlayData?.property1;
   const property2 = overlayData?.property2;

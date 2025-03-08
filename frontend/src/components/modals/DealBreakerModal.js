@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const DealBreakerModal = ({ 
   isOpen, 
@@ -12,30 +12,64 @@ const DealBreakerModal = ({
 }) => {
   if (!modalData) return null;
 
-  // const { gameState, setGameState } = useGameState();
-  const gameState = modalData.gameState;
+  const { gameState } = useGameState();
 
   const [selectedSet, setSelectedSet] = useState(null);
+  
+  // Use ref to preserve state across re-renders caused by card notifications
+  const selectedSetRef = useRef(null);
   const opponents = gameState?.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedSet(null);
+      // Only reset state if this is a new modal session
+      const isNewSession = 
+        !selectedSetRef.current || 
+        (modalData.opponentIds.join(',') !== selectedSetRef.current.opponentIds);
+      
+      if (isNewSession) {
+        // Reset state for new session
+        setSelectedSet(null);
+        selectedSetRef.current = {
+          set: null,
+          opponentIds: modalData.opponentIds.join(',')
+        };
+      } else {
+        // Restore state from ref for the same session
+        setSelectedSet(selectedSetRef.current.set);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, modalData]);
 
   const handleSetSelect = (color, cards, opponent) => {
+    let newSelectedSet;
+    
     if (selectedSet?.color === color && selectedSet?.ownerId === opponent.id) {
+      newSelectedSet = null;
       setSelectedSet(null);
     } else {
-      setSelectedSet({ color, cards, ownerId: opponent.id });
+      newSelectedSet = { color, cards, ownerId: opponent.id };
+      setSelectedSet(newSelectedSet);
     }
+    
+    // Update ref to preserve state
+    selectedSetRef.current = {
+      set: newSelectedSet,
+      opponentIds: modalData.opponentIds.join(',')
+    };
   };
 
   const handleSubmit = () => {
     if (selectedSet) {
       onPropertySetSelect(modalData, selectedSet);
+      
+      // Reset ref when set is selected
+      selectedSetRef.current = {
+        set: null,
+        opponentIds: ''
+      };
+      
       onClose();
     }
   };

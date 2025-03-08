@@ -287,47 +287,46 @@ const MainGame = () => {
     isVisible: false, message: ""
   });
   const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({ 
-    isVisible: false, gameState: null, playerId: "" 
+    isVisible: false, playerId: "" 
   });
   const [justSayNoPlayedOverlayData, setJustSayNoPlayedOverlayData] = useState({
-    isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
+    isVisible: false, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
   });
   const [paymentSuccessfulOverlayData, setPaymentSuccessfulOverlayData] = useState({
-    isVisible: false, gameState: null, playerId: '', targetId: '', selectedCards: []
+    isVisible: false, playerId: '', targetId: '', selectedCards: []
   });
   const [propertyStealOverlayData, setPropertyStealOverlayData] = useState({
-    isVisible: false, gameState: null, property: null, stealerId: '', targetId: ''
+    isVisible: false, property: null, stealerId: '', targetId: ''
   });
   const [propertySwapOverlayData, setPropertySwapOverlayData] = useState({
-    isVisible: false, gameState: null, property1: null, property2: null, player1Id: '', player2Id: ''
+    isVisible: false, property1: null, property2: null, player1Id: '', player2Id: ''
   });
   const [dealBreakerOverlayData, setDealBreakerOverlayData] = useState({
-    isVisible: false, gameState: null, stealerId: '', targetId: '', color: '', propertySet: []
+    isVisible: false, stealerId: '', targetId: '', color: '', propertySet: []
   });
 
   ////////// MODAL DATA VARS
   const [justSayNoModalData, setJustSayNoModalData] = useState({
-    isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+    isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
   });
   const [rentModalData, setRentModalData] = useState({
-    isVisible: false, gameState: null, opponentId: null, userId: null, amountDue: 0, rentType: null
+    isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null
   });
   const [doubleRentModalData, setDoubleRentModalData] = useState({
     isVisible: false, doubleRentAmount: 0, opponentIds: ''
   });
   const [slyDealModalData, setSlyDealModalData] = useState({
-    isVisible: false, gameState: null, card: null, opponentIds: []
+    isVisible: false, card: null, opponentIds: []
   });
   const [forcedDealModalData, setForcedDealModalData] = useState({
-    isVisible: false, gameState: null, card: null, opponentIds: []
+    isVisible: false, card: null, opponentIds: []
   });
   const [dealBreakerModalData, setDealBreakerModalData] = useState({
-    isVisible: false, gameState: null, card: null, opponentIds: []
+    isVisible: false, card: null, opponentIds: []
   });
 
   const [opponentSelectionModalData, setOpponentSelectionModalData] = useState({
     isVisible: false,
-    gameState: null,
     opponentIds: [],
     type: '',
     onSelect: null,
@@ -542,7 +541,6 @@ const MainGame = () => {
     if (pendingDebtCollectorCard) {
       setOpponentSelectionModalData({
         isVisible: true,
-        gameState: gameState,
         opponentIds: opponentIds,
         type: 'debt_collector',
         onSelect: (selectedOpponentId) => {
@@ -669,7 +667,6 @@ const MainGame = () => {
 
       setSlyDealModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingSlyDealCard,
         opponentIds: opponentIds,
       });
@@ -738,7 +735,6 @@ const MainGame = () => {
       
       setForcedDealModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingForcedDealCard,
         opponentIds: opponentIds
       })
@@ -769,7 +765,6 @@ const MainGame = () => {
     
       setDealBreakerModalData({
         isVisible: true,
-        gameState: gameState,
         card: pendingDealBreakerCard,
         opponentIds: opponentIds
       });
@@ -779,28 +774,28 @@ const MainGame = () => {
     if (!pendingJustSayNoChoiceData) return;
     const data = pendingJustSayNoChoiceData;
     setJustSayNoPlayedOverlayData({ 
-      isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null 
+      isVisible: false, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null 
     })
     if (data.playerId === user.unique_id) {
       setJustSayNoModalData({
-        isVisible: true, gameState: gameState, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, againstRentCard: data.againstRentCard, card: data.card, data: data.data
+        isVisible: true, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, againstRentCard: data.againstRentCard, card: data.card, data: data.data
       });
       setJustSayNoChoiceWaitingOverlayData({
-        isVisible: false, gameState: null, playerId: ""
+        isVisible: false, playerId: ""
       });
     } else if (data.opponentId === user.unique_id) {
       setJustSayNoChoiceWaitingOverlayData({
-        isVisible: true, gameState: gameState, playerId: data.playerId
+        isVisible: true, playerId: data.playerId
       });
       setJustSayNoModalData({
-        isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+        isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
       });
     } else {
       setJustSayNoChoiceWaitingOverlayData({
-        isVisible: false, gameState: null, playerId: ""
+        isVisible: false, playerId: ""
       });
       setJustSayNoModalData({
-        isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+        isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
       });
     }
     setPendingJustSayNoChoiceData(null);
@@ -809,21 +804,21 @@ const MainGame = () => {
     if (!pendingJustSayNoResponseData) return;
     const data = pendingJustSayNoResponseData;
     setJustSayNoChoiceWaitingOverlayData({
-      isVisible: false, gameState: null, playerId: ""
+      isVisible: false, playerId: ""
     })
     setJustSayNoModalData({
-      isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
+      isVisible: false, playerId: "", opponentId: "", againstCard: null, againstRentCard: null, card: null, data: null
     });
     if (data.playJustSayNo) {
       setTimeout(() => {
         setJustSayNoPlayedOverlayData({
-          isVisible: true, gameState: gameState, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, justSayNoCard: data.card
+          isVisible: true, playerId: data.playerId, opponentId: data.opponentId, againstCard: data.againstCard, justSayNoCard: data.card
         })
       }, 0);
       // Hide the overlay after 3 seconds
       setTimeout(() => {
         setJustSayNoPlayedOverlayData({
-          isVisible: false, gameState: null, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
+          isVisible: false, playerId: "", opponentId: "", againstCard: null, justSayNoCard: null
         })
       }, 3000);
     }
@@ -843,12 +838,12 @@ const MainGame = () => {
     if (data.recipient_id !== user.unique_id) {
       if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
         if (data.target_player_id === user.unique_id) {
-          setRentModalData({ isVisible: true, gameState: gameState, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+          setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
         } else {
           // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
         }
       } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
-        setRentModalData({ isVisible: true, gameState: gameState, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+        setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
       }
     } else {
       // Show rent animation first for the player who played the rent card
@@ -875,7 +870,7 @@ const MainGame = () => {
     // Only clear rent modal if the current user is the one who paid
     if (data.player_id === user.unique_id) {
       console.log("Clearing rent modal")
-      setRentModalData({ isVisible: false, gameState: null, opponentId: null, userId: null, amountDue: 0, rentType: null });
+      setRentModalData({ isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null });
     }
 
     // Update the payment tracker
@@ -923,7 +918,6 @@ const MainGame = () => {
     
     setPaymentSuccessfulOverlayData({
       isVisible: true,
-      gameState: gameState,
       playerId: data.player_id,
       targetId: data.recipient_id,
       selectedCards: data.selected_cards
@@ -931,7 +925,7 @@ const MainGame = () => {
     
     // Hide overlay after 2 seconds
     setTimeout(() => {
-      setPaymentSuccessfulOverlayData({ isVisible: false, gameState: null, playerId: '', targetId: '', selectedCards: []})
+      setPaymentSuccessfulOverlayData({ isVisible: false, playerId: '', targetId: '', selectedCards: []})
     }, 2000);
     setPendingRentPaidData(null);
   }, [pendingRentPaidData, gameState])
@@ -940,7 +934,6 @@ const MainGame = () => {
     const data = pendingPropertyStealData;
     setPropertyStealOverlayData({
       isVisible: true,
-      gameState: gameState,
       property: data.property,
       stealerId: data.player_id,
       targetId: data.target_id,
@@ -952,7 +945,6 @@ const MainGame = () => {
     const data = pendingPropertySwapData;
     setPropertySwapOverlayData({
       isVisible: true,
-      gameState: gameState,
       property1: data.property1,
       property2: data.property2,
       player1Id: data.player1_id,
@@ -965,7 +957,6 @@ const MainGame = () => {
     const data = pendingDealBreakerData;
     setDealBreakerOverlayData({
       isVisible: true,
-      gameState: gameState,
       stealerId: data.stealerId,
       targetId: data.targetId,
       color: data.color,
@@ -976,8 +967,6 @@ const MainGame = () => {
 
   // Handle sly deal property selection
   const handleSlyDealPropertySelectWrapper = (modalData, selectedProperty) => {
-    // const opponent = gameState.players.find(p => p.id === modalData.opponentId);
-    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === selectedProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
@@ -1006,7 +995,6 @@ const MainGame = () => {
 
   // Handle forced deal property selection
   const handleForcedDealSelectWrapper = (modalData, opponentProperty, userProperty) => {
-    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === opponentProperty.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
@@ -1035,7 +1023,6 @@ const MainGame = () => {
 
   // Handle deal breaker set selection
   const handleDealBreakerSetSelectWrapper = (modalData, selectedSet) => {
-    const gameState = modalData.gameState;
     const opponent = gameState.players.find(p => p.id === selectedSet.ownerId);
     const card = modalData.card;
     const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
@@ -1306,7 +1293,6 @@ const MainGame = () => {
     
     setOpponentSelectionModalData({
       isVisible: true,
-      gameState: gameState,
       opponentIds: opponentIds,
       type: 'multicolor rent',
       onSelect: (selectedOpponentId) => {
@@ -1441,7 +1427,6 @@ const MainGame = () => {
           rentModalOpen={rentModalData.isVisible}
           setRentModalData={setRentModalData}
           rentModalData={{
-            gameState: rentModalData.gameState,
             opponentId: rentModalData.opponentId,
             userId: rentModalData.userId,
             amountDue: rentModalData.amountDue,
@@ -1460,7 +1445,6 @@ const MainGame = () => {
           slyDealModalOpen={slyDealModalData.isVisible}
           setSlyDealModalData={setSlyDealModalData}
           slyDealModalData={{
-            gameState: slyDealModalData.gameState,
             opponentIds: slyDealModalData.opponentIds,
             card: slyDealModalData.card,
           }}
@@ -1470,7 +1454,6 @@ const MainGame = () => {
           forcedDealModalOpen={forcedDealModalData.isVisible}
           setForcedDealModalData={setForcedDealModalData}
           forcedDealModalData={{
-            gameState: forcedDealModalData.gameState,
             opponentIds: forcedDealModalData.opponentIds,
             userId: user.unique_id,
             card: forcedDealModalData.card,
@@ -1481,7 +1464,6 @@ const MainGame = () => {
           dealBreakerModalOpen={dealBreakerModalData.isVisible}
           setDealBreakerModalData={setDealBreakerModalData}
           dealBreakerModalData={{
-            gameState: dealBreakerModalData.gameState,
             opponentIds: dealBreakerModalData.opponentIds,
             card: dealBreakerModalData.card,
           }}
@@ -1491,7 +1473,6 @@ const MainGame = () => {
           justSayNoModalOpen={justSayNoModalData.isVisible}
           setJustSayNoModalData={setJustSayNoModalData}
           justSayNoModalData={{
-            gameState: justSayNoModalData.gameState,
             playerId: justSayNoModalData.playerId,
             opponentId: justSayNoModalData.opponentId,
             againstCard: justSayNoModalData.againstCard,
@@ -1542,7 +1523,6 @@ const MainGame = () => {
     </DragOverlay>
     <OpponentSelectionModal
       isVisible={opponentSelectionModalData.isVisible}
-      gameState={opponentSelectionModalData.gameState}
       opponentIds={opponentSelectionModalData.opponentIds}
       type={opponentSelectionModalData.type}
       onSelect={opponentSelectionModalData.onSelect}

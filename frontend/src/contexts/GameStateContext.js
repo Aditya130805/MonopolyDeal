@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useWebSocket } from './WebSocketContext';
+import { useWebSocketMessageQueue } from './WebSocketMessageQueue';
 
 // Game state helper functions
 export const createEmptyGameState = () => ({
@@ -44,6 +46,50 @@ const GameStateContext = createContext();
 
 export const GameStateProvider = ({ children }) => {
   const [gameState, setGameState] = useState(createEmptyGameState());
+  const { socket } = useWebSocket();
+  const { enqueueMessage } = useWebSocketMessageQueue();
+  const gameStateRef = useRef(gameState);
+
+  // Keep the ref updated with the latest state
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  // WebSocket message handler for game updates
+  const handleGameUpdate = useCallback((data) => {
+    const state = data.state;
+    setGameState(setGameStateFromBackend(state));
+  }, []);
+
+  // Process WebSocket messages
+  const handleWebSocketMessage = useCallback((event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'game_update') {
+        handleGameUpdate(data);
+      }
+    } catch (error) {
+      console.error("Error parsing WebSocket message in GameStateContext:", error);
+    }
+  }, [handleGameUpdate]);
+
+  // Set up WebSocket listener for game state updates
+  useEffect(() => {
+    if (socket) {
+      // Create a dedicated message handler for the GameStateContext
+      const messageHandler = (event) => {
+        enqueueMessage(event, handleWebSocketMessage);
+      };
+
+      // Add event listener
+      socket.addEventListener('message', messageHandler);
+
+      // Clean up
+      return () => {
+        socket.removeEventListener('message', messageHandler);
+      };
+    }
+  }, [socket, enqueueMessage, handleWebSocketMessage]);
 
   const value = {
     gameState,

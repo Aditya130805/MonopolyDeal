@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
 import MoneyCard from '../cards/MoneyCard';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
-  // const { gameState } = useGameState();
-  const gameState = overlayData?.gameState;
+  const { gameState } = useGameState();
   const playerId = overlayData?.playerId;
   const targetId = overlayData?.targetId;
   const selectedCards = overlayData?.selectedCards || [];

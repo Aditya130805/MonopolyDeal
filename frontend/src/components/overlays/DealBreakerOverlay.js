@@ -2,12 +2,11 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 import { colorMap } from '../../utils/gameUtils';
 
 const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
-  // const { gameState } = useGameState();
-  const gameState = overlayData?.gameState;
+  const { gameState } = useGameState();
   
   const stealerId = overlayData?.stealerId;
   const targetId = overlayData?.targetId;

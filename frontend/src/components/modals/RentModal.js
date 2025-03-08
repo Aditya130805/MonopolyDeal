@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MoneyCard from '../cards/MoneyCard';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const RentModal = ({ 
   isOpen, 
@@ -11,26 +11,49 @@ const RentModal = ({
   modalData, 
   onPaymentSubmit 
 }) => {
-  // const { gameState, setGameState } = useGameState();
-  const gameState = modalData.gameState;
+  const { gameState } = useGameState();
   const [selectedCards, setSelectedCards] = useState([]);
   const [totalSelected, setTotalSelected] = useState(0);
   const [hasSelectedAll, setHasSelectedAll] = useState(false);
+  
+  // Use refs to preserve state across re-renders caused by card notifications
+  const selectedCardsRef = useRef([]);
+  const totalSelectedRef = useRef(0);
+  const hasSelectedAllRef = useRef(false);
 
+  // Initialize state only when the modal is first opened with new modalData
   useEffect(() => {
     if (isOpen && modalData && gameState) {
-      setSelectedCards([]);
-      setTotalSelected(0);
+      // Only reset state if this is a new rent request (different opponentId or amountDue)
+      const isNewRentRequest = 
+        !selectedCardsRef.current.length || 
+        modalData.opponentId !== modalData.opponentId || 
+        modalData.amountDue !== modalData.amountDue;
       
-      const player = gameState?.players.find(p => p.id === modalData.userId);
-      if (player) {
-        // If there are no selectable cards at all, set hasSelectedAll to true
-        const allCards = [...player.bank, ...Object.values(player.properties).flat()];
-        const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
-        setHasSelectedAll(nonWildCards.length === 0);
+      if (isNewRentRequest) {
+        // Reset state for new rent request
+        setSelectedCards([]);
+        setTotalSelected(0);
+        selectedCardsRef.current = [];
+        totalSelectedRef.current = 0;
+        
+        const player = gameState?.players.find(p => p.id === modalData.userId);
+        if (player) {
+          // If there are no selectable cards at all, set hasSelectedAll to true
+          const allCards = [...player.bank, ...Object.values(player.properties).flat()];
+          const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
+          const newHasSelectedAll = nonWildCards.length === 0;
+          setHasSelectedAll(newHasSelectedAll);
+          hasSelectedAllRef.current = newHasSelectedAll;
+        }
+      } else {
+        // Restore state from refs for the same rent request
+        setSelectedCards(selectedCardsRef.current);
+        setTotalSelected(totalSelectedRef.current);
+        setHasSelectedAll(hasSelectedAllRef.current);
       }
     }
-  }, [isOpen, modalData, gameState]);
+  }, [isOpen, modalData]);
 
   if (!modalData || !isOpen || !gameState) return null;
 
@@ -49,19 +72,32 @@ const RentModal = ({
 
     const isSelected = selectedCards.some(c => c.id === card.id);
     
+    let newSelectedCards;
+    let newTotalSelected;
+    
     if (isSelected) {
-      setSelectedCards(prev => prev.filter(c => c.id !== card.id));
-      setTotalSelected(prev => prev - card.value);
+      newSelectedCards = selectedCards.filter(c => c.id !== card.id);
+      newTotalSelected = totalSelected - card.value;
+      setSelectedCards(newSelectedCards);
+      setTotalSelected(newTotalSelected);
     } else {
-      setSelectedCards(prev => [...prev, card]);
-      setTotalSelected(prev => prev + card.value);
+      newSelectedCards = [...selectedCards, card];
+      newTotalSelected = totalSelected + card.value;
+      setSelectedCards(newSelectedCards);
+      setTotalSelected(newTotalSelected);
     }
+    
+    // Update refs to preserve state
+    selectedCardsRef.current = newSelectedCards;
+    totalSelectedRef.current = newTotalSelected;
 
     // Check if all selectable cards have been selected
     const allCards = [...player.bank, ...Object.values(player.properties).flat()];
     const nonWildCards = allCards.filter(c => !(c.type.toLowerCase() === 'property' && c.name.toLowerCase() === 'wild'));
-    const selectedCount = selectedCards.length + (isSelected ? -1 : 1); // Account for the current card being toggled
-    setHasSelectedAll(selectedCount === nonWildCards.length);
+    const selectedCount = newSelectedCards.length; // Use the new selected cards count
+    const newHasSelectedAll = selectedCount === nonWildCards.length;
+    setHasSelectedAll(newHasSelectedAll);
+    hasSelectedAllRef.current = newHasSelectedAll;
   };
 
   const isCardSelectable = (card) => {
@@ -75,6 +111,12 @@ const RentModal = ({
 
   const handleSubmit = () => {
     onPaymentSubmit(modalData, selectedCards);
+    
+    // Reset refs when payment is submitted
+    selectedCardsRef.current = [];
+    totalSelectedRef.current = 0;
+    hasSelectedAllRef.current = false;
+    
     onClose();
   };
 

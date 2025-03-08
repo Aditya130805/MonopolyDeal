@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';
 import { setRequirements, splitProperties } from '../../utils/gameUtils';
-// import { useGameState } from '../../contexts/GameStateContext';
+import { useGameState } from '../../contexts/GameStateContext';
 
 const SlyDealModal = ({ 
   isOpen, 
@@ -13,31 +13,65 @@ const SlyDealModal = ({
 }) => {
   if (!modalData) return null;
 
-  // const { gameState } = useGameState();
-  const gameState = modalData.gameState;
+  const { gameState } = useGameState();
   
   const [selectedProperty, setSelectedProperty] = useState(null);
+  
+  // Use ref to preserve state across re-renders caused by card notifications
+  const selectedPropertyRef = useRef(null);
   const opponents = gameState?.players.filter(p => modalData.opponentIds.includes(p.id));
   const card = modalData.card;
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedProperty(null);
+      // Only reset state if this is a new modal session
+      const isNewSession = 
+        !selectedPropertyRef.current || 
+        (modalData.opponentIds.join(',') !== selectedPropertyRef.current.opponentIds);
+      
+      if (isNewSession) {
+        // Reset state for new session
+        setSelectedProperty(null);
+        selectedPropertyRef.current = {
+          property: null,
+          opponentIds: modalData.opponentIds.join(',')
+        };
+      } else {
+        // Restore state from ref for the same session
+        setSelectedProperty(selectedPropertyRef.current.property);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, modalData]);
 
   const handlePropertySelect = (property, opponent) => {
     console.log("Opponent Sly Deal handlePropertySelect: ", opponent)
+    let newSelectedProperty;
+    
     if (selectedProperty?.id === property.id) {
+      newSelectedProperty = null;
       setSelectedProperty(null);
     } else {
-      setSelectedProperty({ ...property, ownerId: opponent.id });
+      newSelectedProperty = { ...property, ownerId: opponent.id };
+      setSelectedProperty(newSelectedProperty);
     }
+    
+    // Update ref to preserve state
+    selectedPropertyRef.current = {
+      property: newSelectedProperty,
+      opponentIds: modalData.opponentIds.join(',')
+    };
   };
 
   const handleSubmit = () => {
     if (selectedProperty) {
       onPropertySelect(modalData, selectedProperty);
+      
+      // Reset ref when property is selected
+      selectedPropertyRef.current = {
+        property: null,
+        opponentIds: ''
+      };
+      
       onClose();
     }
   };
