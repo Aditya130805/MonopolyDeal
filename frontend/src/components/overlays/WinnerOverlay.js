@@ -83,7 +83,8 @@ const WinnerOverlay = ({ isVisible, onClose, overlayData }) => {
                 whileHover={{ scale: 1.05, backgroundColor: 'rgba(120, 53, 15, 0.95)' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/')}
-                className="bg-yellow-900/75 hover:bg-yellow-900/85 text-yellow-100 font-bold py-3 px-6 rounded-lg text-lg shadow-lg transform transition-all duration-200"
+                className="bg-yellow-900/75 hover:bg-yellow-900/85 text-yellow-100 font-bold py-3 px-6 rounded-lg text-lg shadow-lg transform"
+                // transition-all duration-200
                 style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
               >
                 Return Home

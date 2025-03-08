@@ -1483,7 +1483,13 @@ const MainGame = () => {
           handleJustSayNoResponse={() => {}}
           
           opponentSelectionModalOpen={opponentSelectionModalData.isVisible}
-          opponentSelectionModalData={opponentSelectionModalData}
+          opponentSelectionModalData={{
+            isVisible: opponentSelectionModalData.isVisible,
+            opponentIds: opponentSelectionModalData.opponentIds,
+            type: opponentSelectionModalData.type,
+            onSelect: opponentSelectionModalData.onSelect,
+            onCancel: opponentSelectionModalData.onCancel
+          }}
           setOpponentSelectionModalData={setOpponentSelectionModalData}
         />
         

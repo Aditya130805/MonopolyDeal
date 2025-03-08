@@ -82,7 +82,8 @@ const TieOverlay = ({ isVisible, onClose, overlayData }) => {
                 whileHover={{ scale: 1.05, backgroundColor: 'rgba(55, 65, 81, 0.95)' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/')}
-                className="bg-gray-700/75 hover:bg-gray-700/85 text-gray-100 font-bold py-3 px-6 rounded-lg text-lg shadow-lg transform transition-all duration-200"
+                className="bg-gray-700/75 hover:bg-gray-700/85 text-gray-100 font-bold py-3 px-6 rounded-lg text-lg shadow-lg transform"
+                // transition-all duration-200
                 style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
               >
                 Return Home
