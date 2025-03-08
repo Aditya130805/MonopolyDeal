@@ -7,6 +7,7 @@ const ForcedDealModal = React.lazy(() => import('./modals/ForcedDealModal'));
 const DealBreakerModal = React.lazy(() => import('./modals/DealBreakerModal'));
 const JustSayNoModal = React.lazy(() => import('./modals/JustSayNoModal'));
 const DoubleRentModal = React.lazy(() => import('./modals/DoubleRentModal'));
+const OpponentSelectionModal = React.lazy(() => import('./modals/OpponentSelectionModal'));
 
 // Loading fallback component with minimal UI
 const LoadingFallback = () => (
@@ -55,7 +56,12 @@ const GameModals = ({
   justSayNoModalOpen,
   setJustSayNoModalData,
   justSayNoModalData,
-  handleJustSayNoResponse
+  handleJustSayNoResponse,
+  
+  // Opponent Selection Modal props
+  opponentSelectionModalOpen,
+  opponentSelectionModalData,
+  setOpponentSelectionModalData
 }) => {
   return (
     <>
@@ -119,6 +125,16 @@ const GameModals = ({
           onClose={() => setJustSayNoModalData(prev => ({ ...prev, isVisible: false }))}
           modalData={justSayNoModalData}
           onResponse={handleJustSayNoResponse}
+        />
+      </Suspense>
+
+      <Suspense fallback={<LoadingFallback />}>
+        <OpponentSelectionModal
+          isOpen={opponentSelectionModalOpen}
+          opponentIds={opponentSelectionModalData?.opponentIds || []}
+          type={opponentSelectionModalData?.type || ''}
+          onSelect={opponentSelectionModalData?.onSelect}
+          onCancel={opponentSelectionModalData?.onCancel}
         />
       </Suspense>
     </>

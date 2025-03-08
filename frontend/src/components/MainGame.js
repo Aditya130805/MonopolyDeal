@@ -1481,6 +1481,10 @@ const MainGame = () => {
             data: justSayNoModalData.data
           }}
           handleJustSayNoResponse={() => {}}
+          
+          opponentSelectionModalOpen={opponentSelectionModalData.isVisible}
+          opponentSelectionModalData={opponentSelectionModalData}
+          setOpponentSelectionModalData={setOpponentSelectionModalData}
         />
         
         {/* Game Layout */}
@@ -1521,13 +1525,6 @@ const MainGame = () => {
         </div>
       ) : null}
     </DragOverlay>
-    <OpponentSelectionModal
-      isVisible={opponentSelectionModalData.isVisible}
-      opponentIds={opponentSelectionModalData.opponentIds}
-      type={opponentSelectionModalData.type}
-      onSelect={opponentSelectionModalData.onSelect}
-      onCancel={opponentSelectionModalData.onCancel}
-    />
   </DndContext>
   );
 };

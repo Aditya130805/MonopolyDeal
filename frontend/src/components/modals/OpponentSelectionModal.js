@@ -2,9 +2,9 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '../../contexts/GameStateContext';
 
-const OpponentSelectionModal = ({ isVisible, opponentIds, type, onSelect, onCancel }) => {
+const OpponentSelectionModal = ({ isOpen, opponentIds, type, onSelect, onCancel }) => {
     const { gameState } = useGameState();
-    if (!isVisible) return null;
+    if (!isOpen) return null;
 
     const isDebtCollector = type === 'debt_collector';
     const gradientColors = isDebtCollector
@@ -102,9 +102,7 @@ const OpponentSelectionModal = ({ isVisible, opponentIds, type, onSelect, onCanc
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.4 + index * 0.1 }}
                         onClick={() => onSelect(opponentId)}
-                        className="w-full py-3 px-6 bg-white/10 hover:bg-white/20
-                                text-white font-semibold text-lg rounded-xl transition-all transform hover:scale-105
-                                hover:shadow-lg active:scale-95 backdrop-blur-sm"
+                        className="w-full py-3 px-6 bg-white/10 text-white font-semibold text-lg rounded-xl backdrop-blur-sm hover:shadow-lg hover:bg-white/20"
                         style={{
                         textShadow: '1px 1px 0px rgba(0,0,0,0.1)',
                         }}
@@ -120,9 +118,7 @@ const OpponentSelectionModal = ({ isVisible, opponentIds, type, onSelect, onCanc
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 onClick={onCancel}
-                className="mt-6 w-full py-3 px-6 bg-black/20 hover:bg-black/30
-                        text-white/80 font-medium rounded-xl transition-all transform hover:scale-105
-                        hover:shadow-lg active:scale-95 backdrop-blur-sm"
+                className="mt-6 w-full py-3 px-6 bg-black/20 hover:bg-black/30 text-white/80 font-medium rounded-xl hover:shadow-lg backdrop-blur-sm"
                 >
                 Cancel
                 </motion.button>
