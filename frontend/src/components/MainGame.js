@@ -24,7 +24,6 @@ import { handleRentColorSelection } from '../utils/rentActionHandler';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
 import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers, findJustSayNoInHand } from '../utils/gameUtils';
 import PlayerInfo from './game/PlayerInfo';
-import OpponentSelectionModal from './modals/OpponentSelectionModal';
 
 const DraggableCard = memo(({ card, children }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -246,7 +245,6 @@ const MainGame = () => {
   const { enqueueMessage } = useWebSocketMessageQueue();
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [userPlayer, setUserPlayer] = useState(null);
-  // const [opponentId, setOpponentId] = useState('');
   const [opponentIds, setOpponentIds] = useState([]);
   const [errors, setErrors] = useState([]);
   const [showActionAnimation, setShowActionAnimation] = useState({ visible: false, action: null, onComplete: null });
@@ -326,11 +324,7 @@ const MainGame = () => {
   });
 
   const [opponentSelectionModalData, setOpponentSelectionModalData] = useState({
-    isVisible: false,
-    opponentIds: [],
-    type: '',
-    onSelect: null,
-    onCancel: null
+    isVisible: false, opponentIds: [], type: '', onSelect: null, onCancel: null
   });
 
   const [rentPaymentTracker, setRentPaymentTracker] = useState({
@@ -826,6 +820,7 @@ const MainGame = () => {
   }, [pendingJustSayNoResponseData, gameState]);
   useEffect(() => {
     if (!pendingRentRequestData) return;
+    console.log("pendingRentRequestData: ", pendingRentRequestData);
     const data = pendingRentRequestData;
     if (data.players_to_pay) {
       console.log("Total paying players: ", data.total_players);
@@ -836,15 +831,18 @@ const MainGame = () => {
       });
     }
     if (data.recipient_id !== user.unique_id) {
-      if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
-        if (data.target_player_id === user.unique_id) {
-          setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
-        } else {
-          // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
-        }
-      } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
-        setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
-      }
+      // TODO: Handle different instances differently (if you want to)
+
+      /* if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
+      //   if (data.target_player_id === user.unique_id) {
+      //     setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+      //   } else {
+      //     // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
+      //   }
+      // } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
+      //   setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
+      // } */
+      setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
     } else {
       // Show rent animation first for the player who played the rent card
       setShowActionAnimation({
@@ -1053,59 +1051,63 @@ const MainGame = () => {
   // Handle double rent response
   const handleDoubleRentResponseWrapper = (modalData, useDoubleRent) => {
     setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentIds: '' });
-    const opponent = gameState.players.find(p => p.id === modalData.opponentId);
-    const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
-    
+    const targetPlayers = modalData.opponentIds.map(id => gameState.players.find(p => p.id === id));
     if (useDoubleRent) {
       const doubleTheRentCard = userPlayer.hand.find(card => 
         card.type === 'action' && card.name.toLowerCase() === 'double the rent'
       );
-      const doubleRentActionData = JSON.stringify({
-        'action': 'double_the_rent',
-        'player': userPlayer.id,
-        'card': pendingRentCard,
-        'double_the_rent_card': doubleTheRentCard,
-        'rentAmount': doubleRentAmount
-      });
-      if (justSayNoCard) {
-        socket.send(JSON.stringify({
-          action: "just_say_no_choice",
-          playerId: opponent.id,
-          opponentId: userPlayer.id,
-          card: justSayNoCard,
-          againstCard: doubleTheRentCard,
-          againstRentCard: pendingRentCard,
-          data: doubleRentActionData
-        }))
-      } else {
-        socket.send(doubleRentActionData);
-      }
-    } else {
-      const rentActionData = JSON.stringify({
-        'action': 'rent',
-        'player': user.unique_id,
-        'card': pendingRentCard,
-        'rentAmount': rentAmount
-      });
-      if (justSayNoCard) {
-        socket.send(JSON.stringify({
-          action: "just_say_no_choice",
-          playerId: opponent.id,
-          opponentId: userPlayer.id,
-          card: justSayNoCard,
-          againstCard: pendingRentCard,
-          data: rentActionData
-        }));
-      } else {
-        setTimeout(() => {
-          setShowActionAnimation({ visible: true, action: "Rent Request" });
+      targetPlayers.forEach(opponent => {
+        const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
+        const doubleRentActionData = JSON.stringify({
+          'action': 'double_the_rent',
+          'player': userPlayer.id,
+          'card': pendingRentCard,
+          'double_the_rent_card': doubleTheRentCard,
+          'rentAmount': doubleRentAmount
+        });
+        if (justSayNoCard) {
+          socket.send(JSON.stringify({
+            action: "just_say_no_choice",
+            playerId: opponent.id,
+            opponentId: userPlayer.id,
+            card: justSayNoCard,
+            againstCard: doubleTheRentCard,
+            againstRentCard: pendingRentCard,
+            data: doubleRentActionData
+          }))
+        } else {
+          socket.send(doubleRentActionData);
+        }
+      })
+    }
+    else {
+      targetPlayers.forEach(opponent => {
+        const rentActionData = JSON.stringify({
+          'action': 'rent',
+          'player': user.unique_id,
+          'card': pendingRentCard,
+          'rentAmount': rentAmount
+        });
+        if (justSayNoCard) {
+          socket.send(JSON.stringify({
+            action: "just_say_no_choice",
+            playerId: opponent.id,
+            opponentId: userPlayer.id,
+            card: justSayNoCard,
+            againstCard: pendingRentCard,
+            data: rentActionData
+          }));
+        } else {
           setTimeout(() => {
-            setShowActionAnimation({ visible: false, action: '' });
-          }, 2000);
-          socket.send(rentActionData);
-          setPendingRentCard(null);
-        }, 50);
-      }
+            setShowActionAnimation({ visible: true, action: "Rent Request" });
+            setTimeout(() => {
+              setShowActionAnimation({ visible: false, action: '' });
+            }, 2000);
+            socket.send(rentActionData);
+            setPendingRentCard(null);
+          }, 50);
+        }
+      })
     }
     setPendingRentCard(null);
   };

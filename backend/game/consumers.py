@@ -379,7 +379,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 }
             )
             game_state.discard_pile.append(card_to_play)
-    
+
     async def play_double_the_rent(self, game_state, player, rent_card_id, double_the_rent_card_id, rent_amount):
         """Handle double the rent card play"""
         rent_card_to_play = next((c for c in player.hand if c.id == rent_card_id), None)
@@ -388,19 +388,21 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         player.hand.remove(rent_card_to_play)
         player.hand.remove(double_the_rent_card_to_play)
-        opponent = next((p for p in game_state.players if p.id != player.id), None)
+        # opponent = next((p for p in game_state.players if p.id != player.id), None)
         # Send rent request
+        players_to_pay = [p.id for p in game_state.players if p.id != player.id]
         await self.channel_layer.group_send(
             self.game_group_name,
             {
                 'type': 'broadcast_rent_request',
-                'player_id': str(opponent.id),
+                # 'player_id': str(opponent.id),
                 'amount': rent_amount,
                 'rent_type': "double_the_rent",
-                'recipient_id': str(player.id)
+                'recipient_id': str(player.id),
+                'players_to_pay': players_to_pay,
+                'total_players': len(players_to_pay)
             }
         )
-        game_state.discard_pile.append(rent_card_to_play)
         game_state.discard_pile.append(double_the_rent_card_to_play)
         
     async def play_multicolor_rent(self, game_state, player, card_id, rent_amount, target_player_id):
@@ -427,14 +429,14 @@ class GameConsumer(AsyncWebsocketConsumer):
         if not card_to_play:
             return
         player.hand.remove(card_to_play)
-        opponent = next((p for p in game_state.players if p.id != player.id), None)
+        # opponent = next((p for p in game_state.players if p.id != player.id), None)
         # Send rent request
         players_to_pay = [p.id for p in game_state.players if p.id != player.id]
         await self.channel_layer.group_send(
             self.game_group_name,
             {
                 'type': 'broadcast_rent_request',
-                'player_id': str(opponent.id),
+                # 'player_id': str(opponent.id),
                 'amount': rent_amount,
                 'rent_type': "rent",
                 'recipient_id': str(player.id),
