@@ -90,6 +90,7 @@ const TwoPlayerLayout = memo(({
         <div className="flex-1">
           <PropertySet 
             properties={player.properties}
+            playerId={player.id}
             isOpponent={false}
             ItemTypes={ItemTypes}
             onDrop={(item) => handleCardDropPropertyWrapper(item.card)}
@@ -113,6 +114,7 @@ const TwoPlayerLayout = memo(({
         <div className="flex-1">
           <PropertySet 
             properties={opponent.properties}
+            playerId={opponent.id}
             isOpponent={true}
             setsPerRow={4}
           />
@@ -124,6 +126,8 @@ const TwoPlayerLayout = memo(({
         <BankAndCards
           hand={player.hand}
           bank={player.bank}
+          properties={player.properties}
+          playerId={player.id}
           isOpponent={false}
           ItemTypes={ItemTypes}
           DraggableCard={DraggableCard}

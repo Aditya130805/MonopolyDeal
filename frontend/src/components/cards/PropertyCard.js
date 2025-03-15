@@ -37,7 +37,8 @@ const PropertyCard = ({
   isUtility = false,
   isRailroad = false,
   width = 160,
-  height = 220
+  height = 220,
+  scale = 1 // Add scale prop for animations
 }) => {
 
   const getColorScheme = () => {
@@ -100,7 +101,12 @@ const PropertyCard = ({
   return (
     <div 
       className="relative"
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{ 
+        width: `${width}px`, 
+        height: `${height}px`,
+        transform: `scale(${scale})`,
+        transformOrigin: 'center center'
+      }}
     >
       {!isWild ? (
         // Regular Property Card Design

@@ -112,6 +112,7 @@ const PlayerInfo = ({ player, color = 'gray' }) => {
                     
                     <PropertySet
                         properties={player?.properties || {}}
+                        playerId={player?.id}
                         setsPerRow={4}
                         isCompact={true}
                     />

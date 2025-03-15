@@ -10,6 +10,7 @@ const BankAndCards = ({
   hand, 
   bank,
   properties,
+  playerId,
   isOpponent = false, 
   DraggableCard,
   renderCardContent,
@@ -205,6 +206,7 @@ const BankAndCards = ({
             </div>
             <PropertySet 
               properties={properties}
+              playerId={playerId}
               isOpponent={false}
               onDrop={handleCardDropProperty}
               setsPerRow={6}

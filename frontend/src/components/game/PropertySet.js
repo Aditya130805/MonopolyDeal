@@ -3,7 +3,7 @@ import { HomeIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline';
 import { useDroppable } from '@dnd-kit/core';
 import { setRequirements } from '../../utils/gameUtils';
 
-const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, isCompact = false, className = '' }) => {
+const PropertySet = ({ properties, playerId, isOpponent = false, onDrop, setsPerRow = 4, isCompact = false, className = '' }) => {
   // properties is already grouped by color, no need to reduce
   const propertyGroups = properties || {};
   const colorOrder = ['brown', 'mint', 'blue', 'light blue', 'pink', 'orange', 'red', 'yellow', 'green', 'black'];
@@ -86,8 +86,8 @@ const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, i
     const hotelCard = cards && cards.find(card => card.type === 'action' && card.name.toLowerCase() === 'hotel');
 
     return (
-      <div key={color} className={`relative ${isCompact ? 'w-[34px] h-[51px]' : 'w-[40px] h-[60px]'} group`}>
-        <div className={`w-full h-full rounded-sm border border-black/40 shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden`}> 
+      <div key={`${color}-property-${playerId || 'unknown'}`} className={`relative ${isCompact ? 'w-[34px] h-[51px]' : 'w-[40px] h-[60px]'} group`}>
+        <div className={`w-full h-full rounded-sm border border-black/40 shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden`} id={`${color}-property-${playerId || 'unknown'}`}> 
           <div className="flex flex-col h-full">
             {[...Array(requiredCards)].map((_, index) => {
               const hasCard = propertyCards && index < propertyCards.length;
@@ -208,7 +208,7 @@ const PropertySet = ({ properties, isOpponent = false, onDrop, setsPerRow = 4, i
         </div>}
 
         {/* Property Cards Grid */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" id={`property-set-${playerId || 'unknown'}`}>
           {createRows()}
         </div>
       </div>
