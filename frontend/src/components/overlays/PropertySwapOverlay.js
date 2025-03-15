@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropertyCard from '../cards/PropertyCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGameState } from '../../contexts/GameStateContext';
@@ -17,8 +17,9 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   const property1WithDefaults = property1 ? getPropertyWithDefaults(property1) : null;
   const property2WithDefaults = property2 ? getPropertyWithDefaults(property2) : null;
   
-  // Animation sequence state
-  const [currentAnimation, setCurrentAnimation] = useState(0);
+  // Track completed animations
+  const [animationsCompleted, setAnimationsCompleted] = useState(0);
+  const totalAnimations = useRef(0);
   
   // Animation configurations
   const animationConfig = {
@@ -31,12 +32,8 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   };
   
   // Handle animation completion
-  const handleFirstAnimationComplete = () => {
-    setCurrentAnimation(1);
-  };
-  
-  const handleSecondAnimationComplete = () => {
-    onClose();
+  const handleAnimationComplete = () => {
+    setAnimationsCompleted(prev => prev + 1);
   };
   
   // Custom render function for property cards
@@ -61,28 +58,36 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   // Reset animation state when overlay visibility changes
   useEffect(() => {
     if (isVisible) {
-      setCurrentAnimation(0);
+      setAnimationsCompleted(0);
+      // Count how many animations we'll have
+      totalAnimations.current = (animation1Data ? 1 : 0) + (animation2Data ? 1 : 0);
     }
-  }, [isVisible]);
+  }, [isVisible, animation1Data, animation2Data]);
+  
+  // Close overlay when all animations are complete
+  useEffect(() => {
+    if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
+      onClose();
+    }
+  }, [animationsCompleted, onClose]);
   
   return (
     <>
-      {/* First animation - Property 1 moving from player 1 to player 2 */}
-      {isVisible && currentAnimation === 0 && animation1Data && (
+      {/* Both animations run concurrently */}
+      {isVisible && animation1Data && (
         <CardMovementAnimation
           isVisible={true}
-          onClose={handleFirstAnimationComplete}
+          onClose={handleAnimationComplete}
           animationData={animation1Data}
           animationConfig={animationConfig}
           renderCard={renderCard}
         />
       )}
       
-      {/* Second animation - Property 2 moving from player 2 to player 1 */}
-      {isVisible && currentAnimation === 1 && animation2Data && (
+      {isVisible && animation2Data && (
         <CardMovementAnimation
           isVisible={true}
-          onClose={handleSecondAnimationComplete}
+          onClose={handleAnimationComplete}
           animationData={animation2Data}
           animationConfig={animationConfig}
           renderCard={renderCard}
