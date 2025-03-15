@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import PropertyCard from '../cards/PropertyCard';
 import { getPropertyWithDefaults } from '../../utils/gameUtils';
@@ -9,8 +9,9 @@ import { getPropertyWithDefaults } from '../../utils/gameUtils';
  * @param {Object} props Component props
  * @param {boolean} props.isVisible Whether the animation is visible
  * @param {Function} props.onClose Callback to close the overlay after animation completes
- * @param {Object} props.animationData Data needed for the animation
- * @param {Object} props.animationData.card The card object to animate
+ * @param {Object|Array} props.animationData Data needed for the animation - can be a single card object or an array of cards
+ * @param {Object} props.animationData.card The card object to animate (when single card)
+ * @param {Array} props.animationData.cards Array of card objects to animate (when multiple cards)
  * @param {string} props.animationData.sourceElementId DOM ID of the source element
  * @param {string} props.animationData.targetElementId DOM ID of the target element
  * @param {Object} props.animationConfig Optional animation configuration
@@ -20,7 +21,8 @@ import { getPropertyWithDefaults } from '../../utils/gameUtils';
  * @param {number} props.animationConfig.stiffness Spring stiffness for movement animation
  * @param {number} props.animationConfig.damping Spring damping for movement animation
  * @param {number} props.animationConfig.scale Scale of the card (0-1)
- * @param {Function} props.renderCard Custom function to render the card (receives card data and scale)
+ * @param {number} props.animationConfig.cardOffset Horizontal offset between cards when animating multiple cards
+ * @param {Function} props.renderCard Custom function to render the card (receives card data, index, and total count)
  */
 const CardMovementAnimation = ({ 
   isVisible, 
@@ -31,6 +33,7 @@ const CardMovementAnimation = ({
 }) => {
   const cardAnimationControls = useAnimation();
   const animatingCardRef = useRef(null);
+  const cardsContainerRef = useRef(null);
 
   // Default configuration with sensible defaults
   const config = {
@@ -40,8 +43,16 @@ const CardMovementAnimation = ({
     stiffness: animationConfig.stiffness || 40,
     damping: animationConfig.damping || 12,
     scale: animationConfig.scale || 0.8,
+    cardOffset: animationConfig.cardOffset || 30, // horizontal offset between cards in pixels
     finalDelay: animationConfig.finalDelay || 50, // ms
   };
+  
+  // Determine if we're dealing with multiple cards or a single card
+  const isMultipleCards = Array.isArray(animationData?.cards) && animationData.cards.length > 0;
+  const cards = isMultipleCards ? animationData.cards : (animationData?.card ? [animationData.card] : []);
+  
+  // Get the base width of a card for calculations
+  const width = 160; // Base card width
 
   // Function to get element position
   const getElementPosition = (elementId) => {
@@ -57,9 +68,9 @@ const CardMovementAnimation = ({
 
   // Function to animate card movement
   const animateCardMovement = async () => {
-    if (!animationData || !animationData.card) return;
+    if (!animationData || (!animationData.card && !isMultipleCards)) return;
     
-    const { card, sourceElementId, targetElementId } = animationData;
+    const { sourceElementId, targetElementId } = animationData;
     
     // Try to find elements with a small delay to ensure DOM is ready
     let attempts = 0;
@@ -82,20 +93,29 @@ const CardMovementAnimation = ({
         return;
       }
     
-      // Get the initial position of the animating card
-      const cardRect = animatingCardRef.current?.getBoundingClientRect();
-      if (!cardRect) {
+      // Get the initial position of the animating cards container
+      const containerRect = cardsContainerRef.current?.getBoundingClientRect();
+      if (!containerRect) {
         onClose();
         return;
       }
       
-      const startX = sourcePosition.x - cardRect.width / 2;
-      const startY = sourcePosition.y - cardRect.height / 2;
-      const endX = targetPosition.x - cardRect.width / 2;
-      const endY = targetPosition.y - cardRect.height / 2;
+      // Calculate the total width of all cards including overlap
+      const totalCardsWidth = cards.length > 0 
+        ? width + (Math.abs(config.cardOffset) * (cards.length - 1))
+        : containerRect.width;
+      
+      // Calculate the center offset to ensure the center of the card pack aligns with source/target
+      const centerOffsetX = totalCardsWidth / 2 - containerRect.width / 2;
+      
+      // Position the container so its center aligns with source/target elements
+      const startX = sourcePosition.x - containerRect.width / 2 - centerOffsetX;
+      const startY = sourcePosition.y - containerRect.height / 2;
+      const endX = targetPosition.x - containerRect.width / 2 - centerOffsetX;
+      const endY = targetPosition.y - containerRect.height / 2;
     
       // Set initial position
-      await cardAnimationControls.set({
+      cardAnimationControls.set({
         x: startX,
         y: startY,
         opacity: 0,
@@ -104,40 +124,47 @@ const CardMovementAnimation = ({
         position: 'fixed',
       });
       
-      // Animate to visibility
-      await cardAnimationControls.start({
-        opacity: 1,
-        scale: 1,
-        transition: { duration: config.fadeInDuration }
-      });
-      
-      // Animate to target position
-      await cardAnimationControls.start({
-        x: endX,
-        y: endY,
-        transition: {
-          type: 'spring',
-          stiffness: config.stiffness,
-          damping: config.damping,
-          duration: config.moveDuration
+      // Use setTimeout to ensure the component is fully mounted before starting animations
+      setTimeout(async () => {
+        try {
+          // Animate to visibility
+          await cardAnimationControls.start({
+            opacity: 1,
+            scale: 1,
+            transition: { duration: config.fadeInDuration }
+          });
+          
+          // Animate to target position
+          await cardAnimationControls.start({
+            x: endX,
+            y: endY,
+            transition: {
+              type: 'spring',
+              stiffness: config.stiffness,
+              damping: config.damping,
+              duration: config.moveDuration
+            }
+          });
+          
+          // Fade out with a smoother transition
+          await cardAnimationControls.start({
+            opacity: 0,
+            scale: config.scale,
+            transition: { 
+              duration: config.fadeOutDuration,
+              ease: 'easeOut'
+            }
+          });
+          
+          // Small delay to ensure animation is complete before closing
+          setTimeout(() => {
+            onClose();
+          }, config.finalDelay);
+        } catch (error) {
+          console.error('Animation error:', error);
+          onClose();
         }
-      });
-      
-      // Fade out with a smoother transition
-      await cardAnimationControls.start({
-        opacity: 0,
-        scale: config.scale,
-        transition: { 
-          duration: config.fadeOutDuration,
-          ease: 'easeOut'
-        }
-      });
-      
-      // Small delay to ensure animation is complete before closing
-      await new Promise(resolve => setTimeout(resolve, config.finalDelay));
-      
-      // Close the overlay after animation completes
-      onClose();
+      }, 50); // Small delay to ensure component is mounted
     };
     
     // Start the animation attempt process
@@ -145,14 +172,23 @@ const CardMovementAnimation = ({
   };
 
   useEffect(() => {
-    if (isVisible && animationData && animationData.card) {
-      // Start animation when overlay becomes visible
-      animateCardMovement();
+    let animationTimeout;
+    
+    if (isVisible && animationData && (animationData.card || isMultipleCards)) {
+      // Add a small delay before starting animation to ensure component is fully mounted
+      animationTimeout = setTimeout(() => {
+        animateCardMovement();
+      }, 100);
     }
-  }, [isVisible, animationData, onClose]);
+    
+    // Clean up timeout if component unmounts
+    return () => {
+      if (animationTimeout) clearTimeout(animationTimeout);
+    };
+  }, [isVisible, animationData]);
 
   // Default render function for property cards
-  const defaultRenderCard = (card) => {
+  const defaultRenderCard = (card, index, totalCards) => {
     const propertyWithDefaults = getPropertyWithDefaults(card);
     return <PropertyCard {...propertyWithDefaults} scale={config.scale} />;
   };
@@ -160,14 +196,52 @@ const CardMovementAnimation = ({
   // Use custom render function or default to PropertyCard
   const renderCardContent = renderCard || defaultRenderCard;
 
+  // State to track if initial positioning has been set
+  const [isPositioned, setIsPositioned] = useState(false);
+  
+  // Set initial position before rendering cards
+  useEffect(() => {
+    if (isVisible && animationData && cards.length > 0 && !isPositioned) {
+      // Initially hide the cards with opacity 0
+      cardAnimationControls.set({
+        opacity: 0,
+        position: 'fixed',
+        zIndex: 9999
+      });
+      setIsPositioned(true);
+    }
+  }, [isVisible, animationData, cards.length, isPositioned]);
+  
   return (
-    isVisible && animationData && animationData.card ? (
+    isVisible && animationData && cards.length > 0 ? (
       <motion.div
-        ref={animatingCardRef}
+        ref={cardsContainerRef}
         animate={cardAnimationControls}
-        style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 9999 }}
+        initial={{ opacity: 0 }}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          pointerEvents: 'none', 
+          zIndex: 9999,
+          visibility: isPositioned ? 'visible' : 'hidden' // Hide until positioned
+        }}
       >
-        {renderCardContent(animationData.card)}
+        <div className="flex" style={{ position: 'relative' }}>
+          {cards.map((card, index) => (
+            <div 
+              key={card.id || `card-${index}`}
+              ref={index === 0 ? animatingCardRef : null}
+              style={{ 
+                position: 'relative', 
+                left: `${index * config.cardOffset}px`,
+                zIndex: cards.length - index
+              }}
+            >
+              {renderCardContent(card, index, cards.length)}
+            </div>
+          ))}
+        </div>
       </motion.div>
     ) : null
   );

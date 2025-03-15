@@ -93,7 +93,8 @@ const ActionCard = ({
   name,
   width = 160, 
   height = 220,
-  rentColors = []
+  rentColors = [],
+  scale = 1 // Add scale prop for animations
 }) => {
   // Calculate proportional sizes based on the card dimensions
   const calculateSizes = () => {
@@ -157,7 +158,12 @@ const ActionCard = ({
     <div 
       className={`relative flex flex-col ${colors.bg}
         border-2 ${colors.border} rounded-lg shadow-md overflow-hidden`}
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{ 
+        width: `${width}px`, 
+        height: `${height}px`,
+        transform: `scale(${scale})`,
+        transformOrigin: 'center center' 
+      }}
     >
       {/* Large Lightning Icon Background */}
       {/* <div className="absolute inset-0 flex items-center justify-center opacity-15">

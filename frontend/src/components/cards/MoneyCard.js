@@ -9,7 +9,7 @@ export const getMoneyCardJSON = ({ id, value }) => {
   };
 };
 
-const MoneyCard = ({ value, width = 160, height = 220 }) => {
+const MoneyCard = ({ value, width = 160, height = 220, scale = 1 }) => {
   // Simple color scheme based on value
   const getColorSchemeColored = () => {
     switch (value) {
@@ -71,7 +71,12 @@ const MoneyCard = ({ value, width = 160, height = 220 }) => {
     <div 
       className={`relative flex flex-col items-center justify-center ${colors.bg} 
         border-2 ${colors.border} rounded-lg shadow-md overflow-hidden`}
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{ 
+        width: `${width}px`, 
+        height: `${height}px`,
+        transform: `scale(${scale})`,
+        transformOrigin: 'center center'
+      }}
     >
       {/* Value circle in top left */}
       <div className={`absolute top-2 left-2 ${colors.circle} w-12 h-8 rounded-full 
