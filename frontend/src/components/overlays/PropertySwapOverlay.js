@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropertyCard from '../cards/PropertyCard';
-import { useAuth } from '../../contexts/AuthContext';
 import { useGameState } from '../../contexts/GameStateContext';
 import { getPropertyWithDefaults } from '../../utils/gameUtils';
 import CardMovementAnimation from './CardMovementAnimation';
@@ -20,20 +19,29 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   // Track completed animations
   const [animationsCompleted, setAnimationsCompleted] = useState(0);
   const totalAnimations = useRef(0);
+  const animationTimeoutRef = useRef(null);
   
-  // Animation configurations
+  // Animation configurations - optimized for performance
   const animationConfig = {
-    stiffness: 40,
-    damping: 12,
-    moveDuration: 1.5,
-    fadeInDuration: 0.3,
-    fadeOutDuration: 0.4,
+    stiffness: 60,        // Increased for faster animation
+    damping: 14,          // Increased for less oscillation
+    moveDuration: 1.0,    // Reduced duration
+    fadeInDuration: 0.2,  // Faster fade in
+    fadeOutDuration: 0.2, // Faster fade out
     scale: 0.8
   };
   
   // Handle animation completion
   const handleAnimationComplete = () => {
     setAnimationsCompleted(prev => prev + 1);
+  };
+  
+  // Forced cleanup function
+  const forceCleanup = () => {
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    onClose();
   };
   
   // Custom render function for property cards
@@ -61,8 +69,20 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
       setAnimationsCompleted(0);
       // Count how many animations we'll have
       totalAnimations.current = (animation1Data ? 1 : 0) + (animation2Data ? 1 : 0);
+      
+      // Safety timeout - force close after a maximum time
+      animationTimeoutRef.current = setTimeout(() => {
+        onClose();
+      }, 3000); // Force close after 3 seconds regardless of animation state
     }
-  }, [isVisible, animation1Data, animation2Data]);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, [isVisible, animation1Data, animation2Data, onClose]);
   
   // Close overlay when all animations are complete
   useEffect(() => {
@@ -71,11 +91,33 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
     }
   }, [animationsCompleted, onClose]);
   
+  // Handle tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isVisible) {
+        // If tab becomes hidden during animation, force cleanup
+        forceCleanup();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isVisible]);
+  
+  // Only render if overlay is visible and we have animation data
+  if (!isVisible || (!animation1Data && !animation2Data)) {
+    return null;
+  }
+  
   return (
     <>
       {/* Both animations run concurrently */}
-      {isVisible && animation1Data && (
+      {animation1Data && (
         <CardMovementAnimation
+          key={`property1-${property1?.id}`}
           isVisible={true}
           onClose={handleAnimationComplete}
           animationData={animation1Data}
@@ -84,8 +126,9 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
         />
       )}
       
-      {isVisible && animation2Data && (
+      {animation2Data && (
         <CardMovementAnimation
+          key={`property2-${property2?.id}`}
           isVisible={true}
           onClose={handleAnimationComplete}
           animationData={animation2Data}
