@@ -74,8 +74,8 @@ const CardMovementAnimation = ({
     
     // Try to find elements with a small delay to ensure DOM is ready
     let attempts = 0;
-    const maxAttempts = 10;
-    const attemptInterval = 100; // ms
+    const maxAttempts = 15; // Increased max attempts
+    const attemptInterval = 150; // ms - slightly longer interval
     
     const tryAnimation = async () => {
       const sourcePosition = getElementPosition(sourceElementId);
@@ -84,7 +84,7 @@ const CardMovementAnimation = ({
       if (!sourcePosition || !targetPosition) {
         if (attempts < maxAttempts) {
           attempts++;
-          console.log(`Attempt ${attempts}: Waiting for DOM elements to be ready...`);
+          console.log(`Attempt ${attempts}: Waiting for DOM elements to be ready...`, sourceElementId, targetElementId);
           setTimeout(tryAnimation, attemptInterval);
         } else {
           console.log('Could not find source or target elements for animation after multiple attempts:', sourceElementId, targetElementId);
@@ -127,34 +127,37 @@ const CardMovementAnimation = ({
       // Use setTimeout to ensure the component is fully mounted before starting animations
       setTimeout(async () => {
         try {
-          // Animate to visibility
-          await cardAnimationControls.start({
-            opacity: 1,
-            scale: 1,
-            transition: { duration: config.fadeInDuration }
-          });
-          
-          // Animate to target position
-          await cardAnimationControls.start({
-            x: endX,
-            y: endY,
-            transition: {
-              type: 'spring',
-              stiffness: config.stiffness,
-              damping: config.damping,
-              duration: config.moveDuration
-            }
-          });
-          
-          // Fade out with a smoother transition
-          await cardAnimationControls.start({
-            opacity: 0,
-            scale: config.scale,
-            transition: { 
-              duration: config.fadeOutDuration,
-              ease: 'easeOut'
-            }
-          });
+          // Add a visibility check before starting animation
+          if (!document.hidden) {
+            // Animate to visibility
+            await cardAnimationControls.start({
+              opacity: 1,
+              scale: 1,
+              transition: { duration: config.fadeInDuration }
+            });
+            
+            // Animate to target position
+            await cardAnimationControls.start({
+              x: endX,
+              y: endY,
+              transition: {
+                type: 'spring',
+                stiffness: config.stiffness,
+                damping: config.damping,
+                duration: config.moveDuration
+              }
+            });
+            
+            // Fade out with a smoother transition
+            await cardAnimationControls.start({
+              opacity: 0,
+              scale: config.scale,
+              transition: { 
+                duration: config.fadeOutDuration,
+                ease: 'easeOut'
+              }
+            });
+          }
           
           // Small delay to ensure animation is complete before closing
           setTimeout(() => {
@@ -162,15 +165,36 @@ const CardMovementAnimation = ({
           }, config.finalDelay);
         } catch (error) {
           console.error('Animation error:', error);
-          onClose();
+          // Don't immediately close on error, give it a small delay
+          setTimeout(() => {
+            onClose();
+          }, 500);
         }
-      }, 50); // Small delay to ensure component is mounted
+      }, 100); // Slightly longer delay to ensure component is mounted
     };
     
     // Start the animation attempt process
     tryAnimation();
   };
 
+  // Handle visibility change events
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isVisible) {
+        // If tab becomes hidden during animation, ensure we still complete
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isVisible, onClose]);
+  
   useEffect(() => {
     let animationTimeout;
     
@@ -178,7 +202,7 @@ const CardMovementAnimation = ({
       // Add a small delay before starting animation to ensure component is fully mounted
       animationTimeout = setTimeout(() => {
         animateCardMovement();
-      }, 100);
+      }, 200); // Increased delay for more reliability
     }
     
     // Clean up timeout if component unmounts
