@@ -41,7 +41,7 @@ const ActiveGameRoom = () => {
       // console.log(`WebSocket message in room ${roomId}:`, event.data);
       const data = JSON.parse(event.data);
       if (data.type && data.type === "rejection") {
-        navigate("/play");
+        navigate('/');
       } else if (data.type && data.type === "broadcast_game_started") {
         navigate(`/game/${roomId}`);
       }
@@ -55,7 +55,7 @@ const ActiveGameRoom = () => {
 
   const handleLeaveRoom = () => {
     if (socket) socket.close();
-    navigate('/play');
+    navigate('/');
   };
 
   const handleReady = () => {
