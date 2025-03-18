@@ -76,6 +76,7 @@ const TwoPlayerLayout = memo(({
           <BankAndCards
             hand={opponent.hand}
             bank={opponent.bank}
+            playerId={opponent.id}
             isOpponent={true}
             ItemTypes={ItemTypes}
             DraggableCard={DraggableCard}
@@ -188,6 +189,7 @@ const ThreePlayerLayout = memo(({
           hand={player.hand}
           bank={player.bank}
           properties={player.properties}
+          playerId={player.id}
           isOpponent={false}
           DraggableCard={DraggableCard}
           renderCardContent={renderCardContent}

@@ -17,7 +17,7 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   const property2WithDefaults = property2 ? getPropertyWithDefaults(property2) : null;
   
   // Track completed animations
-  const [animationsCompleted, setAnimationsCompleted] = useState(0);
+  // const [animationsCompleted, setAnimationsCompleted] = useState(0);
   const totalAnimations = useRef(0);
   const animationTimeoutRef = useRef(null);
   
@@ -33,7 +33,7 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   
   // Handle animation completion
   const handleAnimationComplete = () => {
-    setAnimationsCompleted(prev => prev + 1);
+    // setAnimationsCompleted(prev => prev + 1);
   };
   
   // Forced cleanup function
@@ -42,11 +42,6 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
       clearTimeout(animationTimeoutRef.current);
     }
     onClose();
-  };
-  
-  // Custom render function for property cards
-  const renderCard = (card) => {
-    return <PropertyCard {...card} scale={0.8} />;
   };
   
   // Prepare animation data for property 1
@@ -66,7 +61,7 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
   // Reset animation state when overlay visibility changes
   useEffect(() => {
     if (isVisible) {
-      setAnimationsCompleted(0);
+      // setAnimationsCompleted(0);
       // Count how many animations we'll have
       totalAnimations.current = (animation1Data ? 1 : 0) + (animation2Data ? 1 : 0);
       
@@ -84,28 +79,12 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
     };
   }, [isVisible, animation1Data, animation2Data, onClose]);
   
-  // Close overlay when all animations are complete
-  useEffect(() => {
-    if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
-      onClose();
-    }
-  }, [animationsCompleted, onClose]);
-  
-  // Handle tab visibility changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && isVisible) {
-        // If tab becomes hidden during animation, force cleanup
-        forceCleanup();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isVisible]);
+  // // Close overlay when all animations are complete
+  // useEffect(() => {
+  //   if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
+  //     onClose();
+  //   }
+  // }, [animationsCompleted, onClose]);
   
   // Only render if overlay is visible and we have animation data
   if (!isVisible || (!animation1Data && !animation2Data)) {
@@ -117,25 +96,31 @@ const PropertySwapOverlay = ({ isVisible, onClose, overlayData }) => {
       {/* Both animations run concurrently */}
       {animation1Data && (
         <CardMovementAnimation
-          key={`property1-${property1?.id}`}
+          key={`property1-forced-deal-${property1?.id}`}
           isVisible={true}
           onClose={handleAnimationComplete}
           animationData={animation1Data}
           animationConfig={animationConfig}
-          renderCard={renderCard}
         />
       )}
       
       {animation2Data && (
         <CardMovementAnimation
-          key={`property2-${property2?.id}`}
+          key={`property2-forced-deal-${property2?.id}`}
           isVisible={true}
           onClose={handleAnimationComplete}
           animationData={animation2Data}
           animationConfig={animationConfig}
-          renderCard={renderCard}
         />
       )}
+
+      {(() => {
+        setTimeout(() => {
+          console.log('PropertySwapOverlay: closing overlay');
+          onClose();
+        }, 2000);
+        return null; // Return null so nothing is rendered
+      })()}
     </>
   );
 };

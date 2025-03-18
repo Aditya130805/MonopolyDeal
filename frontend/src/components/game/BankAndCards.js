@@ -61,6 +61,7 @@ const BankAndCards = ({
 
   const renderCompactBank = () => (
     <div 
+      id={`bank-${playerId || 'unknown'}`}
       className="bg-green-200/80 rounded-xl px-6 py-4 flex items-center border-2 border-green-400 cursor-pointer hover:bg-green-300/80 transition-colors shrink-0 relative"
       onMouseEnter={() => setShowBankDetails(true)}
       onMouseLeave={() => setShowBankDetails(false)}
@@ -98,6 +99,7 @@ const BankAndCards = ({
                 {denominations.map(value => (
                   <div 
                     key={value}
+                    id={`bank-${value}-${playerId || 'unknown'}`}
                     className={`rounded-md p-1.5 ${
                       counts[value] > 0 
                         ? 'bg-green-100 ring-1 ring-green-300' 
@@ -141,6 +143,7 @@ const BankAndCards = ({
 
   const renderFullBank = () => (
     <div 
+      // id={`bank-${playerId || 'unknown'}`}
       ref={!isOpponent ? setBankRef : null}
       className={`bg-white/95 rounded-lg p-3 shadow-lg ${isOpponent ? 'transform rotate-180' : ''} w-[300px] min-w-[250px] flex-shrink-1 relative transition-all duration-100`}
     >
@@ -165,10 +168,11 @@ const BankAndCards = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-3 grid-rows-2 gap-2">
+      <div className="grid grid-cols-3 grid-rows-2 gap-2" id={`bank-${playerId || 'unknown'}`}>
         {denominations.map(value => (
           <div 
             key={value}
+            id={`bank-${value}-${playerId || 'unknown'}`}
             className={`rounded-md p-1 ${
               counts[value] > 0 
                 ? 'bg-emerald-50 border border-emerald-200' 

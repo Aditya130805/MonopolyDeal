@@ -1,79 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import PropertyCard from '../cards/PropertyCard';
-import ActionCard from '../cards/ActionCard';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameState } from '../../contexts/GameStateContext';
+import { getPropertyWithDefaults } from '../../utils/gameUtils';
 import CardMovementAnimation from './CardMovementAnimation';
 
 const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
   const { gameState } = useGameState();
-  
+    
   const stealerId = overlayData?.stealerId;
   const targetId = overlayData?.targetId;
   const color = overlayData?.color;
   const propertySet = overlayData?.propertySet || [];
-  
+
   // Calculate source and target element IDs for the property set
   const getSourceElementId = () => `${color}-property-${targetId || 'unknown'}`;
   const getTargetElementId = () => `${color}-property-${stealerId || 'unknown'}`;
   
-  // Reset animation when overlay becomes visible
-  useEffect(() => {
-    if (!isVisible) return;
-    
-    // Auto-close after animation completes (with buffer for animation duration)
-    const timer = setTimeout(() => {
-      onClose();
-    }, 4000); // Allow enough time for the full animation sequence
-    
-    return () => clearTimeout(timer);
-  }, [isVisible, onClose]);
-
-  // Prepare animation data with all cards
-  const prepareAnimationData = () => {
-    if (!propertySet || propertySet.length === 0) {
-      return null;
-    }
-    
-    return {
-      cards: propertySet,
-      sourceElementId: getSourceElementId(),
-      targetElementId: getTargetElementId()
-    };
-  };
+  // Track completed animations
+  // const [animationsCompleted, setAnimationsCompleted] = useState(0);
+  const totalAnimations = useRef(0);
+  const animationTimeoutRef = useRef(null);
   
-  // Custom render function for the cards
-  const renderCard = (card, index, totalCards) => {
-    return card.type === 'property' ? (
-      <PropertyCard {...card} scale={0.8} />
-    ) : (card.type === 'action') ? (
-      <ActionCard {...card} scale={0.8} />
-    ) : null;
-  };
-  
-  // Animation configuration
+  // Animation configurations - optimized for performance
   const animationConfig = {
-    stiffness: 40,
-    damping: 12,
-    moveDuration: 2.0,
-    fadeInDuration: 0.3,
-    fadeOutDuration: 0.3,
+    stiffness: 60,        // Increased for faster animation
+    damping: 14,          // Increased for less oscillation
+    moveDuration: 1.0,    // Reduced duration
+    fadeInDuration: 0.2,  // Faster fade in
+    fadeOutDuration: 0.2, // Faster fade out
     scale: 0.8,
     cardOffset: -100 // Negative value creates overlap between cards
   };
   
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    // setAnimationsCompleted(prev => prev + 1);
+  };
+  
+  // Forced cleanup function
+  const forceCleanup = () => {
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    onClose();
+  };
+  
+  // Prepare animation data with all cards
+  const animationData = propertySet.length > 0 ? {
+    cards: propertySet,
+    sourceElementId: getSourceElementId(),
+    targetElementId: getTargetElementId()
+  } : null;
+  
+  // Reset animation state when overlay visibility changes
+  useEffect(() => {
+    if (isVisible) {
+      // setAnimationsCompleted(0);
+      // Count how many animations we'll have
+      totalAnimations.current = (animationData ? 1 : 0);
+      
+      // Safety timeout - force close after a maximum time
+      animationTimeoutRef.current = setTimeout(() => {
+        onClose();
+      }, 3000); // Force close after 3 seconds regardless of animation state
+    }
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, [isVisible, animationData, onClose]);
+  
+  // // Close overlay when all animations are complete
+  // useEffect(() => {
+  //   if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
+  //     onClose();
+  //   }
+  // }, [animationsCompleted, onClose]);
+  
+  // Only render if overlay is visible and we have animation data
+  if (!isVisible || !animationData) {
+    return null;
+  }
+  
   return (
     <>
-      {isVisible && propertySet && propertySet.length > 0 && (
+      {/* Both animations run concurrently */}
+      {animationData && (
         <CardMovementAnimation
-          key="deal-breaker-animation"
-          isVisible={isVisible}
-          onClose={onClose}
-          animationData={prepareAnimationData()}
+          key={`property-set-deal-breaker-${propertySet[0]?.id}`}
+          isVisible={true}
+          onClose={handleAnimationComplete}
+          animationData={animationData}
           animationConfig={animationConfig}
-          renderCard={renderCard}
         />
       )}
+      {(() => {
+        setTimeout(() => {
+          console.log('DealBreakerOverlay: closing overlay');
+          onClose();
+        }, 2000);
+        return null; // Return null so nothing is rendered
+      })()}
     </>
   );
 };

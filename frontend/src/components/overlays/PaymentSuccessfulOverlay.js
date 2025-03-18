@@ -1,238 +1,162 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import PropertyCard from '../cards/PropertyCard';
-import ActionCard from '../cards/ActionCard';
-import MoneyCard from '../cards/MoneyCard';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameState } from '../../contexts/GameStateContext';
+import CardMovementAnimation from './CardMovementAnimation';
 
 const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
   const { gameState } = useGameState();
-  const playerId = overlayData?.playerId;
-  const targetId = overlayData?.targetId;
-  const selectedCards = overlayData?.selectedCards || [];
-  
-  const player = gameState?.players.find(p => p.id === playerId);
-  const target = gameState?.players.find(p => p.id === targetId);
 
-  const colorStyle = {
-    bg: '#4A5568',
-    text: '#FFFFFF',
-    gradient: ['#4A5568DD', '#5A6678DD', '#6B7888DD']
+  // Use refs to avoid re-renders and infinite update loops
+  const playerIdRef = useRef(null);
+  const targetIdRef = useRef(null);
+  const selectedCardsRef = useRef([]);
+  const cardGroupsRef = useRef([]);
+  
+  // Update refs when overlay data changes, but don't cause re-renders
+  if (isVisible && overlayData) {
+    playerIdRef.current = overlayData.playerId;
+    targetIdRef.current = overlayData.targetId;
+    selectedCardsRef.current = overlayData.selectedCards || [];
+  }
+  // Track completed animations
+  const totalAnimations = useRef(0);
+  const animationTimeoutRef = useRef(null);
+  
+  // Animation configuration
+  const animationConfig = {
+    stiffness: 40,        // Spring stiffness
+    damping: 12,          // Spring damping
+    moveDuration: 2.2,    // Duration of movement animation
+    fadeInDuration: 0.3,  // Fade in duration
+    fadeOutDuration: 0.4, // Fade out duration
+    scale: 0.8,           // Card scale
+    cardOffset: -100,     // Negative offset creates overlap between cards
+    finalDelay: 50        // Final delay before closing
+  };
+  
+  // Forced cleanup function
+  const forceCleanup = () => {
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    onClose();
   };
 
+  // Determine source and target element IDs for each card
+  const getElementIds = (card) => {
+    const playerId = playerIdRef.current;
+    const targetId = targetIdRef.current;
+    
+    // Determine source element ID (from paying player)
+    let sourceElementId;
+    if (card.type === 'property') {
+      // Property cards come from property set
+      sourceElementId = `${card.currentColor || card.color}-property-${playerId}`;
+    } else if (card.type === 'money') {
+      // Money cards come from bank with specific value
+      sourceElementId = `bank-${card.value}-${playerId}`;
+    } else {
+      // Action cards come from bank
+      sourceElementId = `bank-${card.value || 0}-${playerId}`;
+    }
+    
+    // Determine target element ID (to receiving player)
+    let targetElementId;
+    if (card.type === 'property') {
+      // Property cards go to property set
+      targetElementId = `${card.currentColor || card.color}-property-${targetId}`;
+    } else if (card.type === 'money') {
+      // Money cards go to bank with specific value
+      targetElementId = `bank-${card.value}-${targetId}`;
+    } else {
+      // Action cards go to bank
+      targetElementId = `bank-${card.value || 0}-${targetId}`;
+    }
+    
+    return { sourceElementId, targetElementId };
+  };
+
+  // Create animation data for all cards with source and target element IDs
+  const cards = selectedCardsRef.current.map(card => ({
+    card,
+    ...getElementIds(card)
+  }));
+  
+  // Group cards by source and target element IDs
+  const groupCardsByElements = () => {
+    const groups = {};
+    
+    selectedCardsRef.current.forEach(card => {
+      const { sourceElementId, targetElementId } = getElementIds(card);
+      
+      // Create a unique key for each source-target pair
+      const groupKey = `${sourceElementId}->${targetElementId}`;
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          cards: [],
+          sourceElementId,
+          targetElementId
+        };
+      }
+      
+      groups[groupKey].cards.push(card);
+    });
+    
+    return Object.values(groups);
+  };
+  
+  // Get grouped cards
+  const cardGroups = groupCardsByElements();
+  
+  // Store card groups in ref for access in effects
+  cardGroupsRef.current = cardGroups;
+  
+  // Reset animation state when overlay visibility changes
   useEffect(() => {
     if (isVisible) {
-      const timer = setTimeout(() => {
+      // Count how many animations we'll have
+      totalAnimations.current = cardGroupsRef.current.length;
+      
+      // Safety timeout - force close after a maximum time
+      animationTimeoutRef.current = setTimeout(() => {
         onClose();
-      }, 2000);
-      return () => clearTimeout(timer);
+      }, 3000); // Force close after 3 seconds regardless of animation state
     }
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
   }, [isVisible, onClose]);
 
+  // Only render if overlay is visible and we have animation data
+  if (!isVisible || (!cardGroupsRef.current)) {
+    return null;
+  }
+  
   return (
-    <AnimatePresence mode="wait" onExitComplete={onClose}>
-      {isVisible && overlayData && player && target && (
-        <motion.div
-          className="fixed inset-0 flex items-center justify-center z-[9999]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Backdrop blur */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          
-          <div style={{ position: 'relative' }}>
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ 
-                scale: 1,
-                opacity: 1,
-              }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{
-                duration: 0.7,
-                ease: [0.34, 1.56, 0.64, 1],
-              }}
-              style={{
-                background: `linear-gradient(45deg, ${colorStyle.gradient[0]}, ${colorStyle.gradient[1]}, ${colorStyle.gradient[2]})`,
-                padding: '40px 60px',
-                borderRadius: '20px',
-                boxShadow: `0 10px 30px ${colorStyle.bg}4D`,
-                position: 'relative',
-                overflow: 'hidden',
-                minWidth: 'min-content',
-                backdropFilter: 'brightness(0.9)'
-              }}
-            >
-              {/* Background symbols */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ 
-                  opacity: [0.1, 0.15, 0.1],
-                }}
-                transition={{
-                  duration: 2,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                }}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'space-around',
-                  alignItems: 'center',
-                  fontSize: '24px',
-                  color: 'white',
-                  zIndex: 0,
-                  pointerEvents: 'none',
-                }}
-              >
-                {'💰 💵 💸'.repeat(5).split(' ').map((emoji, i) => (
-                  <motion.span
-                    key={i}
-                    animate={{
-                      y: [0, -10, 0],
-                      rotate: [-5, 5, -5],
-                    }}
-                    transition={{
-                      duration: 3,
-                      ease: "easeInOut",
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                    style={{ margin: '5px' }}
-                  >
-                    {emoji}
-                  </motion.span>
-                ))}
-              </motion.div>
-
-              {/* Content */}
-              <div className="relative z-10">
-                {/* Title */}
-                <motion.div
-                  initial={{ y: -20, opacity: 0 }}
-                  animate={{ 
-                    y: 0,
-                    opacity: 1,
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: 1,
-                    ease: [0.34, 1.56, 0.64, 1],
-                  }}
-                >
-                  <h1 
-                    className="text-4xl font-extrabold text-white text-center mb-6"
-                    style={{
-                      textShadow: '3px 3px 0px rgba(0,0,0,0.2)',
-                    }}
-                  >
-                    PAYMENT MADE!
-                  </h1>
-                </motion.div>
-
-                {/* Player Names */}
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ 
-                    scale: 1,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    ease: [0.34, 1.56, 0.64, 1],
-                    delay: 0.2
-                  }}
-                  className="text-2xl text-white text-center font-semibold mb-8"
-                  style={{
-                    textShadow: '2px 2px 0px rgba(0,0,0,0.1)',
-                  }}
-                >
-                  <span 
-                    className="font-bold"
-                    style={{ 
-                      color: '#f87171',
-                      textShadow: '2px 2px 0px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    {player.name}
-                  </span>
-                  <span className="mx-2">paid</span>
-                  <span 
-                    className="font-bold"
-                    style={{ 
-                      color: '#4ade80',
-                      textShadow: '2px 2px 0px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    {target.name}
-                  </span>
-                </motion.div>
-
-                {/* No Payment Message */}
-                {selectedCards.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-white/80 text-lg text-center italic mb-6"
-                  >
-                    (No cards to pay with)
-                  </motion.div>
-                )}
-
-                {/* Cards Display */}
-                <motion.div
-                  className="flex justify-center items-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <div className="flex -space-x-20 relative">
-                    {selectedCards.map((card, index) => {
-                      let CardComponent = card.type === 'money' ? MoneyCard 
-                                      : card.type === 'property' ? PropertyCard 
-                                      : ActionCard;
-
-                      return (
-                        <motion.div
-                          key={card.id}
-                          className="relative"
-                          style={{ zIndex: index }}
-                          initial={{ 
-                            opacity: 0,
-                            x: -30,
-                            y: 20,
-                          }}
-                          animate={{ 
-                            opacity: 1,
-                            x: 0,
-                            y: 0,
-                          }}
-                          transition={{
-                            duration: 0.5,
-                            delay: 0.1 * index + 0.5,
-                            ease: [0.34, 1.56, 0.64, 1],
-                          }}
-                        >
-                          <CardComponent {...card} />
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <>
+      {/* Render each group of cards as a separate animation */}
+      {cardGroupsRef.current.map((group, index) => (
+        <CardMovementAnimation
+          key={`payment-animation-group-${index}-${Date.now()}`}
+          isVisible={true}
+          onClose={() => {}}
+          animationData={group}
+          animationConfig={animationConfig}
+        />
+      ))}
+      {/* Add a safety timeout to ensure overlay closes */}
+      {(() => {
+        setTimeout(() => {
+          console.log('PaymentSuccessfulOverlay: closing overlay');
+          onClose();
+        }, 3200);
+        return null; // Return null so nothing is rendered
+      })()}
+    </>
   );
 };
 
