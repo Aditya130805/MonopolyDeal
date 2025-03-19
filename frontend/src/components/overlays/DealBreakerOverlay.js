@@ -98,7 +98,6 @@ const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
       )}
       {(() => {
         setTimeout(() => {
-          console.log('DealBreakerOverlay: closing overlay');
           onClose();
         }, 2000);
         return null; // Return null so nothing is rendered

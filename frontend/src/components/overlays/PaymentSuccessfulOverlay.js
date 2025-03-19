@@ -23,12 +23,12 @@ const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
   
   // Animation configuration
   const animationConfig = {
-    stiffness: 40,        // Spring stiffness
-    damping: 12,          // Spring damping
-    moveDuration: 2.2,    // Duration of movement animation
-    fadeInDuration: 0.3,  // Fade in duration
-    fadeOutDuration: 0.4, // Fade out duration
-    scale: 0.8,           // Card scale
+    stiffness: 60,        // Increased for faster animation
+    damping: 14,          // Increased for less oscillation
+    moveDuration: 1.0,    // Reduced duration
+    fadeInDuration: 0.2,  // Faster fade in
+    fadeOutDuration: 0.2, // Faster fade out
+    scale: 0.8,
     cardOffset: -100,     // Negative offset creates overlap between cards
     finalDelay: 50        // Final delay before closing
   };
@@ -151,9 +151,8 @@ const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
       {/* Add a safety timeout to ensure overlay closes */}
       {(() => {
         setTimeout(() => {
-          console.log('PaymentSuccessfulOverlay: closing overlay');
           onClose();
-        }, 3200);
+        }, 2000);
         return null; // Return null so nothing is rendered
       })()}
     </>

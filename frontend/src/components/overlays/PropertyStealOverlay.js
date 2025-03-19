@@ -27,12 +27,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
     fadeInDuration: 0.2,  // Faster fade in
     fadeOutDuration: 0.2, // Faster fade out
     scale: 0.8
-    // stiffness: 40,
-    // damping: 12,
-    // moveDuration: 2.8,
-    // fadeInDuration: 0.3,
-    // fadeOutDuration: 0.4,
-    // scale: 0.8
   };
   
   // Handle animation completion
@@ -102,7 +96,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
       )}
       {(() => {
         setTimeout(() => {
-          console.log('PropertyStealOverlay: closing overlay');
           onClose();
         }, 2000);
         return null; // Return null so nothing is rendered

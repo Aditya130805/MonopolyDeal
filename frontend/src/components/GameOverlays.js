@@ -84,7 +84,7 @@ const GameOverlays = ({
         {/* Done */}
         <RentCollectionOverlay
           isVisible={rentCollectionOverlayData.isVisible}
-          onClose={() => setRentCollectionOverlayData({ isVisible: false, message: "" })}
+          onClose={() => setRentCollectionOverlayData({ isVisible: false, message: "", currentPaymentIndex: 0, totalPayments: 0 })}
           overlayData={rentCollectionOverlayData}
         />
 

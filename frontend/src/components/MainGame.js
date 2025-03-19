@@ -288,7 +288,7 @@ const MainGame = () => {
     isVisible: false 
   });
   const [rentCollectionOverlayData, setRentCollectionOverlayData] = useState({ 
-    isVisible: false, message: ""
+    isVisible: false, message: "", currentPaymentIndex: 0, totalPayments: 0
   });
   const [justSayNoChoiceWaitingOverlayData, setJustSayNoChoiceWaitingOverlayData] = useState({ 
     isVisible: false, playerId: "" 
@@ -518,22 +518,27 @@ const MainGame = () => {
         player: userPlayer.id,
         card: pendingItsYourBirthdayCard
       })
-      if (justSayNoCard) {
-        socket.send(JSON.stringify({
-          action: "just_say_no_choice",
-          playerId: opponentId,
-          opponentId: userPlayer.id,
-          card: justSayNoCard,
-          againstCard: pendingItsYourBirthdayCard,
-          data: birthdayActionData
-        }))
-      } else {
-        setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
-        setTimeout(() => {
-          setShowActionAnimation({ visible: false, action: '' });
-        }, 2000);
-        socket.send(birthdayActionData);
-      }
+      // if (justSayNoCard) {
+      //   socket.send(JSON.stringify({
+      //     action: "just_say_no_choice",
+      //     playerId: opponentId,
+      //     opponentId: userPlayer.id,
+      //     card: justSayNoCard,
+      //     againstCard: pendingItsYourBirthdayCard,
+      //     data: birthdayActionData
+      //   }))
+      // } else {
+        // setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
+        // setTimeout(() => {
+        //   setShowActionAnimation({ visible: false, action: '' });
+        // }, 2000);
+        // socket.send(birthdayActionData);
+      // }
+      setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
+      setTimeout(() => {
+        setShowActionAnimation({ visible: false, action: '' });
+      }, 2000);
+      socket.send(birthdayActionData);
       setPendingItsYourBirthdayCard(null);
     }
   }, [pendingItsYourBirthdayCard, gameState]);
@@ -828,43 +833,35 @@ const MainGame = () => {
     if (!pendingRentRequestData) return;
     console.log("pendingRentRequestData: ", pendingRentRequestData);
     const data = pendingRentRequestData;
-    if (data.players_to_pay) {
-      console.log("Total paying players: ", data.total_players);
-      // Initialize the payment tracker for multi-player rent
-      setRentPaymentTracker({
-        totalPlayers: data.total_players,
-        playersPaid: new Set(),
-      });
-    }
-    if (data.recipient_id !== user.unique_id) {
-      // TODO: Handle different instances differently (if you want to)
-
-      /* if (data.rent_type === "debt collector" || data.rent_type === "multicolor rent") {
-      //   if (data.target_player_id === user.unique_id) {
-      //     setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
-      //   } else {
-      //     // TODO: Show waiting overlay saying x demanded y rent from z via action a, waiting for player z to pay.
-      //   }
-      // } else if (data.rent_type === "it's your birthday" || data.rent_type === "rent") {
-      //   setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
-      // } */
+    if (data.recipient_id === user.unique_id) {
+      if (data.total_players === data.num_players_owing) {
+        console.log("If true: recipient, all owing");
+        // Show rent animation first for the player who played the rent card
+        setShowActionAnimation({
+          visible: true,
+          action: data.rent_type === "it's your birthday" ? 'Birthday Request' :
+                  data.rent_type === "debt collector" ? 'Debt Request' :
+                  data.rent_type === "double_the_rent" ? 'Double Rent Request' :
+                  'Rent Request'
+        });
+        // Wait 2 seconds then start transitioning
+        rentCollectionTimeoutRef.current = setTimeout(() => {
+          // Hide action animation (will trigger fade out)
+          setShowActionAnimation(prev => ({ ...prev, visible: false }));
+          // Show rent collection overlay
+          setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
+        }, 2000);
+      } else {
+        console.log("Else if true: recipient, some owing");
+        // Show rent collection overlay
+        setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
+      }
+    } else if (data.target_player_id === user.unique_id) {
+      console.log("Else if true: target");
       setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
     } else {
-      // Show rent animation first for the player who played the rent card
-      setShowActionAnimation({
-        visible: true,
-        action: data.rent_type === "it's your birthday" ? 'Birthday Request' :
-                data.rent_type === "debt collector" ? 'Debt Request' :
-                data.rent_type === "double_the_rent" ? 'Double Rent Request' :
-                'Rent Request'
-      });
-      // Wait 2 seconds then start transitioning
-      rentCollectionTimeoutRef.current = setTimeout(() => {
-        // Hide action animation (will trigger fade out)
-        setShowActionAnimation(prev => ({ ...prev, visible: false }));
-        // Show rent collection overlay
-        setRentCollectionOverlayData({ isVisible: true, message: "Collecting rent..." })
-      }, 2000);
+      console.log("Else true: not recipient, not target");
+      setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
     }
     setPendingRentRequestData(null);
   }, [pendingRentRequestData, gameState])
@@ -877,49 +874,6 @@ const MainGame = () => {
       setRentModalData({ isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null });
     }
 
-    // Update the payment tracker
-    setRentPaymentTracker(prev => {
-      const newPlayersPaid = new Set(prev.playersPaid);
-      newPlayersPaid.add(data.player_id);
-      
-      // Only clear the collection overlay if everyone has paid
-      console.log("Players paid: ", newPlayersPaid.size, "Total players: ", prev.totalPlayers);
-      if (newPlayersPaid.size >= prev.totalPlayers) {
-        // Clear any pending timeout for rent collection overlay
-        if (rentCollectionTimeoutRef.current) {
-          clearTimeout(rentCollectionTimeoutRef.current);
-          rentCollectionTimeoutRef.current = null;
-        }
-        setRentCollectionOverlayData({ isVisible: false, message: "" });
-        return { playersPaid: new Set(), totalPlayers: 0 };
-      } else {
-        // Check if the current user has paid
-        if (newPlayersPaid.has(user.unique_id)) {
-          console.log("User has paid");
-          // Show waiting overlay with names of players who haven't paid
-          // Get the current players from gameState
-          const unpaidPlayerIds = gameState.players
-            .filter(player => !newPlayersPaid.has(player.id))
-            .filter(player => player.id !== data.recipient_id)
-            .map(player => player.id)
-            .join(", ");
-          const unpaidPlayerNames = gameState.players
-            .filter(player => !newPlayersPaid.has(player.id))
-            .filter(player => player.id !== data.recipient_id)
-            .map(player => player.name)
-            .join(", ");
-
-          if (unpaidPlayerIds) {
-            setRentCollectionOverlayData({
-              isVisible: true,
-              message: `Waiting for player(s) to pay: ${unpaidPlayerNames}`
-            });
-          }
-        }
-        return { ...prev, playersPaid: newPlayersPaid };
-      }
-    });
-    
     setPaymentSuccessfulOverlayData({
       isVisible: true,
       playerId: data.player_id,
@@ -930,6 +884,27 @@ const MainGame = () => {
     // Hide overlay after 2 seconds
     setTimeout(() => {
       setPaymentSuccessfulOverlayData({ isVisible: false, playerId: '', targetId: '', selectedCards: []})
+      // Clear any pending timeout for rent collection overlay
+      console.log("Clearing timeout for rent collection overlay");
+      console.log("Current timeout:", rentCollectionTimeoutRef.current);
+      if (rentCollectionTimeoutRef.current) {
+        clearTimeout(rentCollectionTimeoutRef.current);
+        rentCollectionTimeoutRef.current = null;
+      }
+      console.log("Current timeout after clearing:", rentCollectionTimeoutRef.current);
+      setRentCollectionOverlayData({ isVisible: false, message: "", currentPaymentIndex: 0, totalPayments: 0 });
+      console.log("Rent collection overlay set to false");
+      console.log("Rent collection overlay data:", rentCollectionOverlayData);
+      if (user.unique_id === data.player_id) {
+        const rentPaidData = {
+          action: 'rent_paid',
+          recipient_id: data.recipient_id,
+          player_id: data.player_id,
+          selected_cards: data.selected_cards
+        }
+        console.log("Sending rent paid data:", rentPaidData);
+        socket.send(JSON.stringify(rentPaidData));
+      }
     }, 2000);
     setPendingRentPaidData(null);
   }, [pendingRentPaidData, gameState])
@@ -1255,33 +1230,17 @@ const MainGame = () => {
         ? [gameState.players.find(p => p.id === pendingRentTarget)]
         : gameState.players.filter(p => p.id !== user.unique_id);
 
-      // Check for Just Say No cards and send rent requests
+      // Send rent request
       console.log("Target Players:", targetPlayers);
-      targetPlayers.forEach(opponent => {
-        const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
-        const rentActionData = JSON.stringify({
-          'action': 'rent',
-          'player': userPlayer.id,
-          'card': card,
-          'rentColor': color,
-          'rentAmount': rentAmount,
-          'targetPlayer': opponent.id
-        });
-
-        if (justSayNoCard) {
-          socket.send(JSON.stringify({
-            action: "just_say_no_choice",
-            playerId: opponent.id,
-            opponentId: userPlayer.id,
-            card: justSayNoCard,
-            againstCard: card,
-            data: rentActionData
-          }));
-        } else {
-          socket.send(rentActionData);
-        }
+      const rentActionData = JSON.stringify({
+        'action': 'rent',
+        'player': userPlayer.id,
+        'card': card,
+        'rentColor': color,
+        'rentAmount': rentAmount,
+        'targetPlayers': targetPlayers.map(p => p.id)
       });
-
+      socket.send(rentActionData);
       setShowActionAnimation({ visible: true, action: "Rent Request" });
       setTimeout(() => {
         setShowActionAnimation(prev => ({ ...prev, visible: false }));
