@@ -4,6 +4,7 @@ import PropertyCard from '../cards/PropertyCard';
 import MoneyCard from '../cards/MoneyCard';
 import ActionCard from '../cards/ActionCard';
 import { getPropertyWithDefaults } from '../../utils/gameUtils';
+import { useGameState } from '../../contexts/GameStateContext';
 
 /**
  * A reusable component for animating card movement between two DOM elements
@@ -33,6 +34,7 @@ const CardMovementAnimation = ({
   animationConfig = {},
   renderCard
 }) => {
+  const { gameState } = useGameState();
   // Animation state controlled by useState instead of useAnimation
   const [animationState, setAnimationState] = useState({
     opacity: 0,
@@ -85,7 +87,23 @@ const CardMovementAnimation = ({
   const animateCardMovement = () => {
     if (!animationData || (!animationData.card && !isMultipleCards)) return;
     
-    const { sourceElementId, targetElementId } = animationData;
+    let { sourceElementId, targetElementId } = animationData;
+    
+    console.log("Before adjustment - sourceId:", sourceElementId, "targetId:", targetElementId);
+    console.log("Game state player count:", gameState?.players?.length);
+    // Handle bank IDs for different player counts
+    if (gameState?.players?.length !== 2) {
+      console.log("Adjusting bank IDs for player count:", gameState?.players?.length);
+      // Use regex test method to check if the ID matches the pattern
+      if (sourceElementId && /bank-\d+-/.test(sourceElementId)) {
+        sourceElementId = sourceElementId.replace(/bank-\d+-/, 'bank-');
+        console.log("After adjustment - sourceId:", sourceElementId);
+      }
+      if (targetElementId && /bank-\d+-/.test(targetElementId)) {
+        targetElementId = targetElementId.replace(/bank-\d+-/, 'bank-');
+        console.log("After adjustment - targetId:", targetElementId);
+      }
+    }
     
     // Try to find elements with a small delay to ensure DOM is ready
     let attempts = 0;
@@ -225,10 +243,8 @@ const CardMovementAnimation = ({
   const getTransition = () => {
     switch (animationPhase) {
       case 'fadeIn':
-        console.log("fadeIn");
         return { duration: config.fadeInDuration, ease: 'easeIn' };
       case 'move':
-        console.log("move");
         return { 
           type: 'spring', 
           stiffness: config.stiffness, 
@@ -236,10 +252,8 @@ const CardMovementAnimation = ({
           duration: config.moveDuration 
         };
       case 'fadeOut':
-        console.log("fadeOut");
         return { duration: config.fadeOutDuration, ease: 'easeOut' };
       default:
-        console.log("default");
         return { duration: 0 };
     }
   };

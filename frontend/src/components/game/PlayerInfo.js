@@ -46,7 +46,8 @@ const PlayerInfo = ({ player, color = 'gray' }) => {
                         <span className={`text-sm font-medium text-${color}-700`}>{player?.hand?.length || 0}</span>
                     </div>
                     {/* Bank Amount */}
-                    <div 
+                    <div
+                        id={`bank-${player?.id}`}
                         className={`flex-1 bg-${color}-50 rounded-md px-2 py-1 border border-${color}-100 flex items-center justify-between ml-1 relative cursor-pointer hover:bg-${color}-100 transition-colors`}
                         onMouseEnter={() => setShowBankDetails(true)}
                         onMouseLeave={() => setShowBankDetails(false)}
