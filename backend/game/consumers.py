@@ -342,7 +342,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'card': data.get('double_the_rent_card')
                 }
             )
-            await self.play_double_the_rent(game_state, player, card['id'], data.get('double_the_rent_card')['id'], data.get('rentAmount'))
+            await self.play_double_the_rent(game_state, player, card['id'], data.get('double_the_rent_card')['id'], data.get('rentAmount'), data.get('targetPlayer') or None)
             self.manage_turns(game_state)  # The additional turn is handled here
 
     def play_to_bank(self, player, card_id):
@@ -415,7 +415,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
         game_state.discard_pile.append(card_to_play)
 
-    async def play_double_the_rent(self, game_state, player, rent_card_id, double_the_rent_card_id, rent_amount):
+    async def play_double_the_rent(self, game_state, player, rent_card_id, double_the_rent_card_id, rent_amount, target_player_id=None):
         """Handle double the rent card play"""
         rent_card_to_play = next((c for c in player.hand if c.id == rent_card_id), None)
         double_the_rent_card_to_play = next((c for c in player.hand if c.id == double_the_rent_card_id), None)
@@ -423,10 +423,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         player.hand.remove(rent_card_to_play)
         player.hand.remove(double_the_rent_card_to_play)
-        players_to_pay = [p.id for p in game_state.players if p.id != player.id]
-        game_state.player_ids_to_pay = players_to_pay
-        game_state.num_players_owing = len(players_to_pay)
-        game_state.total_paying_players = len(players_to_pay)
+        if target_player_id:
+            game_state.player_ids_to_pay = [target_player_id]
+        else:
+            players_to_pay = [p.id for p in game_state.players if p.id != player.id]
+            game_state.player_ids_to_pay = players_to_pay
+        game_state.num_players_owing = len(game_state.player_ids_to_pay)
+        game_state.total_paying_players = len(game_state.player_ids_to_pay)
         game_state.rent_amount = rent_amount
         # Send rent request
         await self.channel_layer.group_send(

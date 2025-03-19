@@ -72,7 +72,7 @@ const WinnerOverlay = ({ isVisible, onClose, overlayData }) => {
                   <span className="font-bold">{winner}</span>
                 </p>
                 <p className="text-xl text-yellow-800 mt-2">
-                  Master of Monopoly Deal!
+                  Master of Cardopoly!
                 </p>
               </motion.div>
 

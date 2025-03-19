@@ -317,7 +317,7 @@ const MainGame = () => {
     isVisible: false, opponentId: null, userId: null, amountDue: 0, rentType: null
   });
   const [doubleRentModalData, setDoubleRentModalData] = useState({
-    isVisible: false, doubleRentAmount: 0, opponentIds: ''
+    isVisible: false, doubleRentAmount: 0, opponentIds: '', type: '', card: null, color: '', rentAmount: 0
   });
   const [slyDealModalData, setSlyDealModalData] = useState({
     isVisible: false, card: null, opponentIds: []
@@ -831,11 +831,9 @@ const MainGame = () => {
   }, [pendingJustSayNoResponseData, gameState]);
   useEffect(() => {
     if (!pendingRentRequestData) return;
-    console.log("pendingRentRequestData: ", pendingRentRequestData);
     const data = pendingRentRequestData;
     if (data.recipient_id === user.unique_id) {
       if (data.total_players === data.num_players_owing) {
-        console.log("If true: recipient, all owing");
         // Show rent animation first for the player who played the rent card
         setShowActionAnimation({
           visible: true,
@@ -1031,66 +1029,129 @@ const MainGame = () => {
 
   // Handle double rent response
   const handleDoubleRentResponseWrapper = (modalData, useDoubleRent) => {
-    setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentIds: '' });
-    const targetPlayers = modalData.opponentIds.map(id => gameState.players.find(p => p.id === id));
-    if (useDoubleRent) {
-      const doubleTheRentCard = userPlayer.hand.find(card => 
-        card.type === 'action' && card.name.toLowerCase() === 'double the rent'
-      );
-      targetPlayers.forEach(opponent => {
-        const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
-        const doubleRentActionData = JSON.stringify({
+    setDoubleRentModalData({ isVisible: false, doubleRentAmount: 0, opponentIds: '', type: '', card: null, color: '', rentAmount: 0 });
+    // Rent
+    if (pendingRentCard.type === 'action' && pendingRentCard.name.toLowerCase() === 'rent') {
+      const targetPlayers = modalData.opponentIds.map(id => gameState.players.find(p => p.id === id));
+      if (useDoubleRent) {
+        const doubleTheRentCard = userPlayer.hand.find(card => 
+          card.type === 'action' && card.name.toLowerCase() === 'double the rent'
+        );
+        targetPlayers.forEach(opponent => {
+          const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
+          const doubleRentActionData = JSON.stringify({
+            'action': 'double_the_rent',
+            'player': userPlayer.id,
+            'card': pendingRentCard,
+            'double_the_rent_card': doubleTheRentCard,
+            'rentAmount': doubleRentAmount
+          });
+          if (justSayNoCard) {
+            socket.send(JSON.stringify({
+              action: "just_say_no_choice",
+              playerId: opponent.id,
+              opponentId: userPlayer.id,
+              card: justSayNoCard,
+              againstCard: doubleTheRentCard,
+              againstRentCard: pendingRentCard,
+              data: doubleRentActionData
+            }))
+          } else {
+            socket.send(doubleRentActionData);
+          }
+        })
+      }
+      else {
+        targetPlayers.forEach(opponent => {
+          const rentActionData = JSON.stringify({
+            'action': 'rent',
+            'player': user.unique_id,
+            'card': pendingRentCard,
+            'rentAmount': rentAmount
+          });
+          if (justSayNoCard) {
+            socket.send(JSON.stringify({
+              action: "just_say_no_choice",
+              playerId: opponent.id,
+              opponentId: userPlayer.id,
+              card: justSayNoCard,
+              againstCard: pendingRentCard,
+              data: rentActionData
+            }));
+          } else {
+            setTimeout(() => {
+              setShowActionAnimation({ visible: true, action: "Rent Request" });
+              setTimeout(() => {
+                setShowActionAnimation({ visible: false, action: '' });
+              }, 2000);
+              socket.send(rentActionData);
+              setPendingRentCard(null);
+            }, 50);
+          }
+        })
+      }
+      setPendingRentCard(null);
+    }
+    // Multicolor Rent
+    else {
+      if (doubleTheRentCard) {
+        const doubleTheRentCard = userPlayer.hand.find(card => 
+          card.type === 'action' && card.name.toLowerCase() === 'double the rent'
+        );
+        const doubleRentActionData = {
           'action': 'double_the_rent',
           'player': userPlayer.id,
           'card': pendingRentCard,
           'double_the_rent_card': doubleTheRentCard,
           'rentAmount': doubleRentAmount
-        });
-        if (justSayNoCard) {
-          socket.send(JSON.stringify({
-            action: "just_say_no_choice",
-            playerId: opponent.id,
-            opponentId: userPlayer.id,
-            card: justSayNoCard,
-            againstCard: doubleTheRentCard,
-            againstRentCard: pendingRentCard,
-            data: doubleRentActionData
-          }))
-        } else {
-          socket.send(doubleRentActionData);
-        }
-      })
-    }
-    else {
-      targetPlayers.forEach(opponent => {
-        const rentActionData = JSON.stringify({
-          'action': 'rent',
-          'player': user.unique_id,
-          'card': pendingRentCard,
-          'rentAmount': rentAmount
-        });
-        if (justSayNoCard) {
-          socket.send(JSON.stringify({
-            action: "just_say_no_choice",
-            playerId: opponent.id,
-            opponentId: userPlayer.id,
-            card: justSayNoCard,
-            againstCard: pendingRentCard,
-            data: rentActionData
-          }));
-        } else {
-          setTimeout(() => {
-            setShowActionAnimation({ visible: true, action: "Rent Request" });
-            setTimeout(() => {
-              setShowActionAnimation({ visible: false, action: '' });
-            }, 2000);
-            socket.send(rentActionData);
+        };
+        setOpponentSelectionModalData({
+          isVisible: true,
+          opponentIds: modalData.opponentIds,
+          type: modalData.type,
+          onSelect: (selectedOpponentId) => {
+            // Now we have both color and opponent, send to backend
+            doubleRentActionData.targetPlayer = selectedOpponentId;
+            socket.send(JSON.stringify(doubleRentActionData));
+            // Clear all pending states
             setPendingRentCard(null);
-          }, 50);
-        }
-      })
+            setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+          },
+          onCancel: () => {
+            // Clear everything on cancel
+            setPendingRentCard(null);
+            setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+          }
+        })
+      }
+      else {
+        setOpponentSelectionModalData({
+          isVisible: true,
+          opponentIds: modalData.opponentIds,
+          type: modalData.type,
+          onSelect: (selectedOpponentId) => {
+            // Now we have both color and opponent, send to backend
+            const multicolorRentActionData = {
+              'action': 'multicolor rent',
+              'player': userPlayer.id,
+              'card': modalData.card,
+              'rentColor': modalData.color,
+              'rentAmount': modalData.rentAmount,
+              'targetPlayer': selectedOpponentId
+            };
+            socket.send(JSON.stringify(multicolorRentActionData));
+            // Clear all pending states
+            setPendingRentCard(null);
+            setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+          },
+          onCancel: () => {
+            // Clear everything on cancel
+            setPendingRentCard(null);
+            setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+          }
+        });
+      }
     }
-    setPendingRentCard(null);
   };
 
   // Handle rent payment
@@ -1223,7 +1284,11 @@ const MainGame = () => {
         doubleRentAmount: rentAmount * 2,
         opponentIds: pendingRentTarget ? [pendingRentTarget] : gameState.players
           .filter(p => p.id !== user.unique_id)
-          .map(p => p.id)
+          .map(p => p.id),
+        type: 'rent',
+        card: card,
+        color: color,
+        rentAmount: rentAmount
       });
     } else {
       const targetPlayers = pendingRentTarget 
@@ -1257,32 +1322,50 @@ const MainGame = () => {
     const opponentIds = gameState.players
       .filter(player => player.id !== user.unique_id)
       .map(player => player.id);
-    
-    setOpponentSelectionModalData({
-      isVisible: true,
-      opponentIds: opponentIds,
-      type: 'multicolor rent',
-      onSelect: (selectedOpponentId) => {
-        // Now we have both color and opponent, send to backend
-        const multicolorRentActionData = JSON.stringify({
-          'action': 'multicolor rent',
-          'player': userPlayer.id,
-          'card': card,
-          'rentColor': color,
-          'rentAmount': rentAmount,
-          'targetPlayer': selectedOpponentId
-        });
-        socket.send(multicolorRentActionData);
-        // Clear all pending states
-        setPendingRentCard(null);
-        setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
-      },
-      onCancel: () => {
-        // Clear everything on cancel
-        setPendingRentCard(null);
-        setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
-      }
-    });
+
+    const hasDoubleRentCard = userPlayer.hand.some(card => 
+      card.type === 'action' && card.name.toLowerCase() === 'double the rent'
+    );
+  
+    if (hasDoubleRentCard && gameState.actions_remaining > 1) {
+      setDoubleRentAmount(rentAmount * 2);
+      setDoubleRentModalData({
+        isVisible: true,
+        doubleRentAmount: rentAmount * 2,
+        opponentIds: pendingRentTarget ? [pendingRentTarget] : gameState.players.filter(p => p.id !== user.unique_id).map(p => p.id),
+        type: 'multicolor rent',
+        card: card,
+        color: color,
+        rentAmount: rentAmount
+      });
+    }
+    else {
+      setOpponentSelectionModalData({
+        isVisible: true,
+        opponentIds: opponentIds,
+        type: 'multicolor rent',
+        onSelect: (selectedOpponentId) => {
+          // Now we have both color and opponent, send to backend
+          const multicolorRentActionData = JSON.stringify({
+            'action': 'multicolor rent',
+            'player': userPlayer.id,
+            'card': card,
+            'rentColor': color,
+            'rentAmount': rentAmount,
+            'targetPlayer': selectedOpponentId
+          });
+          socket.send(multicolorRentActionData);
+          // Clear all pending states
+          setPendingRentCard(null);
+          setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+        },
+        onCancel: () => {
+          // Clear everything on cancel
+          setPendingRentCard(null);
+          setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
+        }
+      });
+    }
   };
 
   // Preload overlays and modals when game starts
@@ -1406,6 +1489,10 @@ const MainGame = () => {
           doubleRentModalData={{
             doubleRentAmount: doubleRentModalData.doubleRentAmount,
             opponentIds: doubleRentModalData.opponentIds,
+            type: doubleRentModalData.type,
+            card: doubleRentModalData.card,
+            color: doubleRentModalData.color,
+            rentAmount: doubleRentModalData.rentAmount
           }}
           handleDoubleRentResponse={handleDoubleRentResponseWrapper}
           
