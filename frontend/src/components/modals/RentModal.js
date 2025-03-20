@@ -172,9 +172,10 @@ const RentModal = ({
               <div className="text-sm font-medium text-gray-500">Reason</div>
               <div className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400">
                 {rentType === 'rent' ? 'Rent' :
-                 rentType === 'it\'s your birthday' ? 'It\'s Your Birthday!' :
-                 rentType === 'debt collector' ? 'Debt Collector' :
-                 rentType === 'double_the_rent' ? 'Double the Rent!' : ''}
+                rentType === 'multicolor rent' ? 'Multi-Color Rent' :
+                rentType === 'it\'s your birthday' ? 'It\'s Your Birthday!' :
+                rentType === 'debt collector' ? 'Debt Collector' :
+                rentType === 'double_the_rent' ? 'Double the Rent!' : ''}
               </div>
             </div>
           </div>

@@ -856,6 +856,7 @@ const MainGame = () => {
       }
     } else if (data.target_player_id === user.unique_id) {
       console.log("Else if true: target");
+      console.log(data);
       setRentModalData({ isVisible: true, opponentId: data.recipient_id, userId: user.unique_id, amountDue: data.amount, rentType: data.rent_type })
     } else {
       console.log("Else true: not recipient, not target");
@@ -1039,13 +1040,13 @@ const MainGame = () => {
         );
         targetPlayers.forEach(opponent => {
           const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
-          const doubleRentActionData = JSON.stringify({
+          const doubleRentActionData = {
             'action': 'double_the_rent',
             'player': userPlayer.id,
             'card': pendingRentCard,
             'double_the_rent_card': doubleTheRentCard,
             'rentAmount': doubleRentAmount
-          });
+          };
           if (justSayNoCard) {
             socket.send(JSON.stringify({
               action: "just_say_no_choice",
@@ -1054,7 +1055,7 @@ const MainGame = () => {
               card: justSayNoCard,
               againstCard: doubleTheRentCard,
               againstRentCard: pendingRentCard,
-              data: doubleRentActionData
+              data: JSON.stringify(doubleRentActionData)
             }))
           } else {
             socket.send(doubleRentActionData);
@@ -1094,7 +1095,7 @@ const MainGame = () => {
     }
     // Multicolor Rent
     else {
-      if (doubleTheRentCard) {
+      if (useDoubleRent) {
         const doubleTheRentCard = userPlayer.hand.find(card => 
           card.type === 'action' && card.name.toLowerCase() === 'double the rent'
         );
@@ -1112,7 +1113,21 @@ const MainGame = () => {
           onSelect: (selectedOpponentId) => {
             // Now we have both color and opponent, send to backend
             doubleRentActionData.targetPlayer = selectedOpponentId;
-            socket.send(JSON.stringify(doubleRentActionData));
+            const justSayNoCard = findJustSayNoInHand(gameState, selectedOpponentId);
+            if (justSayNoCard) {
+              const justSayNoActionData = {
+                action: "just_say_no_choice",
+                playerId: selectedOpponentId,
+                opponentId: userPlayer.id,
+                card: justSayNoCard,
+                againstCard: pendingRentCard,
+                againstRentCard: doubleTheRentCard,
+                data: JSON.stringify(doubleRentActionData)
+              };
+              socket.send(JSON.stringify(justSayNoActionData));
+            } else {
+              socket.send(JSON.stringify(doubleRentActionData));
+            }
             // Clear all pending states
             setPendingRentCard(null);
             setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
@@ -1139,7 +1154,20 @@ const MainGame = () => {
               'rentAmount': modalData.rentAmount,
               'targetPlayer': selectedOpponentId
             };
-            socket.send(JSON.stringify(multicolorRentActionData));
+            const justSayNoCard = findJustSayNoInHand(gameState, selectedOpponentId);
+            if (justSayNoCard) {
+              const justSayNoActionData = {
+                action: "just_say_no_choice",
+                playerId: selectedOpponentId,
+                opponentId: userPlayer.id,
+                card: justSayNoCard,
+                againstCard: modalData.card,
+                data: JSON.stringify(multicolorRentActionData)
+              };
+              socket.send(JSON.stringify(justSayNoActionData));
+            } else {
+              socket.send(JSON.stringify(multicolorRentActionData));
+            }
             // Clear all pending states
             setPendingRentCard(null);
             setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
@@ -1319,9 +1347,7 @@ const MainGame = () => {
   const handleRentColorForMulticolor = (card, color, rentAmount) => {
     setRentAmount(rentAmount);
     // Show opponent selection after color is chosen
-    const opponentIds = gameState.players
-      .filter(player => player.id !== user.unique_id)
-      .map(player => player.id);
+    const opponentIds = pendingRentTarget ? [pendingRentTarget] : gameState.players.filter(p => p.id !== user.unique_id).map(p => p.id);
 
     const hasDoubleRentCard = userPlayer.hand.some(card => 
       card.type === 'action' && card.name.toLowerCase() === 'double the rent'
@@ -1332,7 +1358,7 @@ const MainGame = () => {
       setDoubleRentModalData({
         isVisible: true,
         doubleRentAmount: rentAmount * 2,
-        opponentIds: pendingRentTarget ? [pendingRentTarget] : gameState.players.filter(p => p.id !== user.unique_id).map(p => p.id),
+        opponentIds: opponentIds,
         type: 'multicolor rent',
         card: card,
         color: color,
@@ -1346,15 +1372,28 @@ const MainGame = () => {
         type: 'multicolor rent',
         onSelect: (selectedOpponentId) => {
           // Now we have both color and opponent, send to backend
-          const multicolorRentActionData = JSON.stringify({
+          const multicolorRentActionData = {
             'action': 'multicolor rent',
             'player': userPlayer.id,
             'card': card,
             'rentColor': color,
             'rentAmount': rentAmount,
             'targetPlayer': selectedOpponentId
-          });
-          socket.send(multicolorRentActionData);
+          };
+          const justSayNoCard = findJustSayNoInHand(gameState, selectedOpponentId);
+          if (justSayNoCard) {
+            const justSayNoActionData = {
+              action: "just_say_no_choice",
+              playerId: selectedOpponentId,
+              opponentId: userPlayer.id,
+              card: justSayNoCard,
+              againstCard: card,
+              data: JSON.stringify(multicolorRentActionData)
+            };
+            socket.send(JSON.stringify(justSayNoActionData));
+          } else {
+            socket.send(JSON.stringify(multicolorRentActionData));
+          }
           // Clear all pending states
           setPendingRentCard(null);
           setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
