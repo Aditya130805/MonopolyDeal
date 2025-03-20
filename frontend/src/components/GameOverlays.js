@@ -10,6 +10,7 @@ const PropertySwapOverlay = React.lazy(() => import('./overlays/PropertySwapOver
 const RentCollectionOverlay = React.lazy(() => import('./overlays/RentCollectionOverlay'));
 const TieOverlay = React.lazy(() => import('./overlays/TieOverlay'));
 const WinnerOverlay = React.lazy(() => import('./overlays/WinnerOverlay'));
+const PlayerDisconnectedOverlay = React.lazy(() => import('./overlays/PlayerDisconnectedOverlay'));
 
 // Loading fallback component with minimal UI
 const LoadingFallback = () => (
@@ -56,6 +57,10 @@ const GameOverlays = ({
   // Winner Overlay props
   winnerOverlayData,
   setWinnerOverlayData,
+
+  // Player Disconnected Overlay props
+  playerDisconnectedOverlayData,
+  setPlayerDisconnectedOverlayData,
 }) => {
   return (
     <>
@@ -120,6 +125,13 @@ const GameOverlays = ({
           isVisible={winnerOverlayData.isVisible}
           onClose={() => setWinnerOverlayData({ isVisible: false, winner: '' })}
           overlayData={winnerOverlayData}
+        />
+
+        {/* Done */}
+        <PlayerDisconnectedOverlay
+          isVisible={playerDisconnectedOverlayData.isVisible}
+          onClose={() => setPlayerDisconnectedOverlayData({ isVisible: false, playerId: '', username: '' })}
+          overlayData={playerDisconnectedOverlayData}
         />
       </Suspense>
     </>

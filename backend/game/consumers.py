@@ -72,6 +72,26 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
             
         if self.player_id:
+            # Get room and check if game has started
+            room = await self.db_get_room_by_id(self.room_id)
+            
+            # If game is in progress, notify other players about the disconnection
+            if room and room.has_started:
+                # Get the disconnected player's username for the notification
+                user = await self.db_get_user_by_unique_id(self.player_id)
+                username = user.username if user else "Unknown player"
+                
+                # Broadcast player disconnection to all players in the room
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_player_disconnected',
+                        'player_id': str(self.player_id),
+                        'username': username
+                    }
+                )
+
+            # Remove player from room
             await self.db_remove_player_from_room(self.player_id)
         
         # Remove from game group
@@ -801,8 +821,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                             if not paying_player.properties[color]:
                                 del paying_player.properties[color]
                             break
-                    if card_found:
-                            break
         
         return transferred_cards  # Return the list of transferred cards with full info
 
@@ -975,6 +993,14 @@ class GameConsumer(AsyncWebsocketConsumer):
             'targetId': event['targetId'],
             'color': event['color'],
             'property_set': event['property_set']
+        }))
+
+    async def broadcast_player_disconnected(self, event):
+        """Notify players that another player has disconnected"""
+        await self.send(text_data=json.dumps({
+            'type': 'player_disconnected',
+            'player_id': event['player_id'],
+            'username': event['username']
         }))
 
 

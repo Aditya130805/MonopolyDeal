@@ -261,6 +261,8 @@ const MainGame = () => {
   const [rentAmount, setRentAmount] = useState(0);
   const [doubleRentAmount, setDoubleRentAmount] = useState(0);
   const [pendingRentTarget, setPendingRentTarget] = useState(null);
+  const [playerDisconnectedOverlayData, setPlayerDisconnectedOverlayData] = useState({ isVisible: false, playerId: '', username: '' });
+  const gameEndedRef = useRef(false);
 
   ////////// PENDING CARDS VARS
   const [pendingHouseCard, setPendingHouseCard] = useState(null);
@@ -410,13 +412,22 @@ const MainGame = () => {
 
     // Handle winner or tie
     if (state.winner) {
+      gameEndedRef.current = true;
       setWinnerOverlayData({ isVisible: true, winner: state.winner });
     } else if (state.deck_count === 0) {
       // Check if all players' hands are empty
       const allHandsEmpty = state.players.every(player => player.hand.length === 0);
       if (allHandsEmpty) {
+        gameEndedRef.current = true;
         setTieOverlayData({ isVisible: true });
       }
+    }
+  };
+
+  const handlePlayerDisconnected = (data) => {
+    // Only show player disconnected overlay if the game hasn't already ended
+    if (!gameEndedRef.current) {
+      setPlayerDisconnectedOverlayData({ isVisible: true, playerId: data.player_id, username: data.username });
     }
   };
 
@@ -459,6 +470,10 @@ const MainGame = () => {
 
         case 'game_update':
           handleGameUpdate(data);
+          break;
+
+        case 'player_disconnected':
+          handlePlayerDisconnected(data);
           break;
       }
     } catch (error) {
@@ -1420,7 +1435,8 @@ const MainGame = () => {
         import('./overlays/PropertySwapOverlay'),
         import('./overlays/RentCollectionOverlay'),
         import('./overlays/TieOverlay'),
-        import('./overlays/WinnerOverlay')
+        import('./overlays/WinnerOverlay'),
+        import('./overlays/PlayerDisconnectedOverlay')
       ];
 
       // Preload all modal components
@@ -1509,6 +1525,9 @@ const MainGame = () => {
 
           winnerOverlayData={winnerOverlayData}
           setWinnerOverlayData={setWinnerOverlayData}
+
+          playerDisconnectedOverlayData={playerDisconnectedOverlayData}
+          setPlayerDisconnectedOverlayData={setPlayerDisconnectedOverlayData}
         />
 
         {/* Game Modals */}
