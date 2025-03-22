@@ -111,7 +111,7 @@ const CardNotification = ({ card, isVisible, onComplete, actionType, index = 0 }
             padding: '15px',
             borderRadius: '12px',
             color: '#333',
-            zIndex: 1000,
+            zIndex: 100000,
             maxWidth: '300px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
             backdropFilter: 'blur(10px)',
