@@ -53,10 +53,18 @@ const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
       sourceElementId = `${card.currentColor || card.color}-property-${playerId}`;
     } else if (card.type === 'money') {
       // Money cards come from bank with specific value
-      sourceElementId = `bank-${card.value}-${playerId}`;
+      if (gameState?.players?.length === 2) {
+        sourceElementId = `bank-${card.value}-${playerId}`;
+      } else {
+        sourceElementId = `bank-${playerId}`;
+      }
     } else {
       // Action cards come from bank
-      sourceElementId = `bank-${card.value || 0}-${playerId}`;
+      if (gameState?.players?.length === 2) {
+        sourceElementId = `bank-${card.value || 0}-${playerId}`;
+      } else {
+        sourceElementId = `bank-${playerId}`;
+      }
     }
     
     // Determine target element ID (to receiving player)
@@ -66,10 +74,18 @@ const PaymentSuccessfulOverlay = ({ isVisible, onClose, overlayData }) => {
       targetElementId = `${card.currentColor || card.color}-property-${targetId}`;
     } else if (card.type === 'money') {
       // Money cards go to bank with specific value
-      targetElementId = `bank-${card.value}-${targetId}`;
+      if (gameState?.players?.length === 2) {
+        targetElementId = `bank-${card.value}-${targetId}`;
+      } else {
+        targetElementId = `bank-${targetId}`;
+      }
     } else {
       // Action cards go to bank
-      targetElementId = `bank-${card.value || 0}-${targetId}`;
+      if (gameState?.players?.length === 2) {
+        targetElementId = `bank-${card.value || 0}-${targetId}`;
+      } else {
+        targetElementId = `bank-${targetId}`;
+      }
     }
     
     return { sourceElementId, targetElementId };

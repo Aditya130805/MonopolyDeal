@@ -89,22 +89,6 @@ const CardMovementAnimation = ({
     
     let { sourceElementId, targetElementId } = animationData;
     
-    console.log("Before adjustment - sourceId:", sourceElementId, "targetId:", targetElementId);
-    console.log("Game state player count:", gameState?.players?.length);
-    // Handle bank IDs for different player counts
-    if (gameState?.players?.length !== 2) {
-      console.log("Adjusting bank IDs for player count:", gameState?.players?.length);
-      // Use regex test method to check if the ID matches the pattern
-      if (sourceElementId && /bank-\d+-/.test(sourceElementId)) {
-        sourceElementId = sourceElementId.replace(/bank-\d+-/, 'bank-');
-        console.log("After adjustment - sourceId:", sourceElementId);
-      }
-      if (targetElementId && /bank-\d+-/.test(targetElementId)) {
-        targetElementId = targetElementId.replace(/bank-\d+-/, 'bank-');
-        console.log("After adjustment - targetId:", targetElementId);
-      }
-    }
-    
     // Try to find elements with a small delay to ensure DOM is ready
     let attempts = 0;
     const maxAttempts = 15; // Increased max attempts
