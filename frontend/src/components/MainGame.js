@@ -551,31 +551,17 @@ const MainGame = () => {
         opponentIds: opponentIds,
         type: 'debt_collector',
         onSelect: (selectedOpponentId) => {
-          // const opponent = gameState.players.find(p => p.id === selectedOpponentId);
-          // const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
           const debtCollectorActionData = JSON.stringify({
             action: "debt_collector",
             player: userPlayer.id,
             card: pendingDebtCollectorCard,
             targetPlayer: selectedOpponentId
           });
-
-          // if (justSayNoCard) {
-          //   socket.send(JSON.stringify({
-          //     action: "just_say_no_choice",
-          //     playerId: selectedOpponentId,
-          //     opponentId: userPlayer.id,
-          //     card: justSayNoCard,
-          //     againstCard: pendingDebtCollectorCard,
-          //     data: debtCollectorActionData
-          //   }));
-          // } else {
           setShowActionAnimation({ visible: true, action: rentActionAnimationNames["debt collector"] });
           setTimeout(() => {
             setShowActionAnimation({ visible: false, action: '' });
             socket.send(debtCollectorActionData);
           }, 2000);
-          // }
           setPendingDebtCollectorCard(null);
           setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
         },

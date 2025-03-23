@@ -234,12 +234,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             else:
                 player_obj = next(p for p in game_state.players if p.id == player_id)
                 opponent_obj = next(p for p in game_state.players if p.id == opponent_id)
-                # against_card_obj = next(c for c in opponent_obj.hand if c.id == against_card['id'])
+                if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
+                    against_card_obj = next(c for c in opponent_obj.hand if c.id == against_card['id'])
+                    opponent_obj.hand.remove(against_card_obj)
                 if against_rent_card:
                     against_rent_card_obj = next(c for c in opponent_obj.hand if c.id == against_rent_card['id'])
                     opponent_obj.hand.remove(against_rent_card_obj)
                 card_obj = next(c for c in player_obj.hand if c.id == card['id'])
-                # opponent_obj.hand.remove(against_card_obj)
                 player_obj.hand.remove(card_obj)
                 await self.channel_layer.group_send(
                     self.game_group_name,
@@ -267,27 +268,28 @@ class GameConsumer(AsyncWebsocketConsumer):
                 
                 game_state.discard_pile.append(card_obj)
                 # recipient_id = original_action_data.get('player')
-                game_state.player_ids_to_pay.pop(0)
-                game_state.num_players_owing -= 1
-                if game_state.num_players_owing > 0:
-                    await self.channel_layer.group_send(
-                        self.game_group_name,
-                        {
-                            'type': 'broadcast_rent_pre_request',
-                            'amount': game_state.rent_amount,
-                            # 'recipient_id': recipient_id,
-                            'recipient_id': game_state.rent_recipient_id,
-                            'target_player_id': str(game_state.player_ids_to_pay[0]),
-                            'total_players': game_state.total_paying_players,
-                            'num_players_owing': game_state.num_players_owing,
-                            'card': against_card
-                        }
-                    )
-                else:
-                    game_state.player_ids_to_pay = []
-                    game_state.num_players_owing = 0
-                    game_state.rent_amount = 0
-                    game_state.total_paying_players = 0
+                if not (against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector'):
+                    game_state.player_ids_to_pay.pop(0)
+                    game_state.num_players_owing -= 1
+                    if game_state.num_players_owing > 0:
+                        await self.channel_layer.group_send(
+                            self.game_group_name,
+                            {
+                                'type': 'broadcast_rent_pre_request',
+                                'amount': game_state.rent_amount,
+                                # 'recipient_id': recipient_id,
+                                'recipient_id': game_state.rent_recipient_id,
+                                'target_player_id': str(game_state.player_ids_to_pay[0]),
+                                'total_players': game_state.total_paying_players,
+                                'num_players_owing': game_state.num_players_owing,
+                                'card': against_card
+                            }
+                        )
+                    else:
+                        game_state.player_ids_to_pay = []
+                        game_state.num_players_owing = 0
+                        game_state.rent_amount = 0
+                        game_state.total_paying_players = 0
                 self.manage_turns(game_state)
                 if against_rent_card:
                     self.manage_turns(game_state)  # The additional turn is handled here
