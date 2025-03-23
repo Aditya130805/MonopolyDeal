@@ -229,7 +229,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     )
                 else:
                     await self.handle_action_with_notification(original_action_data, original_action_data['action'], original_action_data['card'], original_action_data['player'])
-                self.manage_turns(game_state)
+                    self.manage_turns(game_state)
                 await self.send_game_state()
             else:
                 player_obj = next(p for p in game_state.players if p.id == player_id)
@@ -290,7 +290,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                         game_state.num_players_owing = 0
                         game_state.rent_amount = 0
                         game_state.total_paying_players = 0
-                self.manage_turns(game_state)
+                else:
+                    self.manage_turns(game_state)
                 if against_rent_card:
                     self.manage_turns(game_state)  # The additional turn is handled here
                 await self.send_game_state()
@@ -322,7 +323,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'selected_cards': transferred_cards,  
                     }
                 )
-                # self.manage_turns(game_state)
                 await self.send_game_state()
             elif action == 'rent_paid':
                 game_state.player_ids_to_pay.pop(0)
