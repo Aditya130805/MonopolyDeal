@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { createRoom, joinRoom } from '../services/gameService';
@@ -12,7 +12,6 @@ import {
   BuildingOffice2Icon,
   HomeIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../contexts/AuthContext';
 import Navbar from './auth/Navbar';
 
 const GameRoom = () => {

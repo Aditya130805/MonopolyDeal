@@ -3,7 +3,6 @@ import CardBack from '../cards/CardBack';
 import CountOverlay from '../cards/CountOverlay';
 import ActionCard from '../cards/ActionCard';
 import { useDroppable } from '@dnd-kit/core';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleCardDrop }) => {
   const { setNodeRef, isOver } = useDroppable({

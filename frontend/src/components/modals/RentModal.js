@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import MoneyCard from '../cards/MoneyCard';
 import PropertyCard from '../cards/PropertyCard';
 import ActionCard from '../cards/ActionCard';

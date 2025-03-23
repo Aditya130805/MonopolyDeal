@@ -1,12 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  PlayIcon,
-  ArrowRightIcon,
   CurrencyDollarIcon,
-  SquaresPlusIcon,
   TrophyIcon,
-  EyeIcon,
   InformationCircleIcon,
   BoltIcon,
   HomeIcon,

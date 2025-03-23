@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const RentCollectionOverlay = ({ isVisible, onClose, overlayData }) => {
-  const [animationKey, setAnimationKey] = useState(0);
-  
-  // // Update animation key when message changes to trigger animation restart
-  // useEffect(() => {
-  //   if (isVisible && overlayData.message) {
-  //     setAnimationKey(prev => prev + 1);
-  //   }
-  // }, [isVisible, overlayData.message]);
-
   return (
     <AnimatePresence mode="wait" onExitComplete={onClose}>
       {isVisible && (

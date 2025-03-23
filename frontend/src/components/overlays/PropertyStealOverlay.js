@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import PropertyCard from '../cards/PropertyCard';
-import { useGameState } from '../../contexts/GameStateContext';
+import React, { useEffect, useRef } from 'react';
 import { getPropertyWithDefaults } from '../../utils/gameUtils';
 import CardMovementAnimation from './CardMovementAnimation';
 
 const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
-  const { gameState } = useGameState();
   
   const property = overlayData?.property;
   const stealerId = overlayData?.stealerId;
@@ -14,8 +11,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
   // Process property data
   const propertyWithDefaults = property ? getPropertyWithDefaults(property) : null;
   
-  // Track completed animations
-  // const [animationsCompleted, setAnimationsCompleted] = useState(0);
   const totalAnimations = useRef(0);
   const animationTimeoutRef = useRef(null);
   
@@ -27,11 +22,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
     fadeInDuration: 0.2,  // Faster fade in
     fadeOutDuration: 0.2, // Faster fade out
     scale: 0.8
-  };
-  
-  // Handle animation completion
-  const handleAnimationComplete = () => {
-    // setAnimationsCompleted(prev => prev + 1);
   };
   
   // Forced cleanup function
@@ -52,7 +42,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
   // Reset animation state when overlay visibility changes
   useEffect(() => {
     if (isVisible) {
-      // setAnimationsCompleted(0);
       // Count how many animations we'll have
       totalAnimations.current = (animationData ? 1 : 0);
       
@@ -70,13 +59,6 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
     };
   }, [isVisible, animationData, onClose]);
   
-  // // Close overlay when all animations are complete
-  // useEffect(() => {
-  //   if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
-  //     onClose();
-  //   }
-  // }, [animationsCompleted, onClose]);
-  
   // Only render if overlay is visible and we have animation data
   if (!isVisible || (!animationData)) {
     return null;
@@ -89,7 +71,7 @@ const PropertyStealOverlay = ({ isVisible, onClose, overlayData }) => {
         <CardMovementAnimation
           key={`property-sly-deal-${property?.id}`}
           isVisible={true}
-          onClose={handleAnimationComplete}
+          onClose={() => {}}
           animationData={animationData}
           animationConfig={animationConfig}
         />

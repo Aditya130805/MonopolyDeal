@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGameState } from '../../contexts/GameStateContext';
 import CardMovementAnimation from './CardMovementAnimation';
 

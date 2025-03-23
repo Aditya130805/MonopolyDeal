@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useGameState } from '../../contexts/GameStateContext';
-import { getPropertyWithDefaults } from '../../utils/gameUtils';
+import React, { useEffect, useRef } from 'react';
 import CardMovementAnimation from './CardMovementAnimation';
 
 const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
-  const { gameState } = useGameState();
-    
+  
   const stealerId = overlayData?.stealerId;
   const targetId = overlayData?.targetId;
   const color = overlayData?.color;
@@ -15,8 +12,6 @@ const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
   const getSourceElementId = () => `${color}-property-${targetId || 'unknown'}`;
   const getTargetElementId = () => `${color}-property-${stealerId || 'unknown'}`;
   
-  // Track completed animations
-  // const [animationsCompleted, setAnimationsCompleted] = useState(0);
   const totalAnimations = useRef(0);
   const animationTimeoutRef = useRef(null);
   
@@ -29,11 +24,6 @@ const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
     fadeOutDuration: 0.2, // Faster fade out
     scale: 0.8,
     cardOffset: -100 // Negative value creates overlap between cards
-  };
-  
-  // Handle animation completion
-  const handleAnimationComplete = () => {
-    // setAnimationsCompleted(prev => prev + 1);
   };
   
   // Forced cleanup function
@@ -72,13 +62,6 @@ const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
     };
   }, [isVisible, animationData, onClose]);
   
-  // // Close overlay when all animations are complete
-  // useEffect(() => {
-  //   if (animationsCompleted >= totalAnimations.current && totalAnimations.current > 0) {
-  //     onClose();
-  //   }
-  // }, [animationsCompleted, onClose]);
-  
   // Only render if overlay is visible and we have animation data
   if (!isVisible || !animationData) {
     return null;
@@ -91,7 +74,7 @@ const DealBreakerOverlay = ({ isVisible, onClose, overlayData }) => {
         <CardMovementAnimation
           key={`property-set-deal-breaker-${propertySet[0]?.id}`}
           isVisible={true}
-          onClose={handleAnimationComplete}
+          onClose={() => {}}
           animationData={animationData}
           animationConfig={animationConfig}
         />
