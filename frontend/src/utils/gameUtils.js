@@ -1,4 +1,14 @@
 // Constants
+
+// Rent action display names
+export const rentActionAnimationNames = {
+  "it's your birthday": 'Birthday Request',
+  "debt collector": 'Debt Request',
+  "double_the_rent": 'Double Rent Request',
+  "multicolor rent": 'Rent Request',
+  "rent": 'Rent Request'
+};
+
 export const setRequirements = {
   'brown': 2,
   'mint': 2,

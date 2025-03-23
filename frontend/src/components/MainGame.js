@@ -22,7 +22,7 @@ import { handleHousePlacement } from './actions/HousePlacement';
 import { handleHotelPlacement } from './actions/HotelPlacement';
 import { handleRentColorSelection } from '../utils/rentActionHandler';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
-import { setRequirements, splitProperties, getPlayerById, getOpponentPlayers, findJustSayNoInHand } from '../utils/gameUtils';
+import { rentActionAnimationNames, setRequirements, splitProperties, getPlayerById, getOpponentPlayers, findJustSayNoInHand } from '../utils/gameUtils';
 import PlayerInfo from './game/PlayerInfo';
 
 const DraggableCard = memo(({ card, children }) => {
@@ -530,37 +530,17 @@ const MainGame = () => {
   }, [pendingPassGoCard, gameState]);
   useEffect(() => {
     if (pendingItsYourBirthdayCard) {
-      // const opponent = gameState.players.find(p => p.id === opponentId);
-      // const opponentPlayers = gameState.players.filter(p => p.id !== userPlayer.id);
-      // const justSayNoCard = findJustSayNoInHand(gameState, opponent.id);
-      // const justSayNoCard = null;
       const birthdayActionData = JSON.stringify({
         action: "it's_your_birthday",
         player: userPlayer.id,
         card: pendingItsYourBirthdayCard
       })
-      // if (justSayNoCard) {
-      //   socket.send(JSON.stringify({
-      //     action: "just_say_no_choice",
-      //     playerId: opponentId,
-      //     opponentId: userPlayer.id,
-      //     card: justSayNoCard,
-      //     againstCard: pendingItsYourBirthdayCard,
-      //     data: birthdayActionData
-      //   }))
-      // } else {
-        // setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
-        // setTimeout(() => {
-        //   setShowActionAnimation({ visible: false, action: '' });
-        // }, 2000);
-        // socket.send(birthdayActionData);
-      // }
-      setShowActionAnimation({ visible: true, action: "It's Your Birthday!" });
+      setShowActionAnimation({ visible: true, action: rentActionAnimationNames["it's your birthday"] });
       setTimeout(() => {
         setShowActionAnimation({ visible: false, action: '' });
+        socket.send(birthdayActionData);
       }, 2000);
       console.log("SENDING FRONTEND -> BACKEND:", birthdayActionData)
-      socket.send(birthdayActionData);
       setPendingItsYourBirthdayCard(null);
     }
   }, [pendingItsYourBirthdayCard, gameState]);
@@ -861,13 +841,13 @@ const MainGame = () => {
     const justSayNoCard = findJustSayNoInHand(gameState, data.target_player_id);
     const rentRequestData = {
       action: 'rent_request',
-      amount: data.amount,
-      rentType: data.rent_type,
+      // amount: data.amount,
+      // rentType: data.rent_type,
       player: data.recipient_id,
-      recipientId: data.recipient_id,
+      // recipientId: data.recipient_id,
       targetPlayerId: data.target_player_id,
-      totalPlayers: data.total_players,
-      numPlayersOwing: data.num_players_owing,
+      // totalPlayers: data.total_players,
+      // numPlayersOwing: data.num_players_owing,
       card: data.card
     }
     if (justSayNoCard) {
@@ -898,27 +878,8 @@ const MainGame = () => {
     const data = pendingRentRequestData;
     console.log("PendingRentRequestData:", data);
     if (data.recipient_id === user.unique_id) {
-      if (data.total_players === data.num_players_owing) {
-        // Show rent animation first for the player who played the rent card
-        setShowActionAnimation({
-          visible: true,
-          action: data.rent_type === "it's your birthday" ? 'Birthday Request' :
-                  data.rent_type === "debt collector" ? 'Debt Request' :
-                  data.rent_type === "double_the_rent" ? 'Double Rent Request' :
-                  'Rent Request'
-        });
-        // Wait 2 seconds then start transitioning
-        rentCollectionTimeoutRef.current = setTimeout(() => {
-          // Hide action animation (will trigger fade out)
-          setShowActionAnimation(prev => ({ ...prev, visible: false }));
-          // Show rent collection overlay
-          setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
-        }, 2000);
-      } else {
-        console.log("Else if true: recipient, some owing");
-        // Show rent collection overlay
-        setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
-      }
+      console.log("Else if true: recipient, some owing");
+      setRentCollectionOverlayData({ isVisible: true, message: "Waiting for " + gameState.players.find(p => p.id === data.target_player_id).name + " to pay...", currentPaymentIndex: data.total_players - data.num_players_owing + 1, totalPayments: data.total_players })
     } else if (data.target_player_id === user.unique_id) {
       console.log("Else if true: target");
       console.log(data);
