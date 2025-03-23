@@ -165,7 +165,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             against_rent_card = data.get('againstRentCard') or None
             original_action_data = json.loads(data.get('data'))
             game_state = GameConsumer.game_instances[self.room_id]
-            if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent':
+            if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
                 # Display original action played notification
                 await self.channel_layer.group_send(
                     self.game_group_name,
@@ -177,8 +177,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'card': original_action_data['card']
                     }
                 )
-            else:
-                print("Recognized:", against_card['name'])
             # Let everyone know player is making a choice to use just say no or not
             await self.channel_layer.group_send(
                 self.game_group_name,
@@ -472,16 +470,20 @@ class GameConsumer(AsyncWebsocketConsumer):
         game_state.num_players_owing = 1
         game_state.total_paying_players = 1
         game_state.rent_amount = 5  # Debt Collector cards request 5M
+        game_state.rent_type = "debt collector"
+        game_state.rent_card = card_to_play
+        game_state.rent_recipient_id = str(player.id)
         await self.channel_layer.group_send(
             self.game_group_name,
             {
-                'type': 'broadcast_rent_request',
+                'type': 'broadcast_rent_pre_request',
                 'amount': game_state.rent_amount,
-                'rent_type': "debt collector",
-                'recipient_id': str(player.id),
+                'rent_type': game_state.rent_type,
+                'recipient_id': game_state.rent_recipient_id,
                 'target_player_id': str(game_state.player_ids_to_pay[0]),
                 'total_players': game_state.total_paying_players,
-                'num_players_owing': game_state.num_players_owing
+                'num_players_owing': game_state.num_players_owing,
+                'card': game_state.rent_card.to_dict()
             }
         )
         game_state.discard_pile.append(card_to_play)
