@@ -101,12 +101,11 @@ const CardMovementAnimation = ({
       if (!sourcePosition || !targetPosition) {
         if (attempts < maxAttempts) {
           attempts++;
-          console.log(`Attempt ${attempts}: Waiting for DOM elements to be ready...`, sourceElementId, targetElementId);
           setTimeout(tryAnimation, attemptInterval);
         } else {
-          console.log('Could not find source or target elements for animation after multiple attempts:', sourceElementId, targetElementId);
           onClose();
         }
+        console.error('Could not find source or target elements for animation after multiple attempts:', sourceElementId, targetElementId);
         return;
       }
     

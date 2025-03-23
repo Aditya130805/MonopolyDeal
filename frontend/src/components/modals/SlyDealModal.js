@@ -44,7 +44,6 @@ const SlyDealModal = ({
   }, [isOpen, modalData]);
 
   const handlePropertySelect = (property, opponent) => {
-    console.log("Opponent Sly Deal handlePropertySelect: ", opponent)
     let newSelectedProperty;
     
     if (selectedProperty?.id === property.id) {

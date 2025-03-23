@@ -19,7 +19,6 @@ export function WebSocketMessageQueueProvider({ children }) {
         try {
             // Get the next message and its handler
             const { message, handler } = messageQueue.current[0];
-            console.log("Processing: ", JSON.parse(message.data).type)
             // Process the message
             await handler(message);
             

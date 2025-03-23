@@ -26,9 +26,6 @@ const ForcedDealModal = ({
   if (!modalData) return null;
 
   const { gameState } = useGameState();
-  if (isOpen) {
-    console.log("Forced Deal gameState: ", gameState);
-  }
   
   const [selectedOpponentProperty, setSelectedOpponentProperty] = useState(null);
   const [selectedUserProperty, setSelectedUserProperty] = useState(null);
