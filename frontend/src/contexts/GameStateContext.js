@@ -38,8 +38,49 @@ export const updatePlayerState = (gameState, playerId, updates) => {
   };
 };
 
-export const setGameStateFromBackend = (newState) => {
-  return { ...newState };
+// Apply partial state updates to the current game state
+export const applyStateUpdates = (currentState, updates) => {
+  // Create a deep copy of the current state to avoid mutation
+  const newState = JSON.parse(JSON.stringify(currentState));
+  
+  // Apply simple field updates
+  Object.keys(updates).forEach(key => {
+    // Handle special case for players array
+    if (key === 'players') {
+      // Process each player update
+      updates.players.forEach(playerUpdate => {
+        const playerId = playerUpdate.id;
+        // Find the player in the current state
+        const playerIndex = newState.players.findIndex(p => p.id === playerId);
+        
+        if (playerIndex >= 0) {
+          // Update existing player
+          newState.players[playerIndex] = {
+            ...newState.players[playerIndex],
+            ...playerUpdate
+          };
+        } else {
+          // Add new player
+          newState.players.push(playerUpdate);
+        }
+      });
+    } else {
+      // For all other fields, simply replace the value
+      newState[key] = updates[key];
+    }
+  });
+  
+  return newState;
+};
+
+export const setGameStateFromBackend = (newState, isFullState, currentState) => {
+  if (isFullState) {
+    // If it's a full state update, replace the entire state
+    return { ...newState };
+  } else {
+    // If it's a partial update, apply the changes to the current state
+    return applyStateUpdates(currentState, newState);
+  }
 };
 
 const GameStateContext = createContext();
@@ -58,7 +99,8 @@ export const GameStateProvider = ({ children }) => {
   // WebSocket message handler for game updates
   const handleGameUpdate = useCallback((data) => {
     const state = data.state;
-    setGameState(setGameStateFromBackend(state));
+    const isFullState = data.is_full_state;
+    setGameState(prevState => setGameStateFromBackend(state, isFullState, prevState));
   }, []);
 
   // Process WebSocket messages
@@ -96,7 +138,8 @@ export const GameStateProvider = ({ children }) => {
     setGameState,
     updateGameState,
     updatePlayerState,
-    setGameStateFromBackend
+    setGameStateFromBackend,
+    applyStateUpdates
   };
 
   return (

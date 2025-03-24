@@ -427,8 +427,36 @@ const MainGame = () => {
     };
   }, []);
 
-  //////////////////// CHECK IF IT'S USER'S TURN
+  //////////////////// UPDATE PLAYER STATE AND CHECK IF IT'S USER'S TURN
   useEffect(() => {
+    // Update user player and opponents based on the current game state
+    if (gameState?.players?.length) {
+      const currentPlayer = gameState.players.find(p => p.id === user.unique_id);
+      if (currentPlayer) {
+        setUserPlayer(currentPlayer);
+      }
+      
+      // Find opponents and update their IDs
+      const opponents = gameState.players.filter(p => p.id !== user.unique_id);
+      if (opponents) {
+        setOpponentIds(opponents.map(opponent => opponent.id));
+      }
+
+      // Handle winner or tie
+      if (gameState.winner) {
+        gameEndedRef.current = true;
+        setWinnerOverlayData({ isVisible: true, winner: gameState.winner });
+      } else if (gameState.deck_count === 0) {
+        // Check if all players' hands are empty
+        const allHandsEmpty = gameState.players.every(player => player.hand.length === 0);
+        if (allHandsEmpty) {
+          gameEndedRef.current = true;
+          setTieOverlayData({ isVisible: true });
+        }
+      }
+    }
+    
+    // Check if it's the user's turn
     isUserTurnRef.current = gameState.current_turn === user.unique_id;
   }, [gameState, user.unique_id]);
 
@@ -475,32 +503,42 @@ const MainGame = () => {
 
   const handleGameUpdate = (data) => {
     const state = data.state;
-    setGameState(setGameStateFromBackend(state));
+    const isFullState = data.is_full_state;
     
-    // Use state directly instead of gameState since it's the new data
-    const currentPlayer = state.players.find(p => p.id === user.unique_id);
-    if (currentPlayer) {
-      setUserPlayer(currentPlayer);
-    }
+    // Update the game state with either full state or partial updates
+    setGameState(prevState => setGameStateFromBackend(state, isFullState, prevState));
     
-    // Find opponents and update their hands
-    const opponents = state.players.filter(p => p.id !== user.unique_id);
-    if (opponents) {
-      setOpponentIds(opponents.map(opponent => opponent.id));
-    }
+    // For partial updates, we need to use the updated state which we don't have access to yet
+    // So we'll update the user player and opponents in a useEffect that depends on gameState
+    
+    // For full state updates, we can update immediately
+    if (isFullState) {
+      // Use state directly since it's the complete new data
+      const currentPlayer = state.players.find(p => p.id === user.unique_id);
+      if (currentPlayer) {
+        setUserPlayer(currentPlayer);
+      }
+      
+      // Find opponents and update their hands
+      const opponents = state.players.filter(p => p.id !== user.unique_id);
+      if (opponents) {
+        setOpponentIds(opponents.map(opponent => opponent.id));
+      }
 
-    // Handle winner or tie
-    if (state.winner) {
-      gameEndedRef.current = true;
-      setWinnerOverlayData({ isVisible: true, winner: state.winner });
-    } else if (state.deck_count === 0) {
-      // Check if all players' hands are empty
-      const allHandsEmpty = state.players.every(player => player.hand.length === 0);
-      if (allHandsEmpty) {
+      // Handle winner or tie
+      if (state.winner) {
         gameEndedRef.current = true;
-        setTieOverlayData({ isVisible: true });
+        setWinnerOverlayData({ isVisible: true, winner: state.winner });
+      } else if (state.deck_count === 0) {
+        // Check if all players' hands are empty
+        const allHandsEmpty = state.players.every(player => player.hand.length === 0);
+        if (allHandsEmpty) {
+          gameEndedRef.current = true;
+          setTieOverlayData({ isVisible: true });
+        }
       }
     }
+    // For partial updates, the useEffect below will handle the updates
   };
 
   const handlePlayerDisconnected = (data) => {

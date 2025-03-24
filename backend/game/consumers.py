@@ -112,6 +112,49 @@ class GameConsumer(AsyncWebsocketConsumer):
         }))
         await self.close()
 
+    def calculate_state_diff(self, previous_state, current_state):
+        """
+        Calculate the difference between previous and current game states.
+        Returns a dictionary containing only the changed values.
+        """
+        diff = {}
+        
+        # Handle simple fields
+        for key in ['deck_count', 'current_turn', 'actions_remaining', 'winner']:
+            if previous_state.get(key) != current_state.get(key):
+                diff[key] = current_state.get(key)
+        
+        # Handle discard pile changes
+        if previous_state.get('discard_pile') != current_state.get('discard_pile'):
+            diff['discard_pile'] = current_state.get('discard_pile')
+        
+        # Handle player changes
+        if 'players' in current_state:
+            player_diffs = []
+            current_players = {p['id']: p for p in current_state['players']}
+            previous_players = {p['id']: p for p in previous_state.get('players', [])}
+            
+            for player_id, current_player in current_players.items():
+                player_diff = {}
+                if player_id in previous_players:
+                    prev_player = previous_players[player_id]
+                    # Check each player attribute for changes
+                    for attr in ['hand', 'bank', 'properties']:
+                        if current_player.get(attr) != prev_player.get(attr):
+                            player_diff[attr] = current_player.get(attr)
+                else:
+                    # New player, include all data
+                    player_diff = current_player
+                
+                if player_diff:
+                    player_diff['id'] = player_id  # Always include ID for reference
+                    player_diffs.append(player_diff)
+            
+            if player_diffs:
+                diff['players'] = player_diffs
+        
+        return diff
+    
     async def receive(self, text_data):
         """
         Handle incoming WebSocket messages.
@@ -147,7 +190,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 }
             )
         elif action == 'initial_game_state':
-            await self.send_game_state()
+            # For initial game state, always send the full state
+            await self.send_game_state(full_state=True)
         elif action == 'skip_turn':
             game_state = GameConsumer.game_instances[self.room_id]
             player_id = data.get('player')
@@ -923,24 +967,53 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     ########## SENDS - CALLING BROADCASTS ##########
 
-    async def send_game_state(self):
+    # Track previous game state to compute diffs
+    previous_game_states = {}
+    
+    async def send_game_state(self, full_state=False):
         """
         Broadcast the current game state to all clients in the group.
+        If full_state is True, send the entire state, otherwise send only the changes.
         """
         game_state = self.game_instances.get(self.room_id)
         if game_state:
-            state = game_state.to_dict()
+            current_state = game_state.to_dict()
             if hasattr(game_state, 'last_action'):
-                state['last_action'] = game_state.last_action
+                current_state['last_action'] = game_state.last_action
                 # Clear the last action after broadcasting
                 game_state.last_action = None
-            await self.channel_layer.group_send(
-                self.game_group_name,
-                {
-                    'type': 'broadcast_game_update',
-                    'state': state
-                }
-            )
+            
+            # If this is the first update or full_state is requested, send the entire state
+            if full_state or self.room_id not in self.previous_game_states:
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_game_update',
+                        'state': current_state,
+                        'is_full_state': True
+                    }
+                )
+                # Store the current state for future diffs
+                self.previous_game_states[self.room_id] = current_state
+                return
+            
+            # Calculate the diff between previous and current state
+            previous_state = self.previous_game_states[self.room_id]
+            state_diff = self.calculate_state_diff(previous_state, current_state)
+            
+            # Send only the diff if it's not empty
+            if state_diff:
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_game_update',
+                        'state': state_diff,
+                        'is_full_state': False
+                    }
+                )
+            
+            # Update the previous state
+            self.previous_game_states[self.room_id] = current_state
 
     async def send_room_update(self):
         """
@@ -994,7 +1067,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         """
         await self.send(text_data=json.dumps({
             'type': 'game_update',
-            'state': event['state']
+            'state': event['state'],
+            'is_full_state': event.get('is_full_state', True)
         }))
 
     async def broadcast_card_played(self, event):
