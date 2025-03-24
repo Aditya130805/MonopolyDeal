@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { HomeIcon, BanknotesIcon, Square2StackIcon, UserIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import PropertySet from './PropertySet';
 
-const PlayerInfo = ({ player, color = 'gray' }) => {
+const PlayerInfo = ({ player, color = 'gray', isFourPlayer = false }) => {
     const [showBankDetails, setShowBankDetails] = useState(false);
     
     // Bank calculations
@@ -22,9 +22,9 @@ const PlayerInfo = ({ player, color = 'gray' }) => {
     const total = moneyCards.reduce((sum, card) => sum + card.value, 0);
 
     return (
-        <div className={`w-full max-w-xs bg-white rounded-lg shadow-lg overflow-hidden`}>
+        <div className={`w-full max-w-[270px] bg-white rounded-lg shadow-lg overflow-hidden`}>
             {/* Username Panel */}
-            <div className={`w-full px-3 py-2 bg-${color}-100 border-b border-${color}-200 flex items-center gap-2`}>
+            <div className={`w-full px-3 ${isFourPlayer ? 'py-1' : 'py-2'} bg-${color}-100 border-b border-${color}-200 flex items-center gap-2`}>
                 <div className={`p-1 bg-${color}-50 rounded-md`}>
                     <UserIcon className={`w-4 h-4 text-${color}-600`} />
                 </div>
@@ -34,9 +34,9 @@ const PlayerInfo = ({ player, color = 'gray' }) => {
             </div>
 
             {/* Content Section */}
-            <div className="p-2.5">
+            <div className={isFourPlayer ? 'p-1.5' : 'p-2.5'}>
                 {/* Stats Row */}
-                <div className="flex items-center justify-between w-full mb-2">
+                <div className={`flex items-center justify-between w-full ${isFourPlayer ? 'mb-1.5' : 'mb-2'}`}>
                     {/* Hand Count */}
                     <div className={`flex-1 bg-${color}-50 rounded-md px-2 py-1 border border-${color}-100 flex items-center justify-between mr-1`}>
                         <div className="flex items-center gap-1.5">
@@ -105,19 +105,40 @@ const PlayerInfo = ({ player, color = 'gray' }) => {
                 </div>
 
                 {/* Property Section */}
-                <div className={`bg-${color}-50 rounded-lg p-2 border border-${color}-100`}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                        <HomeIcon className={`w-3.5 h-3.5 text-${color}-600/70`} />
-                        <span className={`text-xs font-medium text-${color}-600 uppercase tracking-wider`}>Properties</span>
+                {isFourPlayer ? (
+                    <div className={`bg-${color}-50 rounded-lg p-1.5 border border-${color}-100`}>
+                        <div className="flex items-stretch justify-center">
+                            {/* House Icon Strip - vertical strip to the left */}
+                            <div className="relative -mr-1 flex items-center">
+                                <div className={`w-6 h-full bg-${color}-200 rounded-l-lg`}></div>
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                    <HomeIcon className={`w-4 h-4 text-${color}-600`} />
+                                </div>
+                            </div>
+                            
+                            <PropertySet
+                                properties={player?.properties || {}}
+                                playerId={player?.id}
+                                setsPerRow={4}
+                                isCompact={true}
+                            />
+                        </div>
                     </div>
-                    
-                    <PropertySet
-                        properties={player?.properties || {}}
-                        playerId={player?.id}
-                        setsPerRow={4}
-                        isCompact={true}
-                    />
-                </div>
+                ) : (
+                    <div className={`bg-${color}-50 rounded-lg p-2 border border-${color}-100`}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                            <HomeIcon className={`w-3.5 h-3.5 text-${color}-600/70`} />
+                            <span className={`text-xs font-medium text-${color}-600 uppercase tracking-wider`}>Properties</span>
+                        </div>
+                        
+                        <PropertySet
+                            properties={player?.properties || {}}
+                            playerId={player?.id}
+                            setsPerRow={4}
+                            isCompact={true}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

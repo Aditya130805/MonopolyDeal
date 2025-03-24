@@ -14,7 +14,8 @@ const BankAndCards = ({
   isOpponent = false, 
   DraggableCard,
   renderCardContent,
-  isThreePlayer = false
+  isThreePlayer = false,
+  isFourPlayer = false
 }) => {
   const [hoveredCardId, setHoveredCardId] = useState(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
@@ -198,9 +199,9 @@ const BankAndCards = ({
   );
 
   return (
-    <div className={`flex items-center ${isOpponent ? 'gap-12 flex-row-reverse' : 'gap-16'} w-full`}>
+    <div className={`flex items-center ${isOpponent ? 'gap-12 flex-row-reverse' : (isFourPlayer ? 'gap-12' : 'gap-16')} w-full`}>
       {/* Conditional Bank and Property Set Rendering */}
-      {isThreePlayer ? (
+      {(isThreePlayer || isFourPlayer) ? (
         <div className="flex gap-4 mr-8">
           {renderCompactBank()}
           <div ref={!isOpponent ? setPropertyRef : null} className="relative mt-6">
@@ -226,10 +227,12 @@ const BankAndCards = ({
       {/* Cards Section */}
       <div className="flex flex-shrink">
         <div 
-          className={`flex ${isOpponent ? '-space-x-24' : (isThreePlayer ? '-space-x-20' : '-space-x-14')} relative`}
+          className={`flex ${isOpponent ? '-space-x-24' : (isThreePlayer || isFourPlayer ? '-space-x-20' : '-space-x-14')} relative`}
           style={{ 
             perspective: '1000px',
-            transformStyle: 'preserve-3d'
+            transformStyle: 'preserve-3d',
+            transform: isFourPlayer ? 'scale(0.95)' : 'none',
+            transformOrigin: 'bottom center'
           }}
           onMouseLeave={() => setHoveredCardId(null)}
         >

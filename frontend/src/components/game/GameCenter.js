@@ -4,7 +4,7 @@ import CountOverlay from '../cards/CountOverlay';
 import ActionCard from '../cards/ActionCard';
 import { useDroppable } from '@dnd-kit/core';
 
-const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleCardDrop }) => {
+const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleCardDrop, isFourPlayer=false }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: 'action'
   });
@@ -50,7 +50,12 @@ const GameCenter = ({ numCardsInDrawPile, lastAction, renderCardContent, handleC
   );
 
   return (
-    <div className="bg-gray-100 rounded-xl p-6 shadow-inner flex gap-6">
+    <div 
+      className="bg-gray-100 rounded-xl p-6 shadow-inner flex gap-6"
+      style={{
+        transform: isFourPlayer ? 'scale(0.9)' : 'none'
+      }}
+    >
       {renderDrawPile(numCardsInDrawPile)}
       <div ref={setNodeRef}>
         {renderActionPile(lastAction)}

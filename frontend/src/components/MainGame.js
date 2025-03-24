@@ -24,6 +24,7 @@ import { handleRentColorSelection } from '../utils/rentActionHandler';
 import { handleCardDropBank, handleCardDropProperty, handleCardDropAction } from './actions/DropZoneHandlers';
 import { rentActionAnimationNames, setRequirements, splitProperties, findJustSayNoInHand } from '../utils/gameUtils';
 import PlayerInfo from './game/PlayerInfo';
+import PlayerInfoHorizontal from './game/PlayerInfoHorizontal';
 
 const DraggableCard = memo(({ card, children }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -200,11 +201,85 @@ const ThreePlayerLayout = memo(({
   );
 });
 
+const FourPlayerLayout = memo(({
+  gameState, ItemTypes, handleCardDropActionWrapper,
+  DraggableCard, renderCardContent, user, onSkipTurn
+}) => {
+  if (!gameState?.players?.length) return null;
+  const player = gameState.players.find(p => p.id === user.unique_id);
+  const opponents = gameState.players.filter(p => p.id !== user.unique_id);
+  if (!player || opponents.length !== 3) return null;
+
+  return (
+    <div className="relative h-screen overflow-hidden">
+      {/* Top Opponents - Positioned absolutely */}
+      <div className="absolute top-[45%] -translate-y-1/2 left-4 w-72 z-10">
+        <PlayerInfo 
+          player={opponents[0]}
+          color="red"
+          isFourPlayer={true}
+        />
+      </div>
+      {/* Turn Display at top left */}
+      <div className="absolute left-2 top-4 z-20">
+        <TurnDisplay 
+          gameState={gameState}
+          user={user}
+          onSkipTurn={onSkipTurn}
+        />
+      </div>
+
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
+        <PlayerInfoHorizontal
+          player={opponents[2]}
+          color="purple"
+          isFourPlayer={true}
+        />
+      </div>
+
+      <div className="absolute top-[45%] -translate-y-1/2 right-0 w-72 z-10">
+        <PlayerInfo 
+          player={opponents[1]}
+          color="blue"
+          isFourPlayer={true}
+        />
+      </div>
+
+      {/* Game Center with Turn Display */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-2">
+        <GameCenter 
+          numCardsInDrawPile={gameState.deck_count}
+          lastAction={gameState.discard_pile ? gameState.discard_pile[gameState.discard_pile.length - 1] : null}
+          renderCardContent={renderCardContent}
+          ItemTypes={ItemTypes}
+          handleCardDrop={handleCardDropActionWrapper}
+          isFourPlayer={true}
+        />
+      </div>
+
+      {/* Bottom Player - Fixed at bottom with more space */}
+      <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-full px-4">
+        <BankAndCards
+          hand={player.hand}
+          bank={player.bank}
+          properties={player.properties}
+          playerId={player.id}
+          isOpponent={false}
+          DraggableCard={DraggableCard}
+          renderCardContent={renderCardContent}
+          isThreePlayer={false}
+          isFourPlayer={true}
+        />
+      </div>
+    </div>
+  );
+});
+
 const TurnDisplay = memo(({ 
   gameState, 
   user, 
   onSkipTurn,
-  className = ''
+  className = '',
 }) => {
   const isUserTurn = gameState.current_turn === user.unique_id;
   const currentPlayer = gameState.players.find(p => p.id === gameState.current_turn);
@@ -212,7 +287,10 @@ const TurnDisplay = memo(({
   if (!currentPlayer) return null;
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div 
+      className={`flex flex-col items-center ${className}`}
+      style={{ transformOrigin: 'center center' }}
+    >
       <div className={`
         px-6 py-3 rounded-xl shadow-lg backdrop-blur-sm
         ${isUserTurn ? 'bg-green-100/90 border-2 border-green-400' : 'bg-gray-100/90 border-2 border-gray-300'}
@@ -1514,7 +1592,7 @@ const MainGame = () => {
               user={user}
               onSkipTurn={handleSkipTurn}
             />
-          ) : (
+          ) : gameState.players.length === 3 ? (
             <ThreePlayerLayout 
               gameState={gameState}
               ItemTypes={ItemTypes}
@@ -1524,6 +1602,16 @@ const MainGame = () => {
               user={user}
               onSkipTurn={handleSkipTurn}
             />
+          ) : (
+            <FourPlayerLayout 
+              gameState={gameState}
+              ItemTypes={ItemTypes}
+              handleCardDropActionWrapper={handleCardDropActionWrapper}
+              DraggableCard={DraggableCard}
+              renderCardContent={renderCardContent}
+              user={user}
+              onSkipTurn={handleSkipTurn}
+            />          
           )}
         </div>
       </div>
