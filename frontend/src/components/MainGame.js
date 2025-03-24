@@ -653,8 +653,8 @@ const MainGame = () => {
       setShowActionAnimation({ visible: true, action: rentActionAnimationNames["it's your birthday"] });
       setTimeout(() => {
         setShowActionAnimation({ visible: false, action: '' });
-        socket.send(birthdayActionData);
       }, 2000);
+      socket.send(birthdayActionData);
       setPendingItsYourBirthdayCard(null);
     }
   }, [pendingItsYourBirthdayCard, gameState]);
@@ -674,8 +674,8 @@ const MainGame = () => {
           setShowActionAnimation({ visible: true, action: rentActionAnimationNames["debt collector"] });
           setTimeout(() => {
             setShowActionAnimation({ visible: false, action: '' });
-            socket.send(debtCollectorActionData);
           }, 2000);
+          socket.send(debtCollectorActionData);
           setPendingDebtCollectorCard(null);
           setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
         },
@@ -1139,8 +1139,8 @@ const MainGame = () => {
         setShowActionAnimation({ visible: true, action: rentActionAnimationNames['double_the_rent'] });
         setTimeout(() => {
           setShowActionAnimation({ visible: false, action: null });
-          socket.send(JSON.stringify(doubleRentActionData));
         }, 2000);
+        socket.send(JSON.stringify(doubleRentActionData));
       }
       else {
         const rentActionData = {
@@ -1152,8 +1152,8 @@ const MainGame = () => {
         setShowActionAnimation({ visible: true, action: rentActionAnimationNames['rent'] });
         setTimeout(() => {
           setShowActionAnimation({ visible: false, action: '' });
-          socket.send(JSON.stringify(rentActionData));
         }, 2000);
+        socket.send(JSON.stringify(rentActionData));
       }
       setPendingRentCard(null);
     }
@@ -1180,8 +1180,8 @@ const MainGame = () => {
             setShowActionAnimation({ visible: true, action: rentActionAnimationNames['double_the_rent'] });
             setTimeout(() => {
               setShowActionAnimation({ visible: false, action: null });
-              socket.send(JSON.stringify(doubleRentActionData));
             }, 2000);
+            socket.send(JSON.stringify(doubleRentActionData));
             // Clear all pending states
             setPendingRentCard(null);
             setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
@@ -1211,8 +1211,8 @@ const MainGame = () => {
             setShowActionAnimation({ visible: true, action: rentActionAnimationNames['rent'] });
             setTimeout(() => {
               setShowActionAnimation({ visible: false, action: '' });
-              socket.send(JSON.stringify(multicolorRentActionData));
             }, 2000);
+            socket.send(JSON.stringify(multicolorRentActionData));
             // Clear all pending states
             setPendingRentCard(null);
             setOpponentSelectionModalData(prev => ({ ...prev, isVisible: false }));
@@ -1376,8 +1376,8 @@ const MainGame = () => {
       setShowActionAnimation({ visible: true, action: rentActionAnimationNames['rent'] });
       setTimeout(() => {
         setShowActionAnimation(prev => ({ ...prev, visible: false }));
-        socket.send(rentActionData);
       }, 2000);
+      socket.send(rentActionData);
       setPendingRentCard(null);
       setPendingRentTarget(null);
     }
