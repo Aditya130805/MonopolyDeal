@@ -114,19 +114,20 @@ const handleRentColorSelection = (card, playerProperties, onColorSelect) => {
         
         // Add color label
         const label = document.createElement('div');
-        label.textContent = `${color}`;
-        // label.textContent = `${color} (${rentAmounts[color]}M)`;
+        label.textContent = `${color} (${rentAmounts[color]}M)`;
         label.style.position = 'absolute';
         label.style.left = '50%';
         label.style.top = '50%';
         label.style.transform = 'translate(-50%, -50%)';
         label.style.color = ['yellow', 'mint', 'light blue'].includes(color) ? '#1F2937' : 'white';
-        label.style.fontSize = '0.875rem';
+        label.style.fontSize = '0.80rem';
         label.style.fontWeight = '600';
         label.style.textTransform = 'capitalize';
         label.style.textShadow = ['yellow', 'mint', 'light blue'].includes(color) ? 'none' : '0 1px 2px rgba(0,0,0,0.2)';
         label.style.pointerEvents = 'none';
-        
+        label.style.width = '100%';
+        label.style.textAlign = 'center';
+
         section.appendChild(label);
         
         section.onmouseover = () => {
