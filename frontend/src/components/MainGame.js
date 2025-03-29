@@ -341,6 +341,7 @@ const MainGame = () => {
   const [pendingRentTarget, setPendingRentTarget] = useState(null);
   const [playerDisconnectedOverlayData, setPlayerDisconnectedOverlayData] = useState({ isVisible: false, playerId: '', username: '' });
   const gameEndedRef = useRef(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   ////////// PENDING CARDS VARS
   const [pendingHouseCard, setPendingHouseCard] = useState(null);
@@ -590,6 +591,8 @@ const MainGame = () => {
           break;
 
         case 'game_update':
+          // Reset the processing action state for completed actions
+          setIsProcessingAction(false);
           handleGameUpdate(data);
           break;
 
@@ -1243,13 +1246,54 @@ const MainGame = () => {
 
   //////////////////// DROP ZONE HANDLERS
   const handleCardDropBankWrapper = (card) => {
-    handleCardDropBank(card, isUserTurnRef, socket, user, setError);
+    if (isProcessingAction) {
+      setError('Cannot play cards while an action is being processed');
+      return;
+    }
+    setIsProcessingAction(true);
+    handleCardDropBank(card, isUserTurnRef, socket, user, setError)
+      .then(success => {
+        if (!success) {
+          // If the handler returned false, it means validation failed
+          setIsProcessingAction(false);
+        }
+        // Otherwise, processing state will be reset by WebSocket response
+      })
+      .catch(() => setIsProcessingAction(false));
   };
+  
   const handleCardDropPropertyWrapper = (card) => {
-    handleCardDropProperty(card, isUserTurnRef, socket, user, setPendingHouseCard, setPendingHotelCard, setError);
+    if (isProcessingAction) {
+      setError('Cannot play cards while an action is being processed');
+      return;
+    }
+    setIsProcessingAction(true);
+    handleCardDropProperty(card, isUserTurnRef, socket, user, setPendingHouseCard, setPendingHotelCard, setError)
+      .then(success => {
+        if (!success) {
+          // If the handler returned false, it means validation failed
+          setIsProcessingAction(false);
+        }
+        // Otherwise, processing state will be reset by WebSocket response
+      })
+      .catch(() => setIsProcessingAction(false));
   };
+  
   const handleCardDropActionWrapper = (card) => {
-    handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError);
+    if (isProcessingAction) {
+      setError('Cannot play cards while an action is being processed');
+      return;
+    }
+    setIsProcessingAction(true);
+    handleCardDropAction(card, isUserTurnRef, socket, user, setPendingPassGoCard, setPendingItsYourBirthdayCard, setPendingDebtCollectorCard, setPendingRentCard, setPendingSlyDealCard, setPendingForcedDealCard, setPendingDealBreakerCard, setError)
+      .then(success => {
+        if (!success) {
+          // If the handler returned false, it means validation failed
+          setIsProcessingAction(false);
+        }
+        // Otherwise, processing state will be reset by WebSocket response
+      })
+      .catch(() => setIsProcessingAction(false));
   };
 
   const mouseSensor = useSensor(MouseSensor);
@@ -1319,6 +1363,10 @@ const MainGame = () => {
   };
 
   const handleSkipTurn = () => {
+    if (isProcessingAction) {
+      setError('Cannot skip turn while an action is being processed');
+      return;
+    }
     if (!isUserTurnRef.current) {
       setError('It is not your turn yet');
       return;
@@ -1327,6 +1375,7 @@ const MainGame = () => {
       setError('You cannot skip your turn when you have more than 7 cards in hand');
       return;
     }
+    setIsProcessingAction(true);
     socket.send(JSON.stringify({
       'action': 'skip_turn',
       'player': userPlayer.id
