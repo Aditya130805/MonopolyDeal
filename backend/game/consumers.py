@@ -208,203 +208,35 @@ class GameConsumer(AsyncWebsocketConsumer):
                 await self.send_game_state()
         
         ###### GAME ACTIONS ######
-        elif action == 'just_say_no_choice':
-            player_id = data.get('playerId')
-            opponent_id = data.get('opponentId')
-            card = data.get('card')
-            against_card = data.get('againstCard') or None
-            against_rent_card = data.get('againstRentCard') or None
-            original_action_data = json.loads(data.get('data'))
-            game_state = GameConsumer.game_instances[self.room_id]
-            if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
-                # Display original action played notification
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_card_played',
-                        'player_id': original_action_data['player'],
-                        'action': original_action_data['action'],
-                        'action_type': 'to_bank' if original_action_data['action'] == 'to_bank' else 'to_properties' if original_action_data['action'] == 'to_properties' else 'action',
-                        'card': original_action_data['card']
-                    }
-                )
-            # Let everyone know player is making a choice to use just say no or not
-            await self.channel_layer.group_send(
-                self.game_group_name,
-                {
-                    'type': 'broadcast_just_say_no_choice',
-                    'opponentId': opponent_id,
-                    'playerId': player_id,
-                    'card': card,
-                    'againstCard': against_card,
-                    'againstRentCard': against_rent_card,
-                    'data': original_action_data
-                }
-            )
-        elif action == 'just_say_no_response':
-            play_just_say_no = data.get('playJustSayNo')
-            player_id = data.get('playerId')
-            opponent_id = data.get('opponentId')
-            card = data.get('card')
-            against_card = data.get('againstCard')
-            against_rent_card = data.get('againstRentCard') or None
-            original_action_data = json.loads(data.get('data'))
-            game_state = GameConsumer.game_instances[self.room_id]
-            if not play_just_say_no:
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_just_say_no_response',
-                        'playJustSayNo': play_just_say_no,
-                        'playerId': player_id,
-                        'opponentId': opponent_id,
-                        'card': card,
-                        'againstCard': against_card,
-                        'againstRentCard': against_rent_card,
-                        'data': original_action_data
-                    }
-                )
-                # Proceed as usual
-                if original_action_data['action'] == 'rent_request':
-                    await self.channel_layer.group_send(
-                        self.game_group_name,
-                        {
-                            'type': 'broadcast_rent_request',
-                            'amount': game_state.rent_amount,
-                            'rent_type': game_state.rent_type,
-                            'recipient_id': game_state.rent_recipient_id,
-                            'target_player_id': str(game_state.player_ids_to_pay[0]),
-                            'total_players': game_state.total_paying_players,
-                            'num_players_owing': game_state.num_players_owing
-                        }
-                    )
-                else:
-                    await self.handle_action_with_notification(original_action_data, original_action_data['action'], original_action_data['card'], original_action_data['player'])
-                    self.manage_turns(game_state)
-                await self.send_game_state()
-            else:
-                player_obj = next(p for p in game_state.players if p.id == player_id)
-                opponent_obj = next(p for p in game_state.players if p.id == opponent_id)
-                if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
-                    against_card_obj = next(c for c in opponent_obj.hand if c.id == against_card['id'])
-                    opponent_obj.hand.remove(against_card_obj)
-                if against_rent_card:
-                    against_rent_card_obj = next(c for c in opponent_obj.hand if c.id == against_rent_card['id'])
-                    opponent_obj.hand.remove(against_rent_card_obj)
-                card_obj = next(c for c in player_obj.hand if c.id == card['id'])
-                player_obj.hand.remove(card_obj)
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_card_played',
-                        'player_id': player_id,
-                        'action': action,
-                        'action_type': 'to_bank' if action == 'to_bank' else 'to_properties' if action == 'to_properties' else 'action',
-                        'card': card
-                    }
-                )
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_just_say_no_response',
-                        'playJustSayNo': play_just_say_no,
-                        'playerId': player_id,
-                        'opponentId': opponent_id,
-                        'card': card,
-                        'againstCard': against_card,
-                        'againstRentCard': against_rent_card,
-                        'data': original_action_data
-                    }
-                )
-                
-                game_state.discard_pile.append(card_obj)
-                # recipient_id = original_action_data.get('player')
-                if not (against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector'):
-                    game_state.player_ids_to_pay.pop(0)
-                    game_state.num_players_owing -= 1
-                    if game_state.num_players_owing > 0:
-                        await self.channel_layer.group_send(
-                            self.game_group_name,
-                            {
-                                'type': 'broadcast_rent_pre_request',
-                                'amount': game_state.rent_amount,
-                                # 'recipient_id': recipient_id,
-                                'recipient_id': game_state.rent_recipient_id,
-                                'target_player_id': str(game_state.player_ids_to_pay[0]),
-                                'total_players': game_state.total_paying_players,
-                                'num_players_owing': game_state.num_players_owing,
-                                'card': against_card
-                            }
-                        )
-                    else:
-                        game_state.player_ids_to_pay = []
-                        game_state.num_players_owing = 0
-                        game_state.rent_amount = 0
-                        game_state.total_paying_players = 0
-                else:
-                    self.manage_turns(game_state)
-                if against_rent_card:
-                    self.manage_turns(game_state)  # The additional turn is handled here
-                await self.send_game_state()
+        no_turn_actions = {'just_say_no_choice', 'just_say_no_response', 'rent_request', 'rent_payment', 'rent_paid'}
+        card = data.get('card')
+        if not card:
+            # No card was provided (e.g., player dragged a card already played due to really quick dragging)
+            return
+        if action in no_turn_actions:
+            await self.handle_action_without_notification(data)
         else:
-            card = data.get('card')
-            player_id = data.get('player')
             game_state = GameConsumer.game_instances[self.room_id]
-            if action == 'rent_request':
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_rent_request',
-                        'amount': game_state.rent_amount,
-                        'rent_type': game_state.rent_type,
-                        'recipient_id': game_state.rent_recipient_id,
-                        'target_player_id': str(game_state.player_ids_to_pay[0]),
-                        'total_players': game_state.total_paying_players,
-                        'num_players_owing': game_state.num_players_owing
-                    }
-                )
-            elif action == 'rent_payment':
-                transferred_cards = self.assist_rent_payment(game_state, player_id, game_state.rent_recipient_id, card)
-                await self.channel_layer.group_send(
-                    self.game_group_name,
-                    {
-                        'type': 'broadcast_rent_paid',
-                        'recipient_id': game_state.rent_recipient_id,
-                        'player_id': player_id,
-                        'selected_cards': transferred_cards,  
-                    }
-                )
-                await self.send_game_state()
-            elif action == 'rent_paid':
-                game_state.player_ids_to_pay.pop(0)
-                game_state.num_players_owing -= 1
-                if game_state.num_players_owing > 0:
-                    await self.channel_layer.group_send(
-                        self.game_group_name,
-                        {
-                            'type': 'broadcast_rent_pre_request',
-                            'amount': game_state.rent_amount,
-                            'recipient_id': game_state.rent_recipient_id,
-                            'target_player_id': str(game_state.player_ids_to_pay[0]),
-                            'total_players': game_state.total_paying_players,
-                            'num_players_owing': game_state.num_players_owing,
-                            'card': game_state.rent_card.to_dict()
-                        }
-                    )
-                else:
-                    game_state.player_ids_to_pay = []
-                    game_state.num_players_owing = 0
-                    game_state.rent_amount = 0
-                    game_state.total_paying_players = 0
-                    game_state.rent_type = None
-                    game_state.rent_card = None
-                    
-            else:
-                await self.handle_action_with_notification(data, action, card, player_id)
-                self.manage_turns(game_state)
-                await self.send_game_state()
+            await self.handle_action_with_notification(data)
+            self.manage_turns(game_state)
+            await self.send_game_state()
+    
+    async def handle_action_without_notification(self, data):
+        if action == 'just_say_no_choice':
+            await self.play_just_say_no_choice(data)
+        elif action == 'just_say_no_response':
+            await self.play_just_say_no_response(data)
+        elif action == 'rent_request': 
+            await self.play_rent_request(data)
+        elif action == 'rent_payment':
+            await self.play_rent_payment(data)
+        elif action == 'rent_paid':
+            await self.play_rent_paid(data)
 
-    async def handle_action_with_notification(self, data, action, card, player_id):
+    async def handle_action_with_notification(self, data):
+        card = data.get('card')
+        player_id = data.get('player')
+        action = data.get('action')
         game_state = GameConsumer.game_instances[self.room_id]
         player = next((p for p in game_state.players if p.id == player_id), None)
         
@@ -951,6 +783,206 @@ class GameConsumer(AsyncWebsocketConsumer):
                         del paying_player.properties[color]
         
         return transferred_cards  # Return the list of transferred cards with full info
+    
+    async def play_just_say_no_choice(self, data):
+        player_id = data.get('playerId')
+        opponent_id = data.get('opponentId')
+        card = data.get('card')
+        against_card = data.get('againstCard') or None
+        against_rent_card = data.get('againstRentCard') or None
+        original_action_data = json.loads(data.get('data'))
+        game_state = GameConsumer.game_instances[self.room_id]
+        if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
+            # Display original action played notification
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_card_played',
+                    'player_id': original_action_data['player'],
+                    'action': original_action_data['action'],
+                    'action_type': 'to_bank' if original_action_data['action'] == 'to_bank' else 'to_properties' if original_action_data['action'] == 'to_properties' else 'action',
+                    'card': original_action_data['card']
+                }
+            )
+        # Let everyone know player is making a choice to use just say no or not
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_just_say_no_choice',
+                'opponentId': opponent_id,
+                'playerId': player_id,
+                'card': card,
+                'againstCard': against_card,
+                'againstRentCard': against_rent_card,
+                'data': original_action_data
+            }
+        )
+        
+    async def play_just_say_no_response(self, data):
+        play_just_say_no = data.get('playJustSayNo')
+        player_id = data.get('playerId')
+        opponent_id = data.get('opponentId')
+        card = data.get('card')
+        against_card = data.get('againstCard')
+        against_rent_card = data.get('againstRentCard') or None
+        original_action_data = json.loads(data.get('data'))
+        game_state = GameConsumer.game_instances[self.room_id]
+        if not play_just_say_no:
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_just_say_no_response',
+                    'playJustSayNo': play_just_say_no,
+                    'playerId': player_id,
+                    'opponentId': opponent_id,
+                    'card': card,
+                    'againstCard': against_card,
+                    'againstRentCard': against_rent_card,
+                    'data': original_action_data
+                }
+            )
+            # Proceed as usual
+            if original_action_data['action'] == 'rent_request':
+                await self.channel_layer.group_send(
+                    self.game_group_name,
+                    {
+                        'type': 'broadcast_rent_request',
+                        'amount': game_state.rent_amount,
+                        'rent_type': game_state.rent_type,
+                        'recipient_id': game_state.rent_recipient_id,
+                        'target_player_id': str(game_state.player_ids_to_pay[0]),
+                        'total_players': game_state.total_paying_players,
+                        'num_players_owing': game_state.num_players_owing
+                    }
+                )
+            else:
+                await self.handle_action_with_notification(original_action_data, original_action_data['action'], original_action_data['card'], original_action_data['player'])
+                self.manage_turns(game_state)
+            await self.send_game_state()
+        else:
+            player_obj = next(p for p in game_state.players if p.id == player_id)
+            opponent_obj = next(p for p in game_state.players if p.id == opponent_id)
+            if against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector':
+                against_card_obj = next(c for c in opponent_obj.hand if c.id == against_card['id'])
+                opponent_obj.hand.remove(against_card_obj)
+            if against_rent_card:
+                against_rent_card_obj = next(c for c in opponent_obj.hand if c.id == against_rent_card['id'])
+                opponent_obj.hand.remove(against_rent_card_obj)
+            card_obj = next(c for c in player_obj.hand if c.id == card['id'])
+            player_obj.hand.remove(card_obj)
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_card_played',
+                    'player_id': player_id,
+                    'action': action,
+                    'action_type': 'to_bank' if action == 'to_bank' else 'to_properties' if action == 'to_properties' else 'action',
+                    'card': card
+                }
+            )
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_just_say_no_response',
+                    'playJustSayNo': play_just_say_no,
+                    'playerId': player_id,
+                    'opponentId': opponent_id,
+                    'card': card,
+                    'againstCard': against_card,
+                    'againstRentCard': against_rent_card,
+                    'data': original_action_data
+                }
+            )
+            
+            game_state.discard_pile.append(card_obj)
+            # recipient_id = original_action_data.get('player')
+            if not (against_card['name'].lower() != 'it\'s your birthday' and against_card['name'].lower() != 'rent' and against_card['name'].lower() != 'double the rent' and against_card['name'].lower() != 'multicolor rent' and against_card['name'].lower() != 'debt collector'):
+                game_state.player_ids_to_pay.pop(0)
+                game_state.num_players_owing -= 1
+                if game_state.num_players_owing > 0:
+                    await self.channel_layer.group_send(
+                        self.game_group_name,
+                        {
+                            'type': 'broadcast_rent_pre_request',
+                            'amount': game_state.rent_amount,
+                            # 'recipient_id': recipient_id,
+                            'recipient_id': game_state.rent_recipient_id,
+                            'target_player_id': str(game_state.player_ids_to_pay[0]),
+                            'total_players': game_state.total_paying_players,
+                            'num_players_owing': game_state.num_players_owing,
+                            'card': against_card
+                        }
+                    )
+                else:
+                    game_state.player_ids_to_pay = []
+                    game_state.num_players_owing = 0
+                    game_state.rent_amount = 0
+                    game_state.total_paying_players = 0
+            else:
+                self.manage_turns(game_state)
+            if against_rent_card:
+                self.manage_turns(game_state)  # The additional turn is handled here
+            await self.send_game_state()
+
+    async def play_rent_request(self, data):
+        card = data.get('card')
+        player_id = data.get('player')
+        game_state = GameConsumer.game_instances[self.room_id]
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_rent_request',
+                'amount': game_state.rent_amount,
+                'rent_type': game_state.rent_type,
+                'recipient_id': game_state.rent_recipient_id,
+                'target_player_id': str(game_state.player_ids_to_pay[0]),
+                'total_players': game_state.total_paying_players,
+                'num_players_owing': game_state.num_players_owing
+            }
+        )
+
+    async def play_rent_payment(self, data):
+        card = data.get('card')
+        player_id = data.get('player')
+        game_state = GameConsumer.game_instances[self.room_id]
+        transferred_cards = self.assist_rent_payment(game_state, player_id, game_state.rent_recipient_id, card)
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'broadcast_rent_paid',
+                'recipient_id': game_state.rent_recipient_id,
+                'player_id': player_id,
+                'selected_cards': transferred_cards,  
+            }
+        )
+        await self.send_game_state()
+
+    async def play_rent_paid(self, data):
+        card = data.get('card')
+        player_id = data.get('player')
+        game_state = GameConsumer.game_instances[self.room_id]
+        game_state.player_ids_to_pay.pop(0)
+        game_state.num_players_owing -= 1
+        if game_state.num_players_owing > 0:
+            await self.channel_layer.group_send(
+                self.game_group_name,
+                {
+                    'type': 'broadcast_rent_pre_request',
+                    'amount': game_state.rent_amount,
+                    'recipient_id': game_state.rent_recipient_id,
+                    'target_player_id': str(game_state.player_ids_to_pay[0]),
+                    'total_players': game_state.total_paying_players,
+                    'num_players_owing': game_state.num_players_owing,
+                    'card': game_state.rent_card.to_dict()
+                }
+            )
+        else:
+            game_state.player_ids_to_pay = []
+            game_state.num_players_owing = 0
+            game_state.rent_amount = 0
+            game_state.total_paying_players = 0
+            game_state.rent_type = None
+            game_state.rent_card = None
 
     def manage_turns(self, game_state):
         # Check if current player has won

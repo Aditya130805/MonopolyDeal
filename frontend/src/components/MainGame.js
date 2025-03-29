@@ -593,6 +593,7 @@ const MainGame = () => {
         case 'game_update':
           // Reset the processing action state for completed actions
           setIsProcessingAction(false);
+          console.log("Received gameUpdate, set isProcessingAction to false");
           handleGameUpdate(data);
           break;
 
@@ -617,13 +618,13 @@ const MainGame = () => {
   //////////////////// ACTION USE EFFECTS
   useEffect(() => {
     if (pendingHouseCard) {
-      handleHousePlacement(pendingHouseCard, userPlayer.properties, setError, socket, user);
+      handleHousePlacement(pendingHouseCard, userPlayer.properties, setError, setIsProcessingAction, socket, user);
       setPendingHouseCard(null);
     }
   }, [pendingHouseCard, gameState]);
   useEffect(() => {
     if (pendingHotelCard) {
-      handleHotelPlacement(pendingHotelCard, userPlayer.properties, setError, socket, user);
+      handleHotelPlacement(pendingHotelCard, userPlayer.properties, setError, setIsProcessingAction, socket, user);
       setPendingHotelCard(null);
     }
   }, [pendingHotelCard, gameState])
@@ -632,6 +633,7 @@ const MainGame = () => {
       if (2 - 1 + userPlayer.hand.length - (gameState.actions_remaining - 1) > 7) {
         setError('Pass Go cannot be played as it will exceed the 7-card limit');
         setPendingPassGoCard(null);
+        setIsProcessingAction(false);
         return;
       }
       setShowActionAnimation({ visible: true, action: 'pass_go' });
@@ -709,6 +711,7 @@ const MainGame = () => {
       if (!hasMatchingProperties) {
         setError("You don't have any properties matching the rent card colors!");
         setPendingRentCard(null);
+        setIsProcessingAction(false);
         return;
       }
       // Handle different rent types
@@ -735,6 +738,7 @@ const MainGame = () => {
       if (!opponentsHaveProperties) {
         setError("Opponents don't have any properties!");
         setPendingSlyDealCard(null);
+        setIsProcessingAction(false);
         return;
       }
 
@@ -772,6 +776,7 @@ const MainGame = () => {
       if (!hasStealableProperties) {
         setError("Opponents have no properties that can be stolen!");
         setPendingSlyDealCard(null);
+        setIsProcessingAction(false);
         return;
       }
 
@@ -788,6 +793,7 @@ const MainGame = () => {
       if (Object.keys(userPlayer.properties).length === 0) {
         setError("You don't have any properties to swap!");
         setPendingForcedDealCard(null);
+        setIsProcessingAction(false);
         return;
       }
 
@@ -803,6 +809,7 @@ const MainGame = () => {
       if (!opponentsHaveProperties) {
         setError("Opponents don't have any properties!");
         setPendingSlyDealCard(null);
+        setIsProcessingAction(false);
         return;
       }
 
@@ -840,6 +847,7 @@ const MainGame = () => {
       if (!hasStealableProperties) {
         setError("Opponents have no properties that can be stolen!");
         setPendingForcedDealCard(null);
+        setIsProcessingAction(false);
         return;
       }
       
@@ -870,6 +878,7 @@ const MainGame = () => {
       if (!hasCompleteSets) {
         setError("Opponents don't have any complete sets!");
         setPendingDealBreakerCard(null);
+        setIsProcessingAction(false);
         return;
       }
     
@@ -1255,6 +1264,7 @@ const MainGame = () => {
       .then(success => {
         if (!success) {
           // If the handler returned false, it means validation failed
+          console.log("Validation failed bank, setting isProcessingAction to false");
           setIsProcessingAction(false);
         }
         // Otherwise, processing state will be reset by WebSocket response
@@ -1272,6 +1282,7 @@ const MainGame = () => {
       .then(success => {
         if (!success) {
           // If the handler returned false, it means validation failed
+          console.log("Validation failed property, setting isProcessingAction to false");
           setIsProcessingAction(false);
         }
         // Otherwise, processing state will be reset by WebSocket response
@@ -1289,6 +1300,7 @@ const MainGame = () => {
       .then(success => {
         if (!success) {
           // If the handler returned false, it means validation failed
+          console.log("Validation failed action, setting isProcessingAction to false");
           setIsProcessingAction(false);
         }
         // Otherwise, processing state will be reset by WebSocket response

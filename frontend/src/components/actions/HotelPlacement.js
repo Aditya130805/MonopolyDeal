@@ -13,7 +13,7 @@ const colorStyles = {
   'mint': '#A7F3D0'
 };
 
-export const handleHotelPlacement = (card, playerProperties, setError, socket, user) => {
+export const handleHotelPlacement = (card, playerProperties, setError, setIsProcessingAction, socket, user) => {
   
   let completeSets = [];
   let { mainSets, overflowSets } = splitProperties(playerProperties);
@@ -47,6 +47,7 @@ export const handleHotelPlacement = (card, playerProperties, setError, socket, u
 
   if (completeSets.length === 0) {
     setError('No valid property sets to add a hotel to');
+    setIsProcessingAction(false);
     return;
   }
 

@@ -13,7 +13,7 @@ const colorStyles = {
   'mint': '#A7F3D0'
 };
 
-export const handleHousePlacement = (card, playerProperties, setError, socket, user) => {
+export const handleHousePlacement = (card, playerProperties, setError, setIsProcessingAction, socket, user) => {
 
   let completeSets = [];
   let { mainSets, overflowSets } = splitProperties(playerProperties);
@@ -45,6 +45,7 @@ export const handleHousePlacement = (card, playerProperties, setError, socket, u
   
   if (completeSets.length === 0) {
     setError('No valid property sets to add a house to');
+    setIsProcessingAction(false);
     return;
   }
 
