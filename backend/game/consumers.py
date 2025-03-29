@@ -3,6 +3,7 @@ import json
 from backend.game_core.game import Game
 from channels.db import database_sync_to_async
 import asyncio
+import random
 
 class GameConsumer(AsyncWebsocketConsumer):
     
@@ -177,7 +178,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             # Create a new game instance for this room
             room = await self.db_get_room_by_id(self.room_id)
             await self.db_mark_game_start(room)
-            GameConsumer.game_instances[self.room_id] = Game(room.players)
+            
+            # Shuffle players to randomize turn order
+            shuffled_players = list(room.players)
+            random.shuffle(shuffled_players)
+            
+            # Create game with shuffled players
+            GameConsumer.game_instances[self.room_id] = Game(shuffled_players)
             # Draw 2 cards for the first player
             game_state = GameConsumer.game_instances[self.room_id]
             first_player = game_state.players[game_state.turn_index]
