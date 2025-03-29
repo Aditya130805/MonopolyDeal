@@ -61,7 +61,10 @@ const GameModals = ({
   // Opponent Selection Modal props
   opponentSelectionModalOpen,
   opponentSelectionModalData,
-  setOpponentSelectionModalData
+  setOpponentSelectionModalData,
+  
+  // Action processing state
+  setIsProcessingAction
 }) => {
   return (
     <>
@@ -88,7 +91,8 @@ const GameModals = ({
           isOpen={slyDealModalOpen}
           onClose={() => {
             setSlyDealModalData(prev => ({ ...prev, isVisible: false })); 
-            setPendingSlyDealCard(null)
+            setPendingSlyDealCard(null);
+            setIsProcessingAction(false);
           }}
           modalData={slyDealModalData}
           onPropertySelect={handleSlyDealPropertySelect}
@@ -101,6 +105,7 @@ const GameModals = ({
           onClose={() => {
             setForcedDealModalData(prev => ({ ...prev, isVisible: false })); 
             setPendingForcedDealCard(null);
+            setIsProcessingAction(false);
           }}
           modalData={forcedDealModalData}
           onPropertySelect={handleForcedDealPropertySelect}
@@ -113,6 +118,7 @@ const GameModals = ({
           onClose={() => {
             setDealBreakerModalData(prev => ({ ...prev, isVisible: false })); 
             setPendingDealBreakerCard(null);
+            setIsProcessingAction(false);
           }}
           modalData={dealBreakerModalData}
           onPropertySetSelect={handleDealBreakerPropertySetSelect}
@@ -123,6 +129,10 @@ const GameModals = ({
         <JustSayNoModal
           isOpen={justSayNoModalOpen}
           onClose={() => setJustSayNoModalData(prev => ({ ...prev, isVisible: false }))}
+          // onClose={() => {
+          //   setJustSayNoModalData(prev => ({ ...prev, isVisible: false }));
+          //   setIsProcessingAction(false);
+          // }}
           modalData={justSayNoModalData}
           onResponse={handleJustSayNoResponse}
         />
@@ -134,7 +144,12 @@ const GameModals = ({
           opponentIds={opponentSelectionModalData?.opponentIds || []}
           type={opponentSelectionModalData?.type || ''}
           onSelect={opponentSelectionModalData?.onSelect}
-          onCancel={opponentSelectionModalData?.onCancel}
+          onCancel={() => {
+            if (opponentSelectionModalData?.onCancel) {
+              opponentSelectionModalData.onCancel();
+            }
+            setIsProcessingAction(false);
+          }}
         />
       </Suspense>
     </>

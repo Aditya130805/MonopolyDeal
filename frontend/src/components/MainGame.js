@@ -1675,6 +1675,7 @@ const MainGame = () => {
             onCancel: opponentSelectionModalData.onCancel
           }}
           setOpponentSelectionModalData={setOpponentSelectionModalData}
+          setIsProcessingAction={setIsProcessingAction}
         />
         
         {/* Game Layout */}

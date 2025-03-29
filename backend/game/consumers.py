@@ -222,6 +222,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send_game_state()
     
     async def handle_action_without_notification(self, data):
+        action = data.get('action')
         if action == 'just_say_no_choice':
             await self.play_just_say_no_choice(data)
         elif action == 'just_say_no_response':
@@ -347,6 +348,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         game_state.discard_pile.append(card_to_play)
 
     async def play_debt_collector(self, game_state, player, target_player_id, card_id):
+        print("Target player id:", target_player_id)
         card_to_play = next((c for c in player.hand if c.id == card_id), None)
         if not card_to_play:
             return
@@ -788,6 +790,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         player_id = data.get('playerId')
         opponent_id = data.get('opponentId')
         card = data.get('card')
+        action = data.get('action')
         against_card = data.get('againstCard') or None
         against_rent_card = data.get('againstRentCard') or None
         original_action_data = json.loads(data.get('data'))
@@ -823,6 +826,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         player_id = data.get('playerId')
         opponent_id = data.get('opponentId')
         card = data.get('card')
+        action = data.get('action')
         against_card = data.get('againstCard')
         against_rent_card = data.get('againstRentCard') or None
         original_action_data = json.loads(data.get('data'))
@@ -927,6 +931,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def play_rent_request(self, data):
         card = data.get('card')
         player_id = data.get('player')
+        action = data.get('action')
         game_state = GameConsumer.game_instances[self.room_id]
         await self.channel_layer.group_send(
             self.game_group_name,
@@ -944,6 +949,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def play_rent_payment(self, data):
         card = data.get('card')
         player_id = data.get('player')
+        action = data.get('action')
         game_state = GameConsumer.game_instances[self.room_id]
         transferred_cards = self.assist_rent_payment(game_state, player_id, game_state.rent_recipient_id, card)
         await self.channel_layer.group_send(
@@ -960,6 +966,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def play_rent_paid(self, data):
         card = data.get('card')
         player_id = data.get('player')
+        action = data.get('action')
         game_state = GameConsumer.game_instances[self.room_id]
         game_state.player_ids_to_pay.pop(0)
         game_state.num_players_owing -= 1
