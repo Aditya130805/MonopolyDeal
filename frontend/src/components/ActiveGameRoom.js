@@ -12,6 +12,7 @@ import Particles from './Particles';
 import Navbar from './auth/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import { useGameState, createEmptyGameState } from '../contexts/GameStateContext';
 import ErrorNotification from './notifications/ErrorNotification';
 
 const ActiveGameRoom = () => {
@@ -25,6 +26,7 @@ const ActiveGameRoom = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { socket, wsLoading } = useWebSocket();
+  const { setGameState } = useGameState();
 
   // Set up socket's message handler
   useEffect(() => {
@@ -34,7 +36,11 @@ const ActiveGameRoom = () => {
     }
     console.log("Socket connected:", socket);
     socket.onmessage = handleMessage;
-  }, [socket, wsLoading]);
+
+    // Reset game state when entering the room to prevent previous victory overlay
+    // from showing when starting a new game with the same group
+    setGameState(createEmptyGameState());
+  }, [socket, wsLoading, setGameState]);
 
   const handleMessage = (event) => {
     try {
