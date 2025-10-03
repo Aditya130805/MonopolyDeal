@@ -10,4 +10,14 @@ __pycache__/
 node_modules/
 
 frontend/public/OldMDeal
+
+# Documents
 LinkedIn Post 1.pdf
+Cardopoly Issue #1.png
+Cardopoly Writeup.docx
+MonopolyVCardopoly.pptx
+
+# Redis database
+dump.rdb
+
+.DS_Store

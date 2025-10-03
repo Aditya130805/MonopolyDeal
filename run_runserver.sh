@@ -1,1 +1,1 @@
-python3.10 -m backend.manage runserver
+python -m backend.manage runserver
