@@ -332,7 +332,7 @@ const ActiveGameRoom = () => {
                   >
                     <div className="flex items-center gap-3">
                       <UserCircleIcon className="w-8 h-8 text-gray-800" />
-                      <div>
+                      <div className="text-left">
                         <span className="text-lg font-bold text-gray-900">{player.name}</span>
                         <motion.div
                           initial={{ scale: 0 }}

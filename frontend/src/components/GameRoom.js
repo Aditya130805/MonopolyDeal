@@ -286,7 +286,7 @@ const GameRoom = () => {
                 </h2>
               </div>
 
-              <p className="text-base text-gray-600 mb-6 leading-relaxed">
+              <p className="text-base text-gray-600 mb-6 leading-relaxed text-left">
                 Start your own property empire and invite friends to join.
               </p>
 
@@ -348,7 +348,7 @@ const GameRoom = () => {
                 </h2>
               </div>
 
-              <p className="text-base text-gray-600 mb-6 leading-relaxed">
+              <p className="text-base text-gray-600 mb-6 leading-relaxed text-left">
                 Join your friends' game room and compete for properties!
               </p>
 
@@ -415,7 +415,7 @@ const GameRoom = () => {
               Quick Tips
             </h3>
             <div className="grid sm:grid-cols-2 gap-6">
-              <div className="space-y-4 text-lg text-gray-600">
+              <div className="space-y-4 text-lg text-gray-600 text-left">
                 <p className="flex items-center gap-3">
                   <BanknotesIcon className="w-6 h-6 text-gray-800 flex-shrink-0" />
                   Share the room code with your friends
@@ -425,7 +425,7 @@ const GameRoom = () => {
                   Play with 2-4 players in a room
                 </p>
               </div>
-              <div className="space-y-4 text-lg text-gray-600">
+              <div className="space-y-4 text-lg text-gray-600 text-left">
                 <p className="flex items-center gap-3">
                   <BuildingOffice2Icon className="w-6 h-6 text-gray-800 flex-shrink-0" />
                   Keep your room code private

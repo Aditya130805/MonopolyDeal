@@ -261,7 +261,7 @@ export default function LandingPage() {
           {[
             { number: `${userCount}`, label: "Players Worldwide" },
             { number: "4.8★", label: "Player Rating" },
-            { number: "10+", label: "Games Played" },
+            { number: "100+", label: "Games Played" },
           ].map((stat, index) => (
             <motion.div
               key={index}
