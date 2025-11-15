@@ -449,7 +449,7 @@ const HowToPlay = () => {
             <p>© 2025 Cardopoly. Built for players who think strategically.</p>
             <div className="flex items-center justify-center gap-6 pt-4">
               <a 
-                href="https://your-portfolio-url.com" 
+                href="https://theadityaagarwal.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -458,7 +458,7 @@ const HowToPlay = () => {
                 <span>Portfolio</span>
               </a>
               <a 
-                href="https://linkedin.com/in/your-profile" 
+                href="https://linkedin.com/in/aditya130805" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
@@ -469,7 +469,7 @@ const HowToPlay = () => {
                 <span>LinkedIn</span>
               </a>
               <a 
-                href="https://github.com/your-username" 
+                href="https://github.com/aditya130805" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
