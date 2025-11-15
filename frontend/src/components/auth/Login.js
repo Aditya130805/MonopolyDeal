@@ -72,18 +72,11 @@ const Login = () => {
                             
                             <div className="flex items-center gap-3">
                                 {!loading && !user && (
-                                    <>
-                                        <Link to="/login">
-                                            <Button variant="ghost" size="sm">
-                                                Log In
-                                            </Button>
-                                        </Link>
-                                        <Link to="/register">
-                                            <Button size="sm" className="rounded-full">
-                                                Get Started
-                                            </Button>
-                                        </Link>
-                                    </>
+                                    <Link to="/login">
+                                        <Button size="sm" className="rounded-full">
+                                            Get Started
+                                        </Button>
+                                    </Link>
                                 )}
                             </div>
                         </div>

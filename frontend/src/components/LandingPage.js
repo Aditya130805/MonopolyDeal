@@ -176,18 +176,11 @@ export default function LandingPage() {
                         </div>
                       </>
                     ) : (
-                      <>
-                        <Link to="/login">
-                          <Button variant="ghost" size="sm">
-                            Log In
-                          </Button>
-                        </Link>
-                        <Link to="/register">
-                          <Button size="sm" className="rounded-full">
-                            Get Started
-                          </Button>
-                        </Link>
-                      </>
+                      <Link to="/login">
+                        <Button size="sm" className="rounded-full">
+                          Get Started
+                        </Button>
+                      </Link>
                     )}
                   </>
                 )}
@@ -238,7 +231,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
             ) : (
-              <Link to="/register">
+              <Link to="/login">
                 <Button size="lg" className="rounded-full h-14 px-10 text-base">
                   Get Started Free
                   <ArrowRightIcon className="ml-2 h-5 w-5" />
@@ -413,7 +406,7 @@ export default function LandingPage() {
               </Button>
             </Link>
           ) : (
-            <Link to="/register">
+            <Link to="/login">
               <Button size="lg" className="rounded-full h-12 px-8">
                 Get Started
               </Button>

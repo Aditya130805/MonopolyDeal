@@ -237,18 +237,11 @@ const GameRoom = () => {
                         </div>
                       </>
                     ) : (
-                      <>
-                        <Link to="/login">
-                          <Button variant="ghost" size="sm">
-                            Log In
-                          </Button>
-                        </Link>
-                        <Link to="/register">
-                          <Button size="sm" className="rounded-full">
-                            Get Started
-                          </Button>
-                        </Link>
-                      </>
+                      <Link to="/login">
+                        <Button size="sm" className="rounded-full">
+                          Get Started
+                        </Button>
+                      </Link>
                     )}
                   </>
                 )}
