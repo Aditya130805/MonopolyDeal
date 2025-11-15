@@ -217,7 +217,7 @@ export default function LandingPage() {
 
           {/* Description */}
           <p className="text-lg md:text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Cardopoly transforms the classic Monopoly Deal experience into an interactive digital game. 
+            The digital version of the classic <strong className="text-gray-900">Monopoly Deal</strong> card game. 
             Connect with friends, build your property empire, and see your strategy unfold in real-time.
           </p>
 
@@ -291,7 +291,7 @@ export default function LandingPage() {
               <span className="italic font-light">Play</span> everything
             </h2>
             <p className="text-lg text-gray-600 mb-6">
-              All your cards in one place.
+              All your <strong className="text-gray-900">Monopoly Deal</strong> cards in one place.
             </p>
             <p className="text-base text-gray-600 leading-relaxed">
               Manage properties, money, and action cards seamlessly. See your game state clearly — easy to understand, easy to strategize.
@@ -365,7 +365,7 @@ export default function LandingPage() {
               Real-time multiplayer gameplay.
             </p>
             <p className="text-base text-gray-600 leading-relaxed">
-              Play with friends or match with players worldwide. Experience smooth, lag-free gameplay that brings the Monopoly Deal experience to life.
+              Play <strong className="text-gray-900">Monopoly Deal</strong> with friends or match with players worldwide. Experience smooth, lag-free gameplay that brings the classic card game to life.
             </p>
           </motion.div>
 
