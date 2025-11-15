@@ -100,11 +100,20 @@ ASGI_APPLICATION = 'backend.backend.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Database configuration
-if os.getenv('DATABASE_URL'):
+database_url_env = os.getenv('DATABASE_URL')
+if database_url_env:
     # Use PostgreSQL in production
+    # Normalize postgresql+asyncpg:// to postgresql:// since dj_database_url doesn't support asyncpg scheme
+    # Also handle postgresql+psycopg:// and other variants
+    normalized_url = database_url_env.replace('postgresql+asyncpg://', 'postgresql://')
+    normalized_url = normalized_url.replace('postgresql+psycopg://', 'postgresql://')
+    
+    # Update environment variable with normalized URL so dj_database_url.config() can read it
+    os.environ['DATABASE_URL'] = normalized_url
+    
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
+            default=normalized_url,
             conn_max_age=600,
             conn_health_checks=True,
         )

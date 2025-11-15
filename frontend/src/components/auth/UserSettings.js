@@ -1,15 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserIcon, KeyIcon, ArrowRightStartOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { UserIcon, KeyIcon, ArrowRightStartOnRectangleIcon, LockClosedIcon, GlobeAltIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-import Navbar from './Navbar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+
+const Button = ({ children, variant = 'default', size = 'md', className = '', onClick, ...props }) => {
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-full transition-all duration-200';
+  const sizeClasses = {
+    sm: 'h-9 px-4 text-sm',
+    md: 'h-11 px-6 text-base',
+    lg: 'h-14 px-10 text-base'
+  };
+  const variantClasses = {
+    default: 'bg-black text-white hover:bg-gray-900 shadow-lg hover:shadow-xl',
+    outline: 'bg-transparent border-2 border-gray-300 text-gray-900 hover:bg-gray-50 hover:border-gray-400',
+    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100'
+  };
+
+  return (
+    <button
+      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const UserSettings = () => {
     const navigate = useNavigate();
     const { user, logout, setUser } = useAuth();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
         username: user?.username || '',
@@ -225,65 +261,119 @@ const UserSettings = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 relative">
-            <Navbar />
+        <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+            {/* Subtle Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-gray-100/30 to-transparent" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-100/20 via-transparent to-transparent" />
             
-            <div className="flex h-[calc(100vh-64px)]">
-                {/* Sidebar - Hidden on mobile */}
-                <div className="hidden lg:flex w-80 bg-gray-100 border-r border-gray-200 flex-col">
-                    <div className="flex-1">
-                        <div className="p-8">
-                            <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
-                            <p className="mt-2 text-sm text-gray-600">Manage your account preferences</p>
+            {/* Floating Navigation */}
+            <div className="fixed top-6 left-0 right-0 z-50 flex justify-center">
+                <motion.nav
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-[90%] max-w-5xl"
+                >
+                    <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl px-6 py-3 shadow-2xl">
+                        <div className="flex items-center justify-between">
+                            <Link to="/" className="flex items-center gap-2">
+                                <div className="bg-black p-2 rounded-lg">
+                                    <GlobeAltIcon className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="text-xl font-bold text-gray-900">Cardopoly</span>
+                            </Link>
+                            
+                            <div className="flex items-center gap-3">
+                                {user && (
+                                    <>
+                                        <Link to="/play">
+                                            <Button size="sm" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600">
+                                                Play Now
+                                            </Button>
+                                        </Link>
+                                        <div className="relative" ref={dropdownRef}>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                                className="flex items-center justify-center w-10 h-10 rounded-full bg-black hover:bg-gray-800 transition-colors"
+                                            >
+                                                <UserIcon className="w-5 h-5 text-white" />
+                                            </motion.button>
+                                            {dropdownOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                    className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50"
+                                                >
+                                                    <Link to="/settings" onClick={() => setDropdownOpen(false)}>
+                                                        <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
+                                                            <Cog6ToothIcon className="w-5 h-5 text-gray-700" />
+                                                            <span className="text-sm font-medium text-gray-900">Settings</span>
+                                                        </div>
+                                                    </Link>
+                                                    <div 
+                                                        onClick={() => {
+                                                            setDropdownOpen(false);
+                                                            handleLogout();
+                                                        }}
+                                                        className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors cursor-pointer border-t border-gray-200"
+                                                    >
+                                                        <ArrowRightStartOnRectangleIcon className="w-5 h-5 text-red-600" />
+                                                        <span className="text-sm font-medium text-red-600">Logout</span>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                        <nav className="px-4">
-                            {tabs.map((tab) => (
-                                <motion.button
-                                    key={tab.id}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`w-full flex items-start gap-4 p-4 rounded-lg mb-2 transition-colors ${
-                                        activeTab === tab.id
-                                            ? 'bg-white shadow-sm'
-                                            : 'hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <tab.icon className={`w-5 h-5 mt-0.5 ${
-                                        activeTab === tab.id ? 'text-black' : 'text-gray-500'
-                                    }`} />
-                                    <div className="text-left">
-                                        <p className={`text-sm font-medium ${
-                                            activeTab === tab.id ? 'text-black' : 'text-gray-700'
-                                        }`}>
-                                            {tab.name}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {tab.description}
-                                        </p>
-                                    </div>
-                                </motion.button>
-                            ))}
-                        </nav>
                     </div>
-                    
-                    {/* Logout Button */}
-                    <div className="p-4 border-t border-gray-200">
+                </motion.nav>
+            </div>
+            
+            <div className="relative pt-32 pb-20">
+            <div className="max-w-6xl mx-auto px-6">
+                {/* Settings Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-12"
+                >
+                    <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-gray-900 mb-4 leading-tight">
+                        Settings
+                    </h1>
+                    <p className="text-lg md:text-xl text-gray-600 font-light">
+                        Manage your account preferences
+                    </p>
+                </motion.div>
+
+                {/* Tab Navigation - Desktop */}
+                <div className="hidden lg:flex justify-center gap-4 mb-12">
+                    {tabs.map((tab) => (
                         <motion.button
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-3 p-4 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                            key={tab.id}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-3 px-6 py-3 rounded-full transition-all ${
+                                activeTab === tab.id
+                                    ? 'bg-black text-white shadow-lg'
+                                    : 'bg-white/80 backdrop-blur-xl border border-gray-200 text-gray-700 hover:bg-gray-50'
+                            }`}
                         >
-                            <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
-                            <span className="text-sm font-medium">Log Out</span>
+                            <tab.icon className={`w-5 h-5 ${
+                                activeTab === tab.id ? 'text-white' : 'text-gray-500'
+                            }`} />
+                            <span className="font-semibold">{tab.name}</span>
                         </motion.button>
-                    </div>
+                    ))}
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 overflow-y-auto bg-gray-50 pb-20 lg:pb-8">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="pb-20 lg:pb-8">
+                    <div className="max-w-4xl mx-auto">
                         {/* Notification Messages */}
                         <AnimatePresence>
                             {error && (
@@ -335,24 +425,19 @@ const UserSettings = () => {
                                 transition={{ duration: 0.2 }}
                                 className="space-y-6 w-full max-w-3xl mx-auto"
                             >
-                                {/* Mobile Header */}
-                                <div className="block lg:hidden mb-6">
-                                    <h2 className="text-xl font-semibold text-gray-900">Profile Settings</h2>
-                                    <p className="mt-2 text-sm text-gray-600">Update your profile information</p>
-                                </div>
 
                                 {/* Profile Card */}
-                                <div className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm w-full">
-                                    <div className="flex items-start gap-4 mb-8">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                                            <UserIcon className="w-6 h-6 text-white" />
+                                <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-2xl w-full mb-6">
+                                    <div className="flex items-start gap-4 mb-8 pb-6 border-b border-gray-200">
+                                        <div className="bg-black p-3 rounded-xl">
+                                            <UserIcon className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="text-left">
-                                            <div className="text-xl font-semibold text-gray-900">Profile</div>
-                                            <div className="text-sm text-gray-500">Choose how others see you</div>
+                                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">Profile</h3>
+                                            <p className="text-base text-gray-600 mt-1">Choose how others see you</p>
                                         </div>
                                     </div>
-                                    <form onSubmit={handleUsernameUpdate} className="space-y-4">
+                                    <form onSubmit={handleUsernameUpdate} className="space-y-6">
                                         <div className="relative">
                                             <input
                                                 type="text"
@@ -360,83 +445,65 @@ const UserSettings = () => {
                                                 name="username"
                                                 value={formData.username}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-6 py-4 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-base"
                                                 placeholder="Enter new username"
                                             />
                                         </div>
-                                        <motion.button
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
+                                        <Button
                                             type="submit"
-                                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all shadow-md"
+                                            size="lg"
+                                            className="w-full rounded-full"
                                         >
                                             Update Username
-                                        </motion.button>
+                                        </Button>
                                     </form>
                                 </div>
 
                                 {/* Email Card */}
-                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm w-full">
+                                <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-2xl w-full mb-6">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <div className="bg-gray-100 p-3 rounded-xl">
+                                            <svg className="w-8 h-8 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                             </svg>
                                         </div>
                                         <div className="text-left">
-                                            <div className="text-lg font-medium text-gray-800">Email Address</div>
-                                            <div className="text-sm text-gray-800 mt-1">{user?.email}</div>
-                                            {/* <div className="text-xs text-gray-500 mt-2">This email is associated with your account and cannot be changed</div> */}
+                                            <h3 className="text-lg font-bold text-gray-900">Email Address</h3>
+                                            <p className="text-base text-gray-600 mt-1">{user?.email}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-100 shadow-sm w-full">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-2xl w-full">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="bg-gray-100 p-2 rounded-lg">
+                                                <svg className="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
-                                            <h3 className="text-sm font-semibold text-blue-900">Username Guidelines</h3>
+                                            <h3 className="text-xl font-bold text-gray-900">Username Guidelines</h3>
                                         </div>
-                                        <ul className="space-y-3 text-sm text-blue-800 text-left">
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <ul className="space-y-4 text-base text-gray-600 text-left">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <span>Choose a username that represents you professionally</span>
                                             </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <span>Avoid using personal information</span>
                                             </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <span>Keep it family-friendly</span>
                                             </li>
                                         </ul>
-                                    </div>
-
-                                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 sm:p-8 border border-purple-100 shadow-sm w-full">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                            <h3 className="text-sm font-semibold text-purple-900">Gaming Identity</h3>
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-sm text-purple-800 leading-relaxed">
-                                                Your username is your gaming identity in Cardopoly. Choose a memorable name that reflects your playing style while keeping it friendly and appropriate for all players.
-                                            </p>
-                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -451,22 +518,17 @@ const UserSettings = () => {
                                 transition={{ duration: 0.2 }}
                                 className="space-y-6 w-full max-w-3xl mx-auto"
                             >
-                                {/* Mobile Header */}
-                                <div className="block lg:hidden mb-6">
-                                    <h2 className="text-xl font-semibold text-gray-900">Security Settings</h2>
-                                    <p className="mt-2 text-sm text-gray-600">Manage your account security</p>
-                                </div>
-                                <div className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm w-full">
-                                    <div className="flex items-start gap-4 mb-8">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                                            <KeyIcon className="w-6 h-6 text-white" />
+                                <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-2xl w-full mb-6">
+                                    <div className="flex items-start gap-4 mb-8 pb-6 border-b border-gray-200">
+                                        <div className="bg-black p-3 rounded-xl">
+                                            <KeyIcon className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="text-left">
-                                            <div className="text-xl font-semibold text-gray-900">Password</div>
-                                            <div className="text-sm text-gray-500">Keep your account protected</div>
+                                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">Password</h3>
+                                            <p className="text-base text-gray-600 mt-1">Keep your account protected</p>
                                         </div>
                                     </div>
-                                    <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
                                         <div className="space-y-4">
                                             <input
                                                 type="password"
@@ -474,7 +536,7 @@ const UserSettings = () => {
                                                 name="currentPassword"
                                                 value={formData.currentPassword}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-6 py-4 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-base"
                                                 placeholder="Current password"
                                             />
                                             <input
@@ -483,7 +545,7 @@ const UserSettings = () => {
                                                 name="newPassword"
                                                 value={formData.newPassword}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-6 py-4 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-base"
                                                 placeholder="New password"
                                             />
                                             <input
@@ -492,82 +554,69 @@ const UserSettings = () => {
                                                 name="confirmPassword"
                                                 value={formData.confirmPassword}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                                className="w-full px-6 py-4 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-base"
                                                 placeholder="Confirm new password"
                                             />
                                         </div>
-                                        <motion.button
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
+                                        <Button
                                             type="submit"
-                                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all shadow-md"
+                                            size="lg"
+                                            className="w-full rounded-full"
                                         >
                                             Update Password
-                                        </motion.button>
+                                        </Button>
                                     </form>
                                 </div>
 
                                 <div className="space-y-6">
-                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-100 shadow-sm w-full">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-2xl w-full mb-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className="bg-gray-100 p-2 rounded-lg">
+                                                <svg className="w-6 h-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                 </svg>
                                             </div>
-                                            <h3 className="text-sm font-semibold text-blue-900">Account Security Guidelines</h3>
+                                            <h3 className="text-xl font-bold text-gray-900">Account Security Guidelines</h3>
                                         </div>
-                                        <ul className="space-y-3 text-sm text-blue-800 text-left">
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <ul className="space-y-4 text-base text-gray-600 text-left">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>Create a password with at least 6 characters, including uppercase, lowercase, numbers, and special characters</span>
+                                                <span>Create a password with at least 8 characters</span>
                                             </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>Avoid using personal information like birthdays, names, or common words in your password</span>
+                                                <span>Avoid using personal information like birthdays, names, or common words</span>
                                             </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-gray-800 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>Use a unique password for your Cardopoly account to prevent unauthorized access</span>
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span>Never share your login credentials or account details with other players or support staff</span>
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span>Update your password regularly and whenever you suspect unauthorized access</span>
+                                                <span>Use a unique password for your Cardopoly account</span>
                                             </li>
                                         </ul>
                                     </div>
 
                                     {/* Delete Account Section */}
-                                    <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 sm:p-8 border border-red-200 shadow-sm w-full">
-                                        <div className="flex items-start gap-4 mb-6">
-                                            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className="bg-white/80 backdrop-blur-xl border border-red-200 rounded-3xl p-8 shadow-2xl w-full">
+                                        <div className="flex items-start gap-4 mb-8 pb-6 border-b border-red-200">
+                                            <div className="bg-red-100 p-3 rounded-xl">
+                                                <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </div>
                                             <div className="text-left">
-                                                <div className="text-xl font-semibold text-red-900">Delete Account</div>
-                                                <div className="text-sm text-red-800 mt-1">This action cannot be undone. Please be certain.</div>
+                                                <h3 className="text-2xl font-bold text-red-900">Delete Account</h3>
+                                                <p className="text-base text-red-800 mt-1">This action cannot be undone. Please be certain.</p>
                                             </div>
                                         </div>
                                         
-                                        <div className="mb-4">
+                                        <div className="mb-6">
                                             <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                     <LockClosedIcon className="h-5 w-5 text-gray-400" />
                                                 </div>
                                                 <input
@@ -576,15 +625,13 @@ const UserSettings = () => {
                                                     name="deleteAccountPassword"
                                                     value={formData.deleteAccountPassword}
                                                     onChange={handleChange}
-                                                    className="block w-full pl-10 pr-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                                    className="block w-full pl-12 pr-4 py-4 text-gray-900 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base"
                                                     placeholder="Enter your current password"
                                                 />
                                             </div>
                                         </div>
 
-                                        <motion.button
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
+                                        <Button
                                             onClick={() => {
                                                 if (!formData.deleteAccountPassword) {
                                                     setError('Please enter your current password');
@@ -616,10 +663,10 @@ const UserSettings = () => {
                                                     setError(error.message || 'Password verification failed');
                                                 });
                                             }}
-                                            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors shadow-md"
+                                            className="w-full rounded-full bg-red-600 hover:bg-red-700 text-white"
                                         >
                                             Delete My Account
-                                        </motion.button>
+                                        </Button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -627,21 +674,21 @@ const UserSettings = () => {
                     </div>
                 </div>
 
-                {/* Mobile Bottom Navigation - Outside scroll container */}
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+                {/* Mobile Bottom Navigation */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 z-50 shadow-2xl">
                     <div className="flex justify-around items-center h-16">
                         <button
                             onClick={() => setActiveTab('profile')}
                             className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
-                                activeTab === 'profile' ? 'text-blue-600' : 'text-gray-600'
+                                activeTab === 'profile' ? 'text-black' : 'text-gray-600'
                             }`}
                         >
                             <UserIcon className="w-6 h-6" />
-                            <span className="text-xs mt-1">Profile</span>
+                            <span className="text-xs mt-1 font-medium">Profile</span>
                             {activeTab === 'profile' && (
                                 <motion.div
                                     layoutId="activeTab"
-                                    className="absolute inset-0 bg-blue-50 rounded-lg"
+                                    className="absolute inset-0 bg-gray-100 rounded-lg"
                                     style={{ zIndex: -1 }}
                                     initial={false}
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
@@ -651,15 +698,15 @@ const UserSettings = () => {
                         <button
                             onClick={() => setActiveTab('security')}
                             className={`flex flex-col items-center justify-center w-1/2 py-2 relative ${
-                                activeTab === 'security' ? 'text-blue-600' : 'text-gray-600'
+                                activeTab === 'security' ? 'text-black' : 'text-gray-600'
                             }`}
                         >
                             <KeyIcon className="w-6 h-6" />
-                            <span className="text-xs mt-1">Security</span>
+                            <span className="text-xs mt-1 font-medium">Security</span>
                             {activeTab === 'security' && (
                                 <motion.div
                                     layoutId="activeTab"
-                                    className="absolute inset-0 bg-blue-50 rounded-lg"
+                                    className="absolute inset-0 bg-gray-100 rounded-lg"
                                     style={{ zIndex: -1 }}
                                     initial={false}
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
@@ -669,6 +716,7 @@ const UserSettings = () => {
                     </div>
                 </div>
             </div>
+            </div>
 
             {/* Delete Account Confirmation Modal */}
             {showDeleteModal && (
@@ -677,36 +725,33 @@ const UserSettings = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
+                        className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
                     >
-                        <div className="text-center mb-6">
-                            <div className="w-12 h-12 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900">Delete Account</h3>
-                            <p className="mt-2 text-sm text-gray-600">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3">Delete Account</h3>
+                            <p className="text-base text-gray-600 leading-relaxed">
                                 Are you sure you want to delete your account? This action cannot be undone and you will lose all your data.
                             </p>
                         </div>
-                        <div className="flex gap-3">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                        <div className="flex gap-4">
+                            <Button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                variant="outline"
+                                className="flex-1 rounded-full"
                             >
                                 Cancel
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                            </Button>
+                            <Button
                                 onClick={handleDeleteAccount}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                className="flex-1 rounded-full bg-red-600 hover:bg-red-700 text-white"
                             >
                                 Yes, Delete
-                            </motion.button>
+                            </Button>
                         </div>
                     </motion.div>
                 </div>
